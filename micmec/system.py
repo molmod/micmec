@@ -9,7 +9,7 @@
 import numpy as np
 import pickle as pkl
 
-from log import log, timer
+from micmec.log import log, timer
 
 from molmod.io.chk import *
 
@@ -22,10 +22,11 @@ class System(object):
                     equilibrium_cell_matrices, 
                     equilibrium_inv_cell_matrices,
                     elasticity_tensors,
+                    free_energies, effective_temps,
                     surrounding_cells, surrounding_nodes,
                     grid=None, types=None):
         """
-        **Arguments:**
+        **ARGUMENTS**
         input_data
             A dictionary with the names of the micromechanical nanocell types as keys. The corresponding values are
             dictionaries which contain all of the relevant data about the cell type.
@@ -47,10 +48,14 @@ class System(object):
         self.pos_ref = pos_ref
         self.cell_ref = cell_ref
         self.pos = pos
+        self.domain = Domain(rvecs)
 
         self.equilibrium_cell_matrices = equilibrium_cell_matrices
         self.equilibrium_inv_cell_matrices = equilibrium_inv_cell_matrices
         self.elasticity_tensors = elasticity_tensors
+
+        self.free_energies = free_energies
+        self.effective_temps = effective_temps
 
         self.surrounding_cells = surrounding_cells
         self.surrounding_nodes = surrounding_nodes
@@ -100,7 +105,7 @@ class System(object):
         """
         Write the system to a file.
         
-        **Arguments:**
+        **ARGUMENTS**
         fn
             The file to write to.
 
@@ -134,8 +139,7 @@ class System(object):
         """
         Write the system to a HDF5 file.
         
-        **Arguments:**
-        
+        **ARGUMENTS**
         f
             A writable h5.File object.
         

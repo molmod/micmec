@@ -6,17 +6,18 @@
 
 import numpy as np
 
-from log import log, timer
+from micmec.log import log, timer
 
 from molmod.units import *
 
 
-__all__ = ['Iterative', 'StateItem', 'AttributeStateItem', 'PosStateItem', 'TemperatureStateItem', 'Hook']
+__all__ = ["Iterative", "StateItem", "AttributeStateItem", "PosStateItem", 
+            "TemperatureStateItem", "VolumeStateItem", "DomainStateItem", "Hook"]
 
 class Iterative(object):
     
     default_state = []
-    log_name = 'ITER'
+    log_name = "ITER"
 
     def __init__(self, mmf, state=None, hooks=None, counter0=0):
         
@@ -45,7 +46,7 @@ class Iterative(object):
 
     
     def call_hooks(self):
-        with timer.section('%s hooks' % self.log_name):
+        with timer.section("%s hooks" % self.log_name):
             state_updated = False
             for hook in self.hooks:
                 if hook.expects_call(self.counter):
@@ -114,7 +115,7 @@ class AttributeStateItem(StateItem):
 class PosStateItem(StateItem):  
     
     def __init__(self):
-        StateItem.__init__(self, 'pos')
+        StateItem.__init__(self, "pos")
 
     def get_value(self, iterative):
         return iterative.mmf.system.pos
@@ -123,14 +124,29 @@ class PosStateItem(StateItem):
 class TemperatureStateItem(StateItem):
     
     def __init__(self):
-        StateItem.__init__(self, 'temp')
+        StateItem.__init__(self, "temp")
 
     def get_value(self, iterative):
-        return getattr(iterative, 'temp', None)
+        return getattr(iterative, "temp", None)
 
     def iter_attrs(self, iterative):
-        yield 'ndof', iterative.ndof
+        yield "ndof", iterative.ndof
 
+
+class VolumeStateItem(StateItem):
+    def __init__(self):
+        StateItem.__init__(self, "volume")
+
+    def get_value(self, iterative):
+        return iterative.mmf.system.domain.volume
+
+
+class DomainStateItem(StateItem):
+    def __init__(self):
+        StateItem.__init__(self, "domain")
+
+    def get_value(self, iterative):
+        return iterative.mmf.system.domain.rvecs
 
 
 class Hook(object):

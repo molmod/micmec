@@ -1,7 +1,7 @@
 import numpy as np
 import h5py
 
-h5_fn = "demo.h5"
+h5_fn = "testing.h5"
 
 with h5py.File(h5_fn, mode = 'a') as h5_f:
     

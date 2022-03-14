@@ -30,6 +30,12 @@ class Application(tk.Tk):
     def __init__(self):
         
         super(Application, self).__init__()
+
+        # Just simply import the azure.tcl file
+        #self.tk.call("source", "tkinter_style/azure.tcl")
+
+        # Then set the theme you want with the set_theme procedure
+        #self.tk.call("set_theme", "dark")
         
         self.title(Application._title)
         self.geometry(Application._geometry)
@@ -138,13 +144,10 @@ class Page(tk.Frame):
 
     _height = 600
     _width = 1024
-    _style = {
-        "bg": "#2B2D2F"
-    }
     
     def __init__(self, manager):
         
-        super(Page, self).__init__(manager, Page._style, 
+        super(Page, self).__init__(manager, 
                                    height=Page._height, 
                                    width=Page._width)
         
@@ -156,7 +159,7 @@ class Page(tk.Frame):
 class HomePage(Page):
 
     """ 
-    The homepage of the application, where the input (micromechanical data)\n
+    The homepage of the application, where the input (micromechanical data)
     and the output (a node network built by the user) of the application are handled. 
     """
     
@@ -192,21 +195,13 @@ class AboutPage(Page):
 
 
     
-class Widget(tk.LabelFrame):
+class Widget(ttk.LabelFrame):
     
     """ Generic class for any widget that is part of the main application. """
     
-    _style = {
-        "relief": "groove",
-        "bd": 3, 
-        "bg": "#2B2D2F",
-        "fg": "#FFFFFF", 
-        "font": ("Courier", 12, "bold")
-    }
-    
     def __init__(self, master, widget_label):
         
-        super(Widget, self).__init__(master, Widget._style, text=widget_label)
+        super(Widget, self).__init__(master, text=widget_label)
 
 
 
@@ -215,7 +210,7 @@ class DataWidget(Widget):
     
     """ Widget that handles the adding, removing, reading and layout of micromechanical data. """
     
-    _widget_label = "Data"
+    _widget_label = "DATA"
     
     def __init__(self, master):
         
@@ -250,24 +245,19 @@ class DataWidget(Widget):
    
 
      
-class DataWidgetButtons(tk.Frame):
-    
-    _style = { 
-        "bg": "#2B2D2F",
-        "highlightbackground": "#2B2D2F"
-    }
+class DataWidgetButtons(ttk.Frame):
     
     def __init__(self, widget):
         
-        super(DataWidgetButtons, self).__init__(widget, DataWidgetButtons._style)
+        super(DataWidgetButtons, self).__init__(widget)
         
         self.widget = widget
         
         self.pack(side="bottom", padx=20, pady=20)
         self.button1 = ttk.Button(self, text="Add", command=self.select_add_data)
-        self.button1.pack(expand="yes", side="left")
+        self.button1.pack(expand="yes", side="left", padx=5)
         self.button2 = ttk.Button(self, text="Remove", command=self.select_remove_data)
-        self.button2.pack(expand="yes", side="left")
+        self.button2.pack(expand="yes", side="left", padx=5)
     
 
     def select_add_data(self):
@@ -302,7 +292,7 @@ class DataWidgetButtons(tk.Frame):
 
     
 
-class DataWidgetTreeview(tk.Frame):
+class DataWidgetTreeview(ttk.Frame):
     
     _columns = [
         "name", 
@@ -365,7 +355,7 @@ class BuilderWidget(Widget):
 
     """ Widget that handles the building and layout of the micromechanical node network. """
     
-    _widget_label = "Builder"
+    _widget_label = "BUILDER"
     _colors = ["#e41a1c", "#377eb8", "#4daf4a", 
                "#984ea3", "#ff7f00", "#ffff33", "#a65628",
                "#f781bf", "#999999", "#66c2a5", "#fc8d62",
@@ -431,17 +421,11 @@ class BuilderWidget(Widget):
     
     
 
-class BuilderWidgetSelector(tk.Frame):
-    
-    _style = { 
-        "bg": "#2B2D2F",
-        "highlightbackground": "#2B2D2F"
-    }
+class BuilderWidgetSelector(ttk.Frame):
     
     def __init__(self, widget):
         
-        super(BuilderWidgetSelector, self).__init__(widget, 
-                                                    BuilderWidgetSelector._style)
+        super(BuilderWidgetSelector, self).__init__(widget)
         
         self.widget = widget
         
@@ -451,15 +435,15 @@ class BuilderWidgetSelector(tk.Frame):
                                            postcommand=self.update_list,
                                            state="readonly")
         self.combobox_types.bind("<<ComboboxSelected>>", self.select_key)
-        self.label_color = tk.Label(self, text="", height=1, width=2, bg="#FFFFFF")
+        self.label_color = tk.Label(self, text="", height=1, width=2, bg="#FFFFFF", borderwidth=2, relief="groove")
         self.spinbox_layers = ttk.Spinbox(self, from_=1, to=self.widget.nz,
                                         state="readonly",
                                         command=self.select_layer, width=5)
         
-        tk.Label(self, text="Type:", font=("Courier", 12), fg="#FFFFFF", bg="#2B2D2F").pack(side="left")
+        tk.Label(self, text="Type:").pack(side="left")
         self.combobox_types.pack(side="left", padx=5, pady=5)
-        self.label_color.pack(side="left")
-        tk.Label(self, text="  Layer:", font=("Courier", 12), fg="#FFFFFF", bg="#2B2D2F").pack(side="left")
+        self.label_color.pack(side="left", padx=5)
+        tk.Label(self, text="       Layer:").pack(side="left")
         self.spinbox_layers.pack(side="left", padx=5, pady=5)
         
         self.spinbox_layers.set(1)
@@ -488,40 +472,56 @@ class BuilderWidgetSelector(tk.Frame):
 
 
 
-class BuilderWidgetButtons(tk.Frame):
-    
-    _style = { 
-        "bg": "#2B2D2F",
-        "highlightbackground": "#2B2D2F"
-    }
+class BuilderWidgetButtons(ttk.Frame):
     
     def __init__(self, widget):
         
-        super(BuilderWidgetButtons, self).__init__(widget, 
-                                                   BuilderWidgetButtons._style)
+        super(BuilderWidgetButtons, self).__init__(widget)
         
         self.widget = widget
         
         self.pack(fill="x", side="top", padx=20, pady=10)
+
+        # Create a style for the checkbuttons.
+        #style = ttk.Style()
+        #style.theme_use("alt")
+        #style.configure("new.TCheckbutton", background="#2B2D2F", focusthickness=0, 
+                                        #indicatorrelief=tk.FLAT, indicatormargin=-1, indicatordiameter=-1, indicatorcolor="red")
         
+        # Create checkbuttons to choose whether a direction has periodic boundary conditions or not.
+        self.pbc_x = tk.IntVar()
+        self.pbc_y = tk.IntVar()
+        self.pbc_z = tk.IntVar()
+        self.check_x = ttk.Checkbutton(self, variable=self.pbc_x) # style="new.TCheckbutton"
+        self.check_y = ttk.Checkbutton(self, variable=self.pbc_y)
+        self.check_z = ttk.Checkbutton(self, variable=self.pbc_z)
         
-        self.spinbox_nx = ttk.Spinbox(self, from_=1, to=20,
+        # Create spinboxes to select the maximum number of nanocells in each direction.
+        self.spinbox_nx = ttk.Spinbox(self, from_=2, to=20,
                                         state="readonly",
                                         command=self.update_nx, width=5)
-        self.spinbox_ny = ttk.Spinbox(self, from_=1, to=20,
+        self.spinbox_ny = ttk.Spinbox(self, from_=2, to=20,
                                         state="readonly",
                                         command=self.update_ny, width=5)
-        self.spinbox_nz = ttk.Spinbox(self, from_=1, to=20,
+        self.spinbox_nz = ttk.Spinbox(self, from_=2, to=20,
                                         state="readonly",
                                         command=self.update_nz, width=5)
         
-        tk.Label(self, text="Nk =", font=("Courier", 12), fg="#FFFFFF", bg="#2B2D2F").pack(side="left")
+        # Add the checkbuttons and spinboxes to the layout.
+        tk.Label(self, text="Nk =").pack(side="left")
         self.spinbox_nx.pack(side="left", padx=5, pady=5)
-        tk.Label(self, text="  Nl =", font=("Courier", 12), fg="#FFFFFF", bg="#2B2D2F").pack(side="left")
+        self.check_x.pack(side="left")
+        tk.Label(self, text="  Nl =").pack(side="left")
         self.spinbox_ny.pack(side="left", padx=5, pady=5)
-        tk.Label(self, text="  Nm =", font=("Courier", 12), fg="#FFFFFF", bg="#2B2D2F").pack(side="left")
+        self.check_y.pack(side="left")
+        tk.Label(self, text="  Nm =").pack(side="left")
         self.spinbox_nz.pack(side="left", padx=5, pady=5)
+        self.check_z.pack(side="left")
         
+        # Set the initial values of the checkboxes and spinboxes.
+        self.pbc_x.set(1)
+        self.pbc_y.set(1)
+        self.pbc_z.set(1)
         self.spinbox_nx.set(self.widget.nx)
         self.spinbox_ny.set(self.widget.ny)
         self.spinbox_nz.set(self.widget.nz)
@@ -578,17 +578,12 @@ class BuilderWidgetButtons(tk.Frame):
 
 class BuilderWidgetCanvas(tk.Canvas):
     
-    _style = { 
-        "bg": "#2B2D2F",
-        "highlightbackground": "#2B2D2F"
-    }
     _rect_width = 20
     _rect_height = 20
     
     def __init__(self, widget):
         
-        super(BuilderWidgetCanvas, self).__init__(widget, 
-                                                  BuilderWidgetCanvas._style)
+        super(BuilderWidgetCanvas, self).__init__(widget)
         
         self.widget = widget
         
@@ -608,20 +603,20 @@ class BuilderWidgetCanvas(tk.Canvas):
         rect_height = BuilderWidgetCanvas._rect_height
         
         select_all = self.create_text((0, 0), 
-                                     anchor="nw", text="#", fill="#FFFFFF",
-                                     tags="SelectAll", font=("Courier", 8))
+                                     anchor="nw", text="#",
+                                     tags="SelectAll")#, font=("Courier", 8))
         self.tag_bind(select_all, "<Button-1>", self.set_color_type_all)
         
         for k0 in range(self.widget.nx):
             select_row = self.create_text((0, (k0 + 1)*rect_height), 
-                                     anchor="nw", text=str(k0+1), fill="#FFFFFF",
-                                     tags="SelectRow" + str(k0), font=("Courier", 8))
+                                     anchor="nw", text=str(k0+1),
+                                     tags="SelectRow" + str(k0))#, font=("Courier", 8))
             self.tag_bind(select_row, "<Button-1>", self.set_color_type_row)
         
         for l0 in range(self.widget.ny):
             select_col = self.create_text(((l0 + 1)*rect_width, 0), 
-                                     anchor="nw", text=str(l0+1), fill="#FFFFFF",
-                                     tags="SelectCol" + str(l0), font=("Courier", 8))
+                                     anchor="nw", text=str(l0+1),
+                                     tags="SelectCol" + str(l0))#, font=("Courier", 8))
             self.tag_bind(select_col, "<Button-1>", self.set_color_type_col)
         
         m0 = self.layer
@@ -691,13 +686,43 @@ class BuilderWidgetCanvas(tk.Canvas):
             for l0 in range(self.widget.ny):
                 self.widget.grid[k0,l0,m0] = self.widget.selected_key
                 self.itemconfigure(self.find_withtag(index_tag)[l0], fill=color)
-        
 
 
+def stylename_elements_options(stylename):
+    """Function to expose the options of every element associated to a widget
+       stylename."""
+    try:
+        # Get widget elements
+        style = ttk.Style()
+        layout = str(style.layout(stylename))
+        print("Stylename = {}".format(stylename))
+        print("Layout    = {}".format(layout))
+        elements=[]
+        for n, x in enumerate(layout):
+            if x=="(":
+                element=""
+                for y in layout[n+2:]:
+                    if y != ",":
+                        element=element+str(y)
+                    else:
+                        elements.append(element[:-1])
+                        break
+        print("\nElement(s) = {}\n".format(elements))
+
+        # Get options of widget elements
+        for element in elements:
+            print("{0:30} options: {1}".format(
+                element, style.element_options(element)))
+
+    except tk.TclError:
+        print("_tkinter.TclError: ... in function"
+              "widget_elements_options({0}) is not a regonised stylename."
+              .format(stylename))
 
 
 if __name__ == "__main__":
     app = Application()
     app.mainloop()
+    #stylename_elements_options("my.TCheckbutton")
 
 

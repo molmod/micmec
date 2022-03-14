@@ -4,23 +4,26 @@
 # Author: Joachim Vandewalle
 # Date: 18-11-2021
 
-'''Trajectory writers'''
+"""Trajectory writers."""
 
-from iterative import Hook
-from log import log, timer
+from micmec.sampling.iterative import Hook
+from micmec.log import log, timer
 
-__all__ = ['HDF5Writer', 'XYZWriter']
+__all__ = [
+    "HDF5Writer", 
+    "XYZWriter",
+]
 
 
 class BaseHDF5Writer(Hook):
 
     def __init__(self, f, start=0, step=1):
         """
-        **Argument:**
+        **ARGUMENTS**
         f
-            A h5.File object to write the trajectory to.
+            An h5.File object to write the trajectory to.
         
-        **Optional arguments:**
+        **OPTIONAL ARGUMENTS**
         start
             The first iteration at which this hook should be called.
         step
@@ -31,9 +34,9 @@ class BaseHDF5Writer(Hook):
 
     
     def __call__(self, iterative):
-        if 'trajectory' not in self.f:
+        if "trajectory" not in self.f:
             self.init_trajectory(iterative)
-        tgrp = self.f['trajectory']
+        tgrp = self.f["trajectory"]
         # Determine the row to write the current iteration to. If a previous
         # iterations was not completely written, then the last row is reused.
         row = min(tgrp[key].shape[0] for key in iterative.state if key in tgrp.keys())
@@ -52,7 +55,7 @@ class BaseHDF5Writer(Hook):
         system.to_hdf5(grp)
 
     def init_trajectory(self, iterative):
-        tgrp = self.f.create_group('trajectory')
+        tgrp = self.f.create_group("trajectory")
         for key, item in iterative.state.items():
             if len(item.shape) > 0 and min(item.shape) == 0:
                 continue
@@ -68,7 +71,7 @@ class BaseHDF5Writer(Hook):
 class HDF5Writer(BaseHDF5Writer):
     
     def __call__(self, iterative):
-        if 'system' not in self.f:
+        if "system" not in self.f:
             self.dump_system(iterative.mmf.system, self.f)
         BaseHDF5Writer.__call__(self, iterative)
 
@@ -78,11 +81,11 @@ class XYZWriter(Hook):
 
     def __init__(self, fn_xyz, select=None, start=0, step=1):
         """
-        **Argument:**
+        **ARGUMENTS**
         fn_xyz
             A filename to write the XYZ trajectory to.
 
-        **Optional arguments:**
+        **OPTIONAL ARGUMENTS**
         select
             A list of node indexes that should be written to the trajectory
             output. If not given, all nodes are included.
@@ -111,7 +114,7 @@ class XYZWriter(Hook):
             else:
                 symbols = [periodic[55].symbol for _ in self.select] # represent nodes with cesium atoms
             self.xyz_writer = XYZWriter(self.fn_xyz, symbols)
-        title = '%7i E_pot = %.10f     ' % (iterative.counter, iterative.epot)
+        title = "%7i E_pot = %.10f     " % (iterative.counter, iterative.epot)
         if self.select is None:
             pos = iterative.mmf.system.pos
         else:

@@ -28,7 +28,8 @@ class MicroMechanicalType(object):
 
     def __init__(self, material, mass, topology=None, temperature_fit=None):
         """
-        This class holds the characteristics of a type of nanocell in the micromechanical model.
+        This class holds the characteristics of a nanocell type in the micromechanical model.
+        Its parameters include:
         """
         self.material = material
         if topology is None:
@@ -47,7 +48,7 @@ class MicroMechanicalType(object):
             self.temperature_fit = temperature_fit
             
             
-    def add_stable_phase(self, cell, elasticity, temperature=None, pressure=None, free_energy=None):
+    def add_state(self, cell, elasticity, temperature=None, pressure=None, free_energy=None):
         
         self.cell.append(cell)
         self.elasticity.append(elasticity)
@@ -60,7 +61,7 @@ class MicroMechanicalType(object):
     def to_pkl(self, output_fn):
         """ 
         Create a pickle file which contains the elastic properties of one type of nanocell.
-        One type can have multiple stable phases.
+        The properties of the type, as they first appear in a simulation, are always the first.
         """
         output = {}
 
@@ -153,7 +154,7 @@ class SimulationProperties(object):
     
     def __init__(self, input_fn, time_step=0.5*femtosecond):
         """
-        Get the properties of an MD simulation from its HDF5 file.
+        Collect the properties of an MD simulation from its HDF5 file.
         """
         if input_fn.endswith(".h5"):
             with h5py.File(input_fn, mode = 'r') as h5f:
@@ -202,12 +203,12 @@ def main():
     sim2 = SimulationProperties("output_reo_0MPa.h5")
     
     cell_type1 = MicroMechanicalType(material="UiO-66(Zr)", mass=sim1.mass, topology="fcu")
-    cell_type1.add_stable_phase(cell=sim1.cell, elasticity=sim1.elasticity, 
+    cell_type1.add_state(cell=sim1.cell, elasticity=sim1.elasticity, 
                                 temperature=sim1.temperature, pressure=sim1.pressure)
     cell_type1.to_pkl("type_fcu_TEST.pickle")
 
     cell_type2 = MicroMechanicalType(material="UiO-66(Zr)", mass=sim2.mass, topology="reo")
-    cell_type2.add_stable_phase(cell=sim2.cell, elasticity=sim2.elasticity, 
+    cell_type2.add_state(cell=sim2.cell, elasticity=sim2.elasticity, 
                                 temperature=sim2.temperature, pressure=sim2.pressure)
     cell_type2.to_pkl("type_reo_TEST.pickle")
     """
@@ -226,7 +227,7 @@ def main():
     elasticity_tensor = tensor.voigt_inv(elasticity_matrix, mode="elasticity")
     
     cell_type = MicroMechanicalType(material="TEST_", mass=mass, topology="test_")
-    cell_type.add_stable_phase(cell=cell, elasticity=elasticity_tensor)
+    cell_type.add_state(cell=cell, elasticity=elasticity_tensor)
     cell_type.to_pkl("type_TEST_.pickle")
 
 if __name__ == '__main__':
