@@ -8,7 +8,7 @@ import numpy as np
 
 __all__ = ["build_output", "build_input"]
 
-def build_output(data, colors_types, grid):
+def build_output(data, colors_types, grid, pbc):
         """
         **Input**
         data
@@ -26,16 +26,18 @@ def build_output(data, colors_types, grid):
             Example: input_grid[kappa, lambda, mu] = 0 is an empty cell at (kappa, lambda, mu).
                      input_grid[kappa', lambda', mu'] = 1 is an fcu cell at (kappa', lambda', mu').
 
+        pbc
+            [True, True, True]
+
         **Output**
         output
             A dictionary which is ready to be stored as a .chk file.
             It contains node positions, reference node positions...
         """
-        pbc = True # periodic boundary conditions
-
         output = {}
         
         for key, color_type in colors_types.items():
+            print(key)
             name = color_type[1]
             color = color_type[0]
             if name in data.keys():
@@ -44,8 +46,10 @@ def build_output(data, colors_types, grid):
                     output["type" + str(key) + "/" + str(key_)] = value
             output["type" + str(key) + "/name"] = name
             output["type" + str(key) + "/color"] = color
-        
+            
+        print(output["type0/name"])
         output["grid"] = grid
+        output["pbc"] = pbc
         
         nx, ny, nz = np.shape(grid)
         
@@ -80,16 +84,10 @@ def build_output(data, colors_types, grid):
         # Get dimensions of majority type cell.
         dx, dy, dz = np.diag(maj_type_data["cell"][0])
         
-        if pbc:
-            nx_nodes = nx
-            ny_nodes = ny
-            nz_nodes = nz
-        else:
-            nx_nodes = nx + 1
-            ny_nodes = ny + 1
-            nz_nodes = nz + 1
-        
-        
+        nx_nodes = nx + 1 - pbc[0]
+        ny_nodes = ny + 1 - pbc[1]
+        nz_nodes = nz + 1 - pbc[2]
+
         # Avoid nested for-loops by keeping the coordinates of the nodes in a 1D list.
         nodes_idxs = []
         for k in range(nx_nodes):
@@ -99,11 +97,21 @@ def build_output(data, colors_types, grid):
                         kappa = k + neighbor_cell[0]
                         lambda_ = l + neighbor_cell[1]
                         mu = m + neighbor_cell[2]
+                        if (not pbc[0]) and (kappa < 0 or kappa >= nx):
+                            continue
+                        if (not pbc[1]) and (lambda_ < 0 or lambda_ >= ny):
+                            continue
+                        if (not pbc[2]) and (mu < 0 or mu >= nz):
+                            continue
                         if grid[(kappa, lambda_, mu)] != 0:
                             nodes_idxs.append((k, l, m))
                             break
         nnodes = len(nodes_idxs)
-        
+
+        boundary_nodes = []
+        for node_index, (k, l, m) in enumerate(nodes_idxs):
+            if k % nx_nodes == 0 or l % ny_nodes == 0 or m % nz_nodes == 0:
+                boundary_nodes.append(node_index)
         
         # Avoid nested for-loops by keeping the coordinates of the cells in a 1D list.
         cells_idxs = []
@@ -124,8 +132,6 @@ def build_output(data, colors_types, grid):
         # Initialize masses of the nodes.
         masses = np.zeros(nnodes)
         
-        cell_ref = np.zeros((ncells, 3, 3))
-
         surrounding_nodes = [[] for _ in range(ncells)]
         surrounding_cells = [[] for _ in range(nnodes)]
         
@@ -140,9 +146,6 @@ def build_output(data, colors_types, grid):
             color, type_ = colors_types[index_type]
             data_type = data[type_]
             
-            cell_ref[cell_index, :, :] = np.array([[dx, 0.0, 0.0],
-                                                   [0.0, dy, 0.0],
-                                                   [0.0, 0.0, dz]])
             cell_matrices.append(data_type["cell"])
             inv_cell_matrices.append([np.linalg.inv(cell) for cell in data_type["cell"]])
             elasticity_tensors.append(data_type["elasticity"])      
@@ -165,7 +168,6 @@ def build_output(data, colors_types, grid):
         
         # Initialize the positions of the nodes.
         pos = np.zeros((nnodes, 3))
-        pos_ref = np.zeros((nnodes, 3))
 
         # Iterate over each node.
         for node_index, node_idxs in enumerate(nodes_idxs):
@@ -177,12 +179,21 @@ def build_output(data, colors_types, grid):
             
             # The initial positions of the nodes are those of a rectangular grid.
             pos[node_index, :] += np.array([k*dx, l*dy, m*dz])
-            pos_ref[node_index, :] += np.array([k*dx, l*dy, m*dz])
         
-
+        # Build the rvecs array, which has either (0, 3) or (1, 3) or (2, 3) or (3, 3) shape.
+        rvecs = []
+        if pbc[0]:
+            rvecs.append(np.array([nx*dx, 0.0, 0.0]))
+        if pbc[1]:
+            rvecs.append(np.array([0.0, ny*dy, 0.0]))
+        if pbc[2]:
+            rvecs.append(np.array([0.0, 0.0, nz*dz]))
+        rvecs = np.array(rvecs)
+        if rvecs.size == 0:
+            rvecs = np.zeros((0, 3))
+        
         output["pos"] = pos
-        output["pos_ref"] = pos_ref
-        output["cell_ref"] = cell_ref
+        output["rvecs"] = rvecs
 
         output["equilibrium_cell_matrices"] = cell_matrices
         output["equilibrium_inv_cell_matrices"] = inv_cell_matrices
@@ -190,6 +201,8 @@ def build_output(data, colors_types, grid):
 
         output["surrounding_cells"] = surrounding_cells
         output["surrounding_nodes"] = surrounding_nodes
+
+        output["boundary_nodes"] = boundary_nodes
 
         output["masses"] = masses
         
@@ -202,6 +215,7 @@ def build_input(output):
     colors_types = {}
     
     grid = output["grid"]
+    pbc = output["pbc"]
 
     temp = {}
     for field, value in output.items():
@@ -227,7 +241,7 @@ def build_input(output):
         colors_types[key] = (color, name)
             
     
-    return data, colors_types, grid
+    return data, colors_types, grid, pbc
 
 
             

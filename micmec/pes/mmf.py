@@ -226,6 +226,13 @@ class ForcePartMechanical(ForcePart):
                        
             return np.sum(self.energies)
 
+    def delta(self, i, j):
+        boundary = self.system.boundary_nodes
+        result = self.system.pos[j] - self.system.pos[i]
+        if (i in boundary) and (j in boundary):
+            result = self.system.domain.mic(result)
+        return result
+        
     
     def _compute_cell_properties(self):
         """Compute the cell properties."""
@@ -238,30 +245,36 @@ class ForcePartMechanical(ForcePart):
 
         # Compute the deviations of the nodes from their initial, rectangular positions in the grid.
         # This is a hack to deal with periodic boundary conditions.
-        devs = self.system.pos - self.system.pos_ref
         
         for cell_index in range(self.system.ncells):
             
-            # Store the deviations of the neighboring nodes in an array.
-            node_devs = np.zeros((8, 3))
+            # Store the vertices in an array.
+            vertices = np.zeros((8, 3), int)
+            edges = np.zeros((12, 3), float)
             for neighbor_index, node_index in self.system.surrounding_nodes[cell_index]:
-                node_devs[neighbor_index] = devs[node_index, :]
+                vertices[neighbor_index] = node_index
             
-            xvec = self.system.cell_ref[cell_index, 0].copy()
-            yvec = self.system.cell_ref[cell_index, 1].copy()
-            zvec = self.system.cell_ref[cell_index, 2].copy()
+            edges[0] = self.delta(vertices[0], vertices[1])
+            edges[1] = self.delta(vertices[2], vertices[4])
+            edges[2] = self.delta(vertices[3], vertices[5])
+            edges[3] = self.delta(vertices[6], vertices[7])
             
-            xvec += 0.25*(-node_devs[0] + node_devs[1] - node_devs[2] + node_devs[4] \
-                        - node_devs[3] + node_devs[5] - node_devs[6] + node_devs[7])
+            edges[4] = self.delta(vertices[0], vertices[2])
+            edges[5] = self.delta(vertices[1], vertices[4])
+            edges[6] = self.delta(vertices[3], vertices[6])
+            edges[7] = self.delta(vertices[5], vertices[7])
+            
+            edges[8] = self.delta(vertices[0], vertices[3])
+            edges[9] = self.delta(vertices[2], vertices[6])
+            edges[10] = self.delta(vertices[1], vertices[5])
+            edges[11] = self.delta(vertices[4], vertices[7])          
 
-            yvec += 0.25*(-node_devs[0] + node_devs[2] - node_devs[1] + node_devs[4] \
-                        - node_devs[3] + node_devs[6] - node_devs[5] + node_devs[7])
-
-            zvec += 0.25*(-node_devs[0] + node_devs[3] - node_devs[2] + node_devs[6] \
-                        - node_devs[1] + node_devs[5] - node_devs[4] + node_devs[7])
+            xvec = np.mean(edges[0:4], axis=0)
+            yvec = np.mean(edges[4:8], axis=0)
+            zvec = np.mean(edges[8:12], axis=0)
             
             # Construct the cell matrix.
-            cell = np.array([xvec.copy(), yvec.copy(), zvec.copy()])
+            cell = np.array([xvec, yvec, zvec])
 
             # Initialize a strain tensor.
             strain = np.zeros((3, 3))

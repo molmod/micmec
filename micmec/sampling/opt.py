@@ -65,6 +65,7 @@ class BaseOptimizer(Iterative):
             A specification of the degrees of freedom. The convergence
             criteria are also part of this argument. This must be a DOF
             instance.
+        
         **OPTIONAL ARGUMENTS**
         state
             A list with state items. State items are simple objects
@@ -77,7 +78,7 @@ class BaseOptimizer(Iterative):
             The counter value associated with the initial state.
         """
         self.dof = dof
-        Iterative.__init__(self, dof.ff, state, hooks, counter0)
+        Iterative.__init__(self, dof.mmf, state, hooks, counter0)
 
     def _add_default_hooks(self):
         if not any(isinstance(hook, OptScreenLog) for hook in self.hooks):
@@ -405,3 +406,5 @@ def solve_trust_radius(grad, evals, radius, threshold=1e-5):
     # Best guess.
     ridge = c[0]
     return compute_step(ridge)
+
+

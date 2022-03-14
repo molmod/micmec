@@ -10,6 +10,7 @@ import numpy as np
 import pickle as pkl
 
 from micmec.log import log, timer
+from micmec.pes.ext import Domain
 
 from molmod.io.chk import *
 
@@ -18,35 +19,16 @@ __all__ = ["System"]
 
 class System(object):
     
-    def __init__(self, pos, pos_ref, cell_ref, masses,
+    def __init__(self, pos, masses, rvecs,
                     equilibrium_cell_matrices, 
                     equilibrium_inv_cell_matrices,
                     elasticity_tensors,
                     free_energies, effective_temps,
                     surrounding_cells, surrounding_nodes,
                     grid=None, types=None):
-        """
-        **ARGUMENTS**
-        input_data
-            A dictionary with the names of the micromechanical nanocell types as keys. The corresponding values are
-            dictionaries which contain all of the relevant data about the cell type.
-            Example: input_data["fcu"] = {"elasticity": [np.array([[[[...]]]])], "cell": ...}
-
-        input_colors_types
-            A dictionary with integer keys. These integers appear in the input_grid.
-            The values corresponding to the keys are tuples of a color and the name of a type.
-            Example: input_colors_types[1] = ("#0000FF", "fcu")
-
-        input_grid
-            An array containing integers, which refer to the types of micromechanical nanocells.
-            Example: input_grid[kappa, lambda, mu] = 0 is an empty cell at (kappa, lambda, mu).
-                     input_grid[kappa", lambda", mu"] = 1 is an fcu cell at (kappa", lambda", mu").
-        """
         
         # Initialize system variables.
         self.masses = masses
-        self.pos_ref = pos_ref
-        self.cell_ref = cell_ref
         self.pos = pos
         self.domain = Domain(rvecs)
 
@@ -59,6 +41,8 @@ class System(object):
 
         self.surrounding_cells = surrounding_cells
         self.surrounding_nodes = surrounding_nodes
+
+        self.boundary_nodes = boundary_nodes
 
         self.nnodes = len(self.surrounding_cells) 
         self.ncells = len(self.surrounding_nodes)
@@ -81,10 +65,12 @@ class System(object):
             kwargs = {}
             if fn.endswith(".chk"):
 
-                allowed_keys = ["pos", "pos_ref", "cell_ref", "masses", 
+                allowed_keys = ["pos", "masses", "rvecs",
                                 "equilibrium_cell_matrices", 
                                 "equilibrium_inv_cell_matrices",
                                 "elasticity_tensors",
+                                "free_energies",
+                                "effective_temps",
                                 "surrounding_cells", "surrounding_nodes"]
                 
                 for key, value in load_chk(fn).items():

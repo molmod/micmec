@@ -19,18 +19,15 @@ import tensor
 from molmod.units import *
 from molmod.constants import *
 
-__all__ = ["MicroMechanicalType", "SimulationProperties", "ElasticProperties"]
+__all__ = ["Nanocell", "SimulationProperties", "ElasticProperties"]
 
 gigapascal = (10**9)*pascal
 
 
-class MicroMechanicalType(object):
+class Nanocell(object):
 
-    def __init__(self, material, mass, topology=None, temperature_fit=None):
-        """
-        This class holds the characteristics of a nanocell type in the micromechanical model.
-        Its parameters include:
-        """
+    def __init__(self, name, mass, topology=None, effective_temp=None):
+        """This class holds the characteristics of a nanocell in the micromechanical model."""
         self.material = material
         if topology is None:
             self.topology = "UNKNOWN"
@@ -39,23 +36,21 @@ class MicroMechanicalType(object):
         self.mass = mass
         self.elasticity = []
         self.cell = []
-        self.temperature = []
-        self.pressure = []
         self.free_energy = []
-        if temperature_fit is None:
-            self.temperature_fit = 300*kelvin
+        if effective_temp is None:
+            self.effective_temp = 300*kelvin
         else:
-            self.temperature_fit = temperature_fit
+            self.effective_temp = effective_temp
             
             
-    def add_state(self, cell, elasticity, temperature=None, pressure=None, free_energy=None):
+    def add_state(self, cell, elasticity, free_energy=None, effective_temp=None):
         
         self.cell.append(cell)
         self.elasticity.append(elasticity)
-        self.pressure.append(pressure)
-        self.temperature.append(temperature)
         if free_energy is None:
             self.free_energy.append(0.0)
+        else:
+            self.free_energy.append(free_energy)
         
     
     def to_pkl(self, output_fn):
@@ -71,10 +66,8 @@ class MicroMechanicalType(object):
         output["mass"] = self.mass
         output["cell"] = self.cell
         output["elasticity"] = self.elasticity
-        output["temperature"] = self.temperature
-        output["pressure"] = self.pressure
         output["free_energy"] = self.free_energy
-        output["temperature_fit"] = self.temperature_fit
+        output["effective_temp"] = self.effective_temp
 
         with open(output_fn, "wb") as pklf:
             pkl.dump(output, pklf)
@@ -198,20 +191,6 @@ class SimulationProperties(object):
 
 
 def main():
-    """
-    sim1 = SimulationProperties("output_fcu_0MPa.h5")
-    sim2 = SimulationProperties("output_reo_0MPa.h5")
-    
-    cell_type1 = MicroMechanicalType(material="UiO-66(Zr)", mass=sim1.mass, topology="fcu")
-    cell_type1.add_state(cell=sim1.cell, elasticity=sim1.elasticity, 
-                                temperature=sim1.temperature, pressure=sim1.pressure)
-    cell_type1.to_pkl("type_fcu_TEST.pickle")
-
-    cell_type2 = MicroMechanicalType(material="UiO-66(Zr)", mass=sim2.mass, topology="reo")
-    cell_type2.add_state(cell=sim2.cell, elasticity=sim2.elasticity, 
-                                temperature=sim2.temperature, pressure=sim2.pressure)
-    cell_type2.to_pkl("type_reo_TEST.pickle")
-    """
     # Define a toy system with very easy parameters in atomic units.
     mass = 10000000
     unit_cell_length = 10.0*angstrom
@@ -226,9 +205,9 @@ def main():
                                   [ 0.0,  0.0,  0.0,  0.0,  0.0, 10.0]])*gigapascal
     elasticity_tensor = tensor.voigt_inv(elasticity_matrix, mode="elasticity")
     
-    cell_type = MicroMechanicalType(material="TEST_", mass=mass, topology="test_")
-    cell_type.add_state(cell=cell, elasticity=elasticity_tensor)
-    cell_type.to_pkl("type_TEST_.pickle")
+    test_cell = Nanocell(material="TEST_", mass=mass, topology="test_")
+    test_cell.add_state(cell=cell, elasticity=elasticity_tensor)
+    test_cell.to_pkl("type_TEST_.pickle")
 
 if __name__ == '__main__':
     main()

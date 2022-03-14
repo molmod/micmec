@@ -75,12 +75,12 @@ class Application(tk.Tk):
         homepage = self.frames[self.pages[0]]
         filename = filedialog.askopenfilename(
             title="Select Data",
-            initialdir="/",
+            initialdir="/home/joachim/Scripts/micmec",
             filetypes=(("CHECKPOINT FILES", "*.chk"), 
                        ("ALL FILES", "*.*"))
         )
         input_all = load_chk(filename)
-        data, colors_types, grid = build_input(input_all)
+        data, colors_types, grid, pbc = build_input(input_all)
         homepage.data_widget.data = data
         homepage.data_widget.update_data()
         homepage.builder_widget.colors_types = colors_types
@@ -94,18 +94,26 @@ class Application(tk.Tk):
         homepage.builder_widget.buttons.spinbox_nx.set(nx)
         homepage.builder_widget.buttons.spinbox_ny.set(ny)
         homepage.builder_widget.buttons.spinbox_nz.set(nz)
+        homepage.builder_widget.buttons.pbc_x.set(pbc[0])
+        homepage.builder_widget.buttons.pbc_y.set(pbc[1])
+        homepage.builder_widget.buttons.pbc_z.set(pbc[2])
         homepage.builder_widget.update_colors_types()
     
 
     def event_save(self):
         """ Save the current build to a .chk file."""
         homepage = self.frames[self.pages[0]]
+        pbc = []
+        pbc.append(homepage.builder_widget.buttons.pbc_x.get())
+        pbc.append(homepage.builder_widget.buttons.pbc_y.get())
+        pbc.append(homepage.builder_widget.buttons.pbc_z.get())
         output1 = homepage.data_widget.data
         output2 = homepage.builder_widget.colors_types
         output3 = homepage.builder_widget.grid
-        output_all = build_output(output1, output2, output3)
+        output4 = pbc
+        output_all = build_output(output1, output2, output3, output4)
         filename = filedialog.asksaveasfilename(
-            initialdir="/", 
+            initialdir="/home/joachim/Scripts/micmec", 
             title="Save File",
             filetypes=(("CHECKPOINT FILES", "*.chk"), 
                        ("ALL FILES", "*.*"))
@@ -268,7 +276,7 @@ class DataWidgetButtons(ttk.Frame):
         
         filepath = filedialog.askopenfilename(
             title="Select Data",
-            initialdir="/",
+            initialdir="/home/joachim/Scripts/micmec",
             filetypes=filetypes)
         
         with open(filepath, "rb") as loadfile:
@@ -300,8 +308,8 @@ class DataWidgetTreeview(ttk.Frame):
         "topology", 
         "cell", 
         "elasticity", 
-        "pressure", 
-        "temperature"
+        "free_energy",
+        "effective_temp"
     ]
     
     def __init__(self, widget):
@@ -508,13 +516,13 @@ class BuilderWidgetButtons(ttk.Frame):
                                         command=self.update_nz, width=5)
         
         # Add the checkbuttons and spinboxes to the layout.
-        tk.Label(self, text="Nk =").pack(side="left")
+        tk.Label(self, text="nx =").pack(side="left")
         self.spinbox_nx.pack(side="left", padx=5, pady=5)
         self.check_x.pack(side="left")
-        tk.Label(self, text="  Nl =").pack(side="left")
+        tk.Label(self, text="  ny =").pack(side="left")
         self.spinbox_ny.pack(side="left", padx=5, pady=5)
         self.check_y.pack(side="left")
-        tk.Label(self, text="  Nm =").pack(side="left")
+        tk.Label(self, text="  nz =").pack(side="left")
         self.spinbox_nz.pack(side="left", padx=5, pady=5)
         self.check_z.pack(side="left")
         
@@ -688,41 +696,9 @@ class BuilderWidgetCanvas(tk.Canvas):
                 self.itemconfigure(self.find_withtag(index_tag)[l0], fill=color)
 
 
-def stylename_elements_options(stylename):
-    """Function to expose the options of every element associated to a widget
-       stylename."""
-    try:
-        # Get widget elements
-        style = ttk.Style()
-        layout = str(style.layout(stylename))
-        print("Stylename = {}".format(stylename))
-        print("Layout    = {}".format(layout))
-        elements=[]
-        for n, x in enumerate(layout):
-            if x=="(":
-                element=""
-                for y in layout[n+2:]:
-                    if y != ",":
-                        element=element+str(y)
-                    else:
-                        elements.append(element[:-1])
-                        break
-        print("\nElement(s) = {}\n".format(elements))
-
-        # Get options of widget elements
-        for element in elements:
-            print("{0:30} options: {1}".format(
-                element, style.element_options(element)))
-
-    except tk.TclError:
-        print("_tkinter.TclError: ... in function"
-              "widget_elements_options({0}) is not a regonised stylename."
-              .format(stylename))
-
 
 if __name__ == "__main__":
     app = Application()
     app.mainloop()
-    #stylename_elements_options("my.TCheckbutton")
 
 
