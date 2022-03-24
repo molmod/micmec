@@ -6,8 +6,8 @@
 
 """Trajectory writers."""
 
-from micmec.sampling.iterative import Hook
-from micmec.log import log, timer
+from .iterative import Hook
+from ..log import log, timer
 
 __all__ = [
     "HDF5Writer", 

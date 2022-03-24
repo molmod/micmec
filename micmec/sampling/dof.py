@@ -11,7 +11,7 @@ import numpy as np
 
 from molmod.minimizer import check_delta
 
-from micmec.log import log
+from ..log import log
 
 
 __all__ = [

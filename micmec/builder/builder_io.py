@@ -37,7 +37,6 @@ def build_output(data, colors_types, grid, pbc):
         output = {}
         
         for key, color_type in colors_types.items():
-            print(key)
             name = color_type[1]
             color = color_type[0]
             if name in data.keys():
@@ -47,7 +46,6 @@ def build_output(data, colors_types, grid, pbc):
             output["type" + str(key) + "/name"] = name
             output["type" + str(key) + "/color"] = color
             
-        print(output["type0/name"])
         output["grid"] = grid
         output["pbc"] = pbc
         
@@ -110,7 +108,10 @@ def build_output(data, colors_types, grid, pbc):
 
         boundary_nodes = []
         for node_index, (k, l, m) in enumerate(nodes_idxs):
-            if k % nx_nodes == 0 or l % ny_nodes == 0 or m % nz_nodes == 0:
+            bx = (k == 0 or k == nx_nodes - 1)
+            by = (l == 0 or l == ny_nodes - 1)
+            bz = (m == 0 or m == nz_nodes - 1)
+            if bx or by or bz:
                 boundary_nodes.append(node_index)
         
         # Avoid nested for-loops by keeping the coordinates of the cells in a 1D list.
@@ -128,12 +129,14 @@ def build_output(data, colors_types, grid, pbc):
         cell_matrices = []
         inv_cell_matrices = []
         elasticity_tensors = []
+        free_energies = []
+        effective_temps = []
 
         # Initialize masses of the nodes.
         masses = np.zeros(nnodes)
         
-        surrounding_nodes = [[] for _ in range(ncells)]
-        surrounding_cells = [[] for _ in range(nnodes)]
+        surrounding_nodes = -np.ones((ncells, 8), dtype=int)
+        surrounding_cells = -np.ones((nnodes, 8), dtype=int)
         
         # Iterate over each cell.
         for cell_index, cell_idxs in enumerate(cells_idxs):
@@ -148,7 +151,9 @@ def build_output(data, colors_types, grid, pbc):
             
             cell_matrices.append(data_type["cell"])
             inv_cell_matrices.append([np.linalg.inv(cell) for cell in data_type["cell"]])
-            elasticity_tensors.append(data_type["elasticity"])      
+            elasticity_tensors.append(data_type["elasticity"])
+            free_energies.append(data_type["free_energy"]) 
+            effective_temps.append(data_type["effective_temp"])
 
             # Iterate over the eight neighboring nodes of the cell.
             for neighbor_index, neighbor_node in enumerate(neighbor_nodes):
@@ -161,8 +166,8 @@ def build_output(data, colors_types, grid, pbc):
                 # Go to the index of node (k, l, m).
                 for node_index, node_idxs in enumerate(nodes_idxs):
                     if k == node_idxs[0] and l == node_idxs[1] and m == node_idxs[2]:
-                        surrounding_nodes[cell_index].append((neighbor_index, node_index))
-                        surrounding_cells[node_index].append((neighbor_index, cell_index))
+                        surrounding_nodes[cell_index, neighbor_index] = node_index
+                        surrounding_cells[node_index, neighbor_index] = cell_index
                         masses[node_index] += 0.125*data_type["mass"]
                         break 
         
@@ -198,6 +203,9 @@ def build_output(data, colors_types, grid, pbc):
         output["equilibrium_cell_matrices"] = cell_matrices
         output["equilibrium_inv_cell_matrices"] = inv_cell_matrices
         output["elasticity_tensors"] = elasticity_tensors
+    
+        output["free_energies"] = free_energies
+        output["effective_temps"] = effective_temps
 
         output["surrounding_cells"] = surrounding_cells
         output["surrounding_nodes"] = surrounding_nodes

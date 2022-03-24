@@ -14,7 +14,7 @@ import h5py
 import yaff
 import sys
 
-import tensor
+import micmec.analysis.tensor as tensor
 
 from molmod.units import *
 from molmod.constants import *
@@ -26,7 +26,7 @@ gigapascal = (10**9)*pascal
 
 class Nanocell(object):
 
-    def __init__(self, name, mass, topology=None, effective_temp=None):
+    def __init__(self, material, mass, topology=None, effective_temp=None):
         """This class holds the characteristics of a nanocell in the micromechanical model."""
         self.material = material
         if topology is None:
@@ -43,7 +43,7 @@ class Nanocell(object):
             self.effective_temp = effective_temp
             
             
-    def add_state(self, cell, elasticity, free_energy=None, effective_temp=None):
+    def add_state(self, cell, elasticity, free_energy=None):
         
         self.cell.append(cell)
         self.elasticity.append(elasticity)
@@ -194,9 +194,12 @@ def main():
     # Define a toy system with very easy parameters in atomic units.
     mass = 10000000
     unit_cell_length = 10.0*angstrom
-    cell = np.array([[unit_cell_length, 0.0, 0.0],
-                     [0.0, unit_cell_length, 0.0],
-                     [0.0, 0.0, unit_cell_length]])
+    cell_0 = np.array([[unit_cell_length, 0.0, 0.0],
+                        [0.0, unit_cell_length, 0.0],
+                        [0.0, 0.0, unit_cell_length]])
+    cell_1 = np.array([[0.5*unit_cell_length, 0.0, 0.0],
+                        [0.0, 2.0*unit_cell_length, 0.0],
+                        [0.0, 0.0, 2.0*unit_cell_length]])
     elasticity_matrix = np.array([[20.0, 10.0, 10.0,  0.0,  0.0,  0.0],
                                   [10.0, 20.0, 10.0,  0.0,  0.0,  0.0],
                                   [10.0, 10.0, 20.0,  0.0,  0.0,  0.0],
@@ -205,9 +208,13 @@ def main():
                                   [ 0.0,  0.0,  0.0,  0.0,  0.0, 10.0]])*gigapascal
     elasticity_tensor = tensor.voigt_inv(elasticity_matrix, mode="elasticity")
     
-    test_cell = Nanocell(material="TEST_", mass=mass, topology="test_")
-    test_cell.add_state(cell=cell, elasticity=elasticity_tensor)
-    test_cell.to_pkl("type_TEST_.pickle")
+    test_cell_0 = Nanocell(material="new_test_0", mass=mass, topology="test")
+    test_cell_0.add_state(cell=cell_0, elasticity=elasticity_tensor)
+    test_cell_0.to_pkl("new_test_0.pickle")
+    
+    test_cell_1 = Nanocell(material="new_test_1", mass=mass, topology="test")
+    test_cell_1.add_state(cell=cell_1, elasticity=elasticity_tensor)
+    test_cell_1.to_pkl("new_test_1.pickle")
 
 if __name__ == '__main__':
     main()

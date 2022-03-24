@@ -4,11 +4,11 @@ import numpy as np
 
 from molmod import boltzmann, femtosecond
 
-from micmec.log import log
-from micmec.sampling.iterative import Iterative, StateItem
-from micmec.sampling.utils import get_random_vel, clean_momenta, \
+from ..log import log
+from .iterative import Iterative, StateItem
+from .utils import get_random_vel, clean_momenta, \
     get_ndof_internal_md, stabilized_cholesky_decomp
-from micmec.sampling.verlet import VerletHook
+from .verlet import VerletHook
 
 
 __all__ = [
@@ -57,7 +57,7 @@ class AndersenThermostat(VerletHook):
 
     def init(self, iterative):
         # It is mandatory to zero the external momenta.
-        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
 
     def pre(self, iterative, G1_add = None):
         # Andersen thermostat step before usual Verlet hook, since it largely affects the velocities.
@@ -69,7 +69,7 @@ class AndersenThermostat(VerletHook):
         else:
             iterative.vel[self.select] = get_random_vel(self.temp, False, iterative.masses, self.select)
         # Zero any external momenta after choosing new velocities.
-        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # Update the kinetic energy and the reference for the conserved quantity.
         ekin_after = iterative._compute_ekin()
         self.econs_correction += ekin_before - ekin_after
@@ -111,9 +111,9 @@ class BerendsenThermostat(VerletHook):
     def init(self, iterative):
         if not self.restart:
             # It is mandatory to zero the external momenta.
-            clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+            clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.cell.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.domain.nvec)
 
     def pre(self, iterative, G1_add = None):
         ekin = iterative.ekin
@@ -153,7 +153,7 @@ class LangevinThermostat(VerletHook):
 
     def init(self, iterative):
         # It is mandatory to zero the external momenta.
-        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
 
     def pre(self, iterative, G1_add = None):
         ekin0 = iterative.ekin
@@ -205,9 +205,9 @@ class CSVRThermostat(VerletHook):
 
     def init(self, iterative):
         # It is mandatory to zero the external momenta.
-        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.cell.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.domain.nvec)
         self.kin = 0.5*iterative.ndof*boltzmann*self.temp
 
     def pre(self, iterative, G1_add = None):
@@ -261,7 +261,7 @@ class GLEThermostat(VerletHook):
 
     def init(self, iterative):
         # It is mandatory to zero the external momenta.
-        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+        clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # Initialize the additional momenta.
         self.s = 0.5*boltzmann*self.temp*np.random.normal(size=(self.ns, iterative.pos.size))
         # Determine the update matrices.
@@ -421,10 +421,10 @@ class NHCThermostat(VerletHook):
     def init(self, iterative):
         if not self.restart:
             # It is mandatory to zero the external momenta.
-            clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.cell)
+            clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # If needed, determine the number of _internal_ degrees of freedom.
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.cell.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.domain.nvec)
         # Configure the chain.
         self.chain.timestep = iterative.timestep
         self.chain.set_ndof(iterative.ndof)

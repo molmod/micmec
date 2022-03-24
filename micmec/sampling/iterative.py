@@ -6,7 +6,7 @@
 
 import numpy as np
 
-from micmec.log import log, timer
+from ..log import log, timer
 
 from molmod.units import *
 

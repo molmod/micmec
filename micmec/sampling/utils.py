@@ -130,6 +130,29 @@ def inertia_tensor(pos, masses):
     return np.identity(3)*(masses.reshape(-1,1)*pos**2).sum() - np.dot(pos.T, masses.reshape(-1,1)*pos)
 
 
+def angular_moment(pos, vel, masses):
+    """
+    Compute the angular moment of a set of point particles.
+        
+    **ARGUMENTS**
+    pos
+        An (N, 3) array with atomic positions.
+    vel
+        An (N, 3) array with atomic velocities.
+    masses
+        An (N,) array with atomic masses.
+        
+    **RETURNS** 
+    A (3,) array with the angular momentum vector.
+    """
+    lin_moms = masses.reshape(-1,1)*vel
+    ang_mom = np.zeros(3, float)
+    ang_mom[0] = np.sum(pos[:,1]*lin_moms[:,2] - pos[:,2]*lin_moms[:,1])
+    ang_mom[1] = np.sum(pos[:,2]*lin_moms[:,0] - pos[:,0]*lin_moms[:,2])
+    ang_mom[2] = np.sum(pos[:,0]*lin_moms[:,1] - pos[:,1]*lin_moms[:,0])
+    return ang_mom
+
+
 def angular_velocity(amom, itens, epsilon=1e-10):
     """
     Derive the angular velocity from the angular moment and the inertia tensor.

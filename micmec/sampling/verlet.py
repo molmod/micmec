@@ -10,10 +10,10 @@ import time
 
 from molmod import boltzmann, kjmol, kelvin
 
-from micmec.sampling.iterative import Iterative, Hook, StateItem, AttributeStateItem, PosStateItem, \
-                                        TemperatureStateItem, VolumeStateItem, CellStateItem,
-from micmec.sampling.utils import get_random_vel
-from micmec.log import log, timer
+from .iterative import Iterative, Hook, StateItem, AttributeStateItem, PosStateItem, \
+                        TemperatureStateItem, VolumeStateItem, DomainStateItem
+from .utils import get_random_vel, clean_momenta
+from ..log import log, timer
 
 
 __all__ = [
@@ -44,11 +44,11 @@ class VerletIntegrator(Iterative):
         AttributeStateItem("vtens"),
         AttributeStateItem("press"),
         VolumeStateItem(),
-        CellStateItem(),
+        DomainStateItem(),
     ]
     log_name = "VERLET"
     
-    def __init__(self, mmff, timestep=None, state=None, hooks=None, vel0=None,
+    def __init__(self, mmf, timestep=None, state=None, hooks=None, vel0=None,
                  temp0=300*kelvin, scalevel0=True, time0=None, ndof=None, counter0=None):
         
         # Assign initial arguments.
@@ -60,28 +60,31 @@ class VerletIntegrator(Iterative):
         if counter0 is None: 
             counter0 = 0
         
-        self.pos = mmff.system.pos.copy() # (N, 3) array
-        self.rvecs = mmff.system.domain.rvecs.copy()
-        self.masses = mmff.system.masses.copy() # (N,) array
+        self.pos = mmf.system.pos.copy() # (N, 3) array
+        self.rvecs = mmf.system.domain.rvecs.copy()
+        self.masses = mmf.system.masses.copy() # (N,) array
         self.timestep = timestep
         self.time = time0
+
+        self._verify_hooks()
         
         # Set random initial velocities, with no center-of-mass velocity.
         if vel0 is None:
             self.vel = get_random_vel(temp0, scalevel0, self.masses)
-            remove_com_moment(self.vel, self.masses)
+            clean_momenta(self.pos, self.vel, self.masses, mmf.system.domain)
         else:
             self.vel = vel0.copy()
         
         # Initialize working arrays.
         self.gpos = np.zeros(self.pos.shape, float)
         self.delta = np.zeros(self.pos.shape, float)
+        self.vtens = np.zeros((3, 3), float)
         
         # Initialize tracking of the error on the conserved quantity.
         self._cons_err_tracker = ConsErrTracker()
         
         # Initialize superclass.
-        Iterative.__init__(self, mmff, state, self.hooks, counter0)
+        Iterative.__init__(self, mmf, state, self.hooks, counter0)
 
 
     def initialize(self):
@@ -89,10 +92,13 @@ class VerletIntegrator(Iterative):
         # Initialize Verlet algorithm.
         self.gpos[:] = 0.0
         self.delta[:] = 0.0
-        self.mmff.update_pos(self.pos)
-        self.epot = self.mmff.compute(self.gpos)
+        self.mmf.update_pos(self.pos)
+        self.epot = self.mmf.compute(self.gpos)
         self.acc = -self.gpos/self.masses.reshape(-1, 1)
         self.posold = self.pos.copy()
+
+        # Allow for specialized initializations by the Verlet hooks.
+        self.call_verlet_hooks("init")
 
         # Configure the number of degrees of freedom if needed.
         if self.ndof is None:
@@ -106,18 +112,22 @@ class VerletIntegrator(Iterative):
     
     def propagate(self):
 
+        self.call_verlet_hooks("pre")
+            
         # Regular verlet step
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
         self.pos += self.timestep*self.vel
-        print(self.pos[6])
-        self.mmff.update_pos(self.pos)
+        self.mmf.update_pos(self.pos)
         self.gpos[:] = 0.0
+        self.vtens[:] = 0.0
         # Compute gradient and potential energy
-        self.epot = self.mmff.compute(self.gpos)
+        self.epot = self.mmf.compute(self.gpos, self.vtens)
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
-        self.ekin = self._compute_ekin()
+        self.ekin = self._compute_ekin()      
+
+        self.call_verlet_hooks("post")
 
         # Calculate the total position change
         self.posnew = self.pos.copy()
@@ -142,11 +152,16 @@ class VerletIntegrator(Iterative):
         self.temp = (self.ekin/self.ndof)*(2.0/boltzmann)
         self.etot = self.ekin + self.epot
         self.econs = self.etot
+
+        for hook in self.hooks:
+            if isinstance(hook, VerletHook):
+                self.econs += hook.econs_correction
+        
         self._cons_err_tracker.update(self.ekin, self.econs)
         self.cons_err = self._cons_err_tracker.get()
 
-        if self.mmff.system.domain.nvec > 0:
-            self.ptens = (np.dot(self.vel.T*self.masses, self.vel) - self.vtens)/self.mmff.system.domain.volume
+        if self.mmf.system.domain.nvec > 0:
+            self.ptens = (np.dot(self.vel.T*self.masses, self.vel) - self.vtens)/self.mmf.system.domain.volume
             self.press = np.trace(self.ptens)/3.0
 
     
@@ -155,7 +170,74 @@ class VerletIntegrator(Iterative):
             log.hline()
     
     def call_verlet_hooks(self, kind):
-        pass
+        from .npt import BerendsenBarostat, TBCombination
+        # In this call, the state items are not updated. The pre and post calls
+        # of the verlet hooks can rely on the specific implementation of the
+        # VerletIntegrator and need not to rely on the generic state item
+        # interface.
+        with timer.section("%s special hooks" % self.log_name):
+            for hook in self.hooks:
+                if isinstance(hook, VerletHook) and hook.expects_call(self.counter):
+                    if kind == "init":
+                        hook.init(self)
+                    elif kind == "pre":
+                        hook.pre(self)
+                    elif kind == "post":
+                        hook.post(self)
+                    else:
+                        raise NotImplementedError
+
+    def _add_default_hooks(self):
+        if not any(isinstance(hook, VerletScreenLog) for hook in self.hooks):
+            self.hooks.append(VerletScreenLog())
+
+
+    def _verify_hooks(self):
+        with log.section("ENSEM"):
+            thermo = None
+            index_thermo = 0
+            baro = None
+            index_baro = 0
+
+            # Look for the presence of a thermostat and/or barostat
+            if hasattr(self.hooks, "__len__"):
+                for index, hook in enumerate(self.hooks):
+                    if hook.method == "thermostat":
+                        thermo = hook
+                        index_thermo = index
+                    elif hook.method == "barostat":
+                        baro = hook
+                        index_baro = index
+            elif self.hooks is not None:
+                if self.hooks.method == "thermostat":
+                    thermo = self.hooks
+                elif self.hooks.method == "barostat":
+                    baro = self.hooks
+
+            # If both are present, delete them and generate TBCombination element
+            if thermo is not None and baro is not None:
+                from .npt import TBCombination
+                if log.do_warning:
+                    log.warn("Both thermostat and barostat are present separately and will be merged")
+                del self.hooks[max(index_thermo, index_thermo)]
+                del self.hooks[min(index_thermo, index_baro)]
+                self.hooks.append(TBCombination(thermo, baro))
+
+            if hasattr(self.hooks, "__len__"):
+                for hook in self.hooks:
+                    if hook.name == "TBCombination":
+                        thermo = hook.thermostat
+                        baro = hook.barostat
+            elif self.hooks is not None:
+                if self.hooks.name == "TBCombination":
+                    thermo = self.hooks.thermostat
+                    baro = self.hooks.barostat
+
+            if log.do_warning:
+                if thermo is not None:
+                    log("Temperature coupling achieved through " + str(thermo.name) + " thermostat")
+                if baro is not None:
+                    log("Pressure coupling achieved through " + str(baro.name) + " barostat")
 
 
 
@@ -181,10 +263,10 @@ class ConsErrTracker(object):
             self.econs_m = econs
         else:
             ekin_tmp = ekin - self.ekin_m
-            self.ekin_m += ekin_tmp/(self.counter+1)
+            self.ekin_m += ekin_tmp/(self.counter + 1)
             self.ekin_s += ekin_tmp*(ekin - self.ekin_m)
             econs_tmp = econs - self.econs_m
-            self.econs_m += econs_tmp/(self.counter+1)
+            self.econs_m += econs_tmp/(self.counter + 1)
             self.econs_s += econs_tmp*(econs - self.econs_m)
         self.counter += 1
 

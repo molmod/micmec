@@ -4,11 +4,11 @@ import numpy as np
 
 from molmod import boltzmann, femtosecond, kjmol, bar, atm
 
-from micmec.log import log, timer
-from micmec.sampling.utils import get_random_vel, domain_symmetrize, get_random_vel_press, \
+from ..log import log, timer
+from .utils import get_random_vel, domain_symmetrize, get_random_vel_press, \
     get_ndof_internal_md, clean_momenta, get_ndof_baro
-from micmec.sampling.verlet import VerletHook
-from micmec.sampling.iterative import StateItem
+from .verlet import VerletHook
+from .iterative import StateItem
 
 
 __all__ = [
@@ -50,7 +50,7 @@ class TBCombination(VerletHook):
         self.thermostat.init(iterative)
         self.barostat.init(iterative)
         # Ensure ndof = 3N if the center of mass movement is not suppressed and ndof is not determined by the user.
-        from yammf.sampling.nvt import LangevinThermostat, GLEThermostat
+        from .nvt import LangevinThermostat, GLEThermostat
         p_cm_fluct = isinstance(self.thermostat, LangevinThermostat) or isinstance(self.thermostat, GLEThermostat) or isinstance(self.barostat, LangevinBarostat)
         if (not set_ndof) and p_cm_fluct:
             iterative.ndof = iterative.pos.size
@@ -61,7 +61,7 @@ class TBCombination(VerletHook):
     def pre(self, iterative):
         # Determine whether the barostat should be called.
         if self.expectscall(iterative, "baro"):
-            from yammf.sampling.nvt import NHCThermostat
+            from .nvt import NHCThermostat
             if isinstance(self.thermostat, NHCThermostat):
                 # In case the barostat is coupled with a NHC thermostat:
                 # v_{xi,1} is needed to update v_g.
@@ -88,7 +88,7 @@ class TBCombination(VerletHook):
             self.thermostat.post(iterative, self.G1_add)
         # Determine whether the barostat should be called.
         if self.expectscall(iterative, "baro"):
-            from yammf.sampling.nvt import NHCThermostat, LangevinThermostat
+            from .nvt import NHCThermostat, LangevinThermostat
             if isinstance(self.thermostat, NHCThermostat):
                 # In case the barostat is coupled with a NHC thermostat:
                 # v_{xi,1} is needed to update v_g.
@@ -114,7 +114,7 @@ class TBCombination(VerletHook):
 
     def verify(self):
         # Returns whether the thermostat and barostat instances are currently supported by Yaff/MicMec.
-        from yammf.sampling.nvt import AndersenThermostat, NHCThermostat, LangevinThermostat, BerendsenThermostat, CSVRThermostat, GLEThermostat
+        from .nvt import AndersenThermostat, NHCThermostat, LangevinThermostat, BerendsenThermostat, CSVRThermostat, GLEThermostat
         thermo_correct = False
         baro_correct = False
         thermo_list = [AndersenThermostat, NHCThermostat, LangevinThermostat, BerendsenThermostat, CSVRThermostat, GLEThermostat]
@@ -422,7 +422,7 @@ class LangevinBarostat(VerletHook):
         # Update the potential energy.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
         # -iL (v_g + Tr(v_g)/ndof) h/2
         if self.anisotropic:
@@ -520,10 +520,10 @@ class MTKBarostat(VerletHook):
             clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # Determine the internal degrees of freedom.
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(len(iterative.mmf.system.numbers), iterative.mmf.system.domain.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.mmf.system.nnodes, iterative.mmf.system.domain.nvec)
         # Determine barostat "mass".
         angfreq = 2*np.pi/self.timecon_press
-        self.mass_press = (iterative.ndof+self.dim**2)*boltzmann*self.temp/angfreq**2
+        self.mass_press = (iterative.ndof + self.dim**2)*boltzmann*self.temp/angfreq**2
         if self.vel_press is None:
             # Define initial barostat velocity.
             self.vel_press = get_random_vel_press(self.mass_press, self.temp)
@@ -540,7 +540,7 @@ class MTKBarostat(VerletHook):
         # after symmetrising the domain tensor.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
     def pre(self, iterative, chainvel0 = None):
         if self.baro_thermo is not None:
@@ -623,7 +623,7 @@ class MTKBarostat(VerletHook):
         # Update the potential energy.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
         # -iL (v_g + Tr(v_g)/ndof) h/2
         if self.anisotropic:
@@ -635,7 +635,7 @@ class MTKBarostat(VerletHook):
             rot_mat = np.dot(np.dot(Eg, Daccg), Eg.T)
             vel_new = np.dot(iterative.vel, rot_mat)
         else:
-            vel_new = np.exp(-((1.0+3.0/iterative.ndof)*self.vel_press)*self.timestep_press/2) * iterative.vel
+            vel_new = np.exp(-((1.0 + 3.0/iterative.ndof)*self.vel_press)*self.timestep_press/2)*iterative.vel
 
         # Update the velocities and the kinetic energy.
         iterative.vel[:] = vel_new
@@ -730,10 +730,10 @@ class PRBarostat(VerletHook):
             clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # Determine the internal degrees of freedom.
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(len(iterative.mmf.system.numbers), iterative.mmf.system.domain.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.mmf.system.nnodes, iterative.mmf.system.domain.nvec)
         # Determine barostat "mass" following W = timecon*np.sqrt(n_part) * m_av
         # n_part = len(iterative.masses)
-        # self.mass_press = self.timecon_press*np.sum(iterative.masses)/np.sqrt(len(iterative.mmf.system.numbers))
+        # self.mass_press = self.timecon_press*np.sum(iterative.masses)/np.sqrt(iterative.mmf.system.nnodes)
         angfreq = 2*np.pi/self.timecon_press
         self.mass_press = (iterative.ndof+self.dim**2)*boltzmann*self.temp/angfreq**2/self.vol0**(2./3)
         if self.vel_press is None:
@@ -752,7 +752,7 @@ class PRBarostat(VerletHook):
         # after symmetrising the domain tensor.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
     def pre(self, iterative, chainvel0 = None):
         if self.baro_thermo is not None:
@@ -839,7 +839,7 @@ class PRBarostat(VerletHook):
         # Update the potential and kinetic energy.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
         iterative.ekin = iterative._compute_ekin()
 
         # Second part of the barostat velocity tensor update.
@@ -925,7 +925,7 @@ class TadmorBarostat(VerletHook):
             clean_momenta(iterative.pos, iterative.vel, iterative.masses, iterative.mmf.system.domain)
         # Determine the internal degrees of freedom.
         if iterative.ndof is None:
-            iterative.ndof = get_ndof_internal_md(len(iterative.mmf.system.numbers), iterative.mmf.system.domain.nvec)
+            iterative.ndof = get_ndof_internal_md(iterative.mmf.system.nnodes, iterative.mmf.system.domain.nvec)
         # Determine barostat "mass".
         angfreq = 2*np.pi/self.timecon_press
         self.mass_press = (iterative.ndof+self.dim**2)*boltzmann*self.temp/angfreq**2
@@ -945,7 +945,7 @@ class TadmorBarostat(VerletHook):
         # after symmetrising the domain tensor.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
     def pre(self, iterative, chainvel0 = None):
         if self.baro_thermo is not None:
@@ -1030,7 +1030,7 @@ class TadmorBarostat(VerletHook):
         # Update the potential energy.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
         # -iL (Tr(v_g)/ndof) h/2
         if self.anisotropic:

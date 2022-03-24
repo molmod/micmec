@@ -10,7 +10,7 @@ import numpy as np
 
 from molmod import boltzmann
 
-from micmec.log import log, timer
+from ..log import log, timer
 
 __all__ = [
     "MicMecForceField", 
@@ -38,7 +38,7 @@ class ForcePart(object):
         self.name = name
         # backup copies of last call to compute:
         self.energy = 0.0
-        self.gpos = np.zeros((system.natom, 3), float)
+        self.gpos = np.zeros((system.nnodes, 3), float)
         self.vtens = np.zeros((3, 3), float)
         self.clear()
 
@@ -147,8 +147,8 @@ class MicMecForceField(ForcePart):
         for part in parts:
             self.add_part(part)
         if log.do_medium:
-            with log.section("MMFFINIT"):
-                log("Micromechanical force field with %i parts:&%s." % (
+            with log.section("FFINIT"):
+                log("Force field with %i parts:&%s." % (
                     len(self.parts), ", ".join(part.name for part in self.parts)
                 ))
 
@@ -230,7 +230,7 @@ class ForcePartMechanical(ForcePart):
         boundary = self.system.boundary_nodes
         result = self.system.pos[j] - self.system.pos[i]
         if (i in boundary) and (j in boundary):
-            result = self.system.domain.mic(result)
+            self.system.domain.mic(result)
         return result
         
     
@@ -239,6 +239,7 @@ class ForcePartMechanical(ForcePart):
         # Initialize empty lists to store the cell matrices and their inverses in.
         self.cell_matrices = []
         self.inv_cell_matrices = [] 
+        self.cell_dets = []
         self.strain_tensors = []
         self.weights = []
         self.energies = []
@@ -249,11 +250,11 @@ class ForcePartMechanical(ForcePart):
         for cell_index in range(self.system.ncells):
             
             # Store the vertices in an array.
-            vertices = np.zeros((8, 3), int)
+            vertices = np.zeros((8,), int)
             edges = np.zeros((12, 3), float)
-            for neighbor_index, node_index in self.system.surrounding_nodes[cell_index]:
+            for neighbor_index, node_index in enumerate(self.system.surrounding_nodes[cell_index]):
                 vertices[neighbor_index] = node_index
-            
+                
             edges[0] = self.delta(vertices[0], vertices[1])
             edges[1] = self.delta(vertices[2], vertices[4])
             edges[2] = self.delta(vertices[3], vertices[5])
@@ -267,15 +268,16 @@ class ForcePartMechanical(ForcePart):
             edges[8] = self.delta(vertices[0], vertices[3])
             edges[9] = self.delta(vertices[2], vertices[6])
             edges[10] = self.delta(vertices[1], vertices[5])
-            edges[11] = self.delta(vertices[4], vertices[7])          
-
+            edges[11] = self.delta(vertices[4], vertices[7])
+            
             xvec = np.mean(edges[0:4], axis=0)
             yvec = np.mean(edges[4:8], axis=0)
             zvec = np.mean(edges[8:12], axis=0)
             
             # Construct the cell matrix.
             cell = np.array([xvec, yvec, zvec])
-
+            cell_det = np.linalg.det(cell)
+            
             # Initialize a strain tensor.
             strain = np.zeros((3, 3))
             cell0_inv_lst = self.system.equilibrium_inv_cell_matrices[cell_index]
@@ -291,18 +293,20 @@ class ForcePartMechanical(ForcePart):
 
             effective_temp = self.system.effective_temps[cell_index]
 
-            weights_cell = []
+            energy_lst = []
             # Iterate over all metastable states.
             for elast, free_energy, strain in zip(elast_lst, free_energy_lst, strain_lst):
                 pot_energy = 0.5*cell_det*np.tensordot(strain, np.tensordot(elast, strain, axes=2), axes=2)
-                weight = np.exp(-(pot_energy + free_energy)/(boltzmann*effective_temp))
-                weights_cell.append(weight)
-            energy_cell = -boltzmann*effective_temp*np.log(np.sum(weights_cell))
+                energy_lst.append(pot_energy + free_energy)
+            energy_lst = np.array(energy_lst)
+            energy_min = np.min(energy_lst)
+            weights_cell = np.exp(-(energy_lst - energy_min)/(boltzmann*effective_temp))
+            energy_cell = energy_min - effective_temp*boltzmann*np.log(np.sum(weights_cell))
 
             # Store the cell matrices, the inverse cell matrices, the determinants and the strain tensors.
-            self.cell_matrices.append(cell))
+            self.cell_matrices.append(cell)
             self.inv_cell_matrices.append(np.linalg.inv(cell))
-            self.cell_dets.append(np.linalg.det(cell))
+            self.cell_dets.append(cell_det)
             self.strain_tensors.append(strain_lst)
             self.energies.append(energy_cell)
             self.weights.append(weights_cell)
@@ -324,7 +328,10 @@ class ForcePartMechanical(ForcePart):
             fz_node = 0.0
 
             # Iterate over each neighboring cell of node (k, l, m).
-            for neighbor_index, cell_index in self.system.surrounding_cells[node_index]:
+            for neighbor_index, cell_index in enumerate(self.system.surrounding_cells[node_index]):
+
+                if cell_index < 0:
+                    continue
 
                 cell = self.cell_matrices[cell_index]
                 cell_inv = self.inv_cell_matrices[cell_index]
@@ -338,7 +345,6 @@ class ForcePartMechanical(ForcePart):
                 weight_lst = self.weights[cell_index]
                 
                 weight_lst_norm = np.array(weight_lst)/np.sum(weight_lst)
-
 
                 # Get the derivatives to x, y and z of the cell matrix.
                 cell_xderiv = self.cell_xderivs[neighbor_index]

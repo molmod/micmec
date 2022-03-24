@@ -9,8 +9,8 @@
 import numpy as np
 import pickle as pkl
 
-from micmec.log import log, timer
-from micmec.pes.ext import Domain
+from .log import log, timer
+from yaff.pes.ext import Cell
 
 from molmod.io.chk import *
 
@@ -25,12 +25,13 @@ class System(object):
                     elasticity_tensors,
                     free_energies, effective_temps,
                     surrounding_cells, surrounding_nodes,
+                    boundary_nodes,
                     grid=None, types=None):
         
         # Initialize system variables.
         self.masses = masses
         self.pos = pos
-        self.domain = Domain(rvecs)
+        self.domain = Cell(rvecs)
 
         self.equilibrium_cell_matrices = equilibrium_cell_matrices
         self.equilibrium_inv_cell_matrices = equilibrium_inv_cell_matrices
@@ -71,7 +72,8 @@ class System(object):
                                 "elasticity_tensors",
                                 "free_energies",
                                 "effective_temps",
-                                "surrounding_cells", "surrounding_nodes"]
+                                "surrounding_cells", "surrounding_nodes",
+                                "boundary_nodes"]
                 
                 for key, value in load_chk(fn).items():
                     if key in allowed_keys:
