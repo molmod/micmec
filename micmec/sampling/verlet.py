@@ -126,7 +126,7 @@ class VerletIntegrator(Iterative):
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
         self.ekin = self._compute_ekin()      
-
+        
         self.call_verlet_hooks("post")
 
         # Calculate the total position change

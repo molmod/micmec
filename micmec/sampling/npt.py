@@ -38,7 +38,7 @@ class TBCombination(VerletHook):
             self.barostat = thermostat
             self.thermostat = barostat
             if not self.verify():
-                raise TypeError("The Thermostat or Barostat instance is not supported (yet)")
+                raise TypeError("The Thermostat or Barostat instance is not supported (yet).")
         self.step_thermo = self.thermostat.step
         self.step_baro = self.barostat.step
         VerletHook.__init__(self, start, min(self.step_thermo, self.step_baro))
@@ -248,7 +248,7 @@ class BerendsenBarostat(VerletHook):
         # after symmetrising the domain tensor.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
         if iterative.ndof is None:
             iterative.ndof = get_ndof_internal_md(iterative.pos.shape[0], iterative.mmf.system.domain.nvec)
         # Rescaling of the barostat mass, to be in accordance with Langevin and MTTK.
@@ -347,7 +347,7 @@ class LangevinBarostat(VerletHook):
         # after symmetrising the domain tensor.
         iterative.gpos[:] = 0.0
         iterative.vtens[:] = 0.0
-        iterative.epot = iterative.mmf.compute(iterative.gpos,iterative.vtens)
+        iterative.epot = iterative.mmf.compute(iterative.gpos, iterative.vtens)
 
     def pre(self, iterative, chainvel0 = None):
         # Bookkeeping.

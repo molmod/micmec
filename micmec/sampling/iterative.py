@@ -11,7 +11,7 @@ from ..log import log, timer
 from molmod.units import *
 
 
-__all__ = ["Iterative", "StateItem", "AttributeStateItem", "PosStateItem", 
+__all__ = ["Iterative", "StateItem", "AttributeStateItem", "PosStateItem", "EPotContribStateItem", "ConsErrStateItem",
             "TemperatureStateItem", "VolumeStateItem", "DomainStateItem", "Hook"]
 
 class Iterative(object):
@@ -30,6 +30,14 @@ class Iterative(object):
             self.state_list = [state_item.copy() for state_item in self.default_state]
             self.state_list += state
         self.state = dict((item.key, item) for item in self.state_list)
+
+        if hooks is None:
+            self.hooks = []
+        elif hasattr(hooks, "__len__"):
+            self.hooks = hooks
+        else:
+            self.hooks = [hooks]
+        self._add_default_hooks()
 
         self.counter0 = counter0
         self.counter = counter0
@@ -74,7 +82,7 @@ class Iterative(object):
         self.call_hooks()
 
     def finalize():
-        pass
+        raise NotImplementedError
 
 
 class StateItem(object):
@@ -147,6 +155,26 @@ class DomainStateItem(StateItem):
 
     def get_value(self, iterative):
         return iterative.mmf.system.domain.rvecs
+
+
+class ConsErrStateItem(StateItem):
+    def get_value(self, iterative):
+        return getattr(iterative._cons_err_tracker, self.key, None)
+
+    def copy(self):
+        return self.__class__(self.key)
+
+
+class EPotContribStateItem(StateItem):
+    """Keeps track of all the contributions to the potential energy."""
+    def __init__(self):
+        StateItem.__init__(self, "epot_contribs")
+
+    def get_value(self, iterative):
+        return np.array([part.energy for part in iterative.ff.parts])
+
+    def iter_attrs(self, iterative):
+        yield "epot_contrib_names", np.array([part.name for part in iterative.ff.parts], dtype="S")
 
 
 class Hook(object):
