@@ -12,6 +12,7 @@ import pickle as pkl
 from .log import log, timer
 from yaff.pes.ext import Cell
 
+from molmod.units import *
 from molmod.io.chk import *
 
 __all__ = ["System"]

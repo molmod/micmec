@@ -6,7 +6,7 @@ from molmod import boltzmann, femtosecond, kjmol, bar, atm
 
 from ..log import log, timer
 from .utils import get_random_vel, domain_symmetrize, get_random_vel_press, \
-    get_ndof_internal_md, clean_momenta, get_ndof_baro
+    get_ndof_internal_md, clean_momenta, get_ndof_baro, transform_lower_triangular
 from .verlet import VerletHook
 from .iterative import StateItem
 
@@ -976,7 +976,7 @@ class TadmorBarostat(VerletHook):
         # Propagate the barostat.
         self.baro(iterative, chainvel0)
         # Calculate the Lagrangian strain.
-        eta = 0.5*(np.dot(self.domaininv0.T,np.dot(iterative.rvecs.T,np.dot(iterative.rvecs,self.domaininv0)))-np.eye(3))
+        eta = 0.5*(np.dot(self.domaininv0.T,np.dot(iterative.rvecs.T, np.dot(iterative.rvecs,self.domaininv0)))-np.eye(3))
         # Calculate the correction due to the barostat alone.
         ang_ten = self._compute_angular_tensor(iterative.pos, iterative.vel, iterative.masses)
         self.econs_correction = self.vol0*np.trace(np.dot(self.press.T,eta)) + self._compute_ekin_baro() - np.trace(np.dot(ang_ten, self.vel_press))
@@ -997,7 +997,7 @@ class TadmorBarostat(VerletHook):
             ang_ten = self._compute_angular_tensor(iterative.pos, iterative.vel, iterative.masses)
             dptens_vol = np.dot(self.vel_press.T, ang_ten.T) - np.dot(ang_ten.T, self.vel_press.T)
             # Definition of \tilde{sigma} V.
-            sigmaS_vol = self.vol0*np.dot(np.dot(iterative.rvecs,self.Strans), iterative.rvecs.T)
+            sigmaS_vol = self.vol0*np.dot(np.dot(iterative.rvecs, self.Strans), iterative.rvecs.T)
             # Definition of G.
             G = (ptens_vol - sigmaS_vol + dptens_vol + 2.0*iterative.ekin/iterative.ndof*np.eye(3))/self.mass_press
             if not self.anisotropic:
@@ -1093,5 +1093,195 @@ class MTKAttributeStateItem(StateItem):
 
     def copy(self):
         return self.__class__(self.attr)
+
+
+class RectangularMonteCarloBarostat(VerletHook):
+    """Monte Carlo algorithm for pressure control."""
+    name = "RectangularMC"
+    kind = "stochastic"
+    method = "barostat"
+
+    def __init__(self, temp, press, start=0, step=10):
+        """
+        This hook implements a Rectangular Monte Carlo barostat.
+
+        **ARGUMENTS**
+
+        temperature (float):
+            Temperature at which the simulation is performed, in kelvin.
+
+        pressure (float):
+            External (and isotropic) pressure that is applied on the system,
+            in atomic units.
+
+        start (int, default 0):
+            Starting point during the Verlet run from which MC trial moves in
+            the cell degrees of freedom should be performed.
+
+        step (int, default 10):
+            Period between consecutive trial moves.
+        """
+        self.beta = 1.0/(boltzmann*temp)
+        self.pressure = press
+
+        #self.internal_cell    = np.zeros((3, 3)) # internal representation of cell
+        self.internal_ampl = 0 # max trial amplitudes for isotropic and anisotropic moves
+        self.internal_trials = 0 # number of trials for isotropic and anisotropic moves
+        self.internal_accepts = 0 # number of accepted trials for isotropic and anisotropic moves
+
+        self.econs_correction = 0
+        self.start = start
+        self.step  = step
+
+    def init(self, iterative):
+        """Initialize cell and radii."""
+        rvecs = iterative.rvecs.copy()
+        # Compute internal cell representation and initialize amplitudes.
+        # Amplitude for isotropic moves is set to 10% of the current volume.
+        # Amplitude for anisotropic moves is set to 0.01.
+        self.internal_ampl = 0.1*(np.linalg.det(rvecs))**(1/3) # Initialize nonzero for all nine amplitudes.
+
+    def pre(self, iterative, chainvel0=None):
+        pass
+
+    def post(self, iterative, chainvel0=None):
+        """
+        Generates and applies trial moves.
+
+        The kind of trial move is chosen randomly depending on the mode of the
+        barostat:
+
+            full:
+                Includes both isotropic and anisotropic trial moves.
+
+            anisotropic:
+                Includes only anisotropic trial moves.
+
+            isotropic:
+                Includes only isotropic trial moves.
+
+        """
+        # Transform positions and domain vectors to lower triangular form.
+        transform_lower_triangular(iterative.pos, iterative.rvecs)
+        # Generate and perform a trial move.
+        trial = self.get_trial(iterative.rvecs)
+        accepted = self.perform_trial(iterative, trial) 
+        self.internal_trials += 1
+        if accepted:
+            self.internal_accepts += 1
+        # Maintain desired acceptance ratio around 50% by adjusting the
+        # amplitudes based on trial and acceptance statistics.
+        self.adjust_amplitudes()
+
+    def get_trial(self, rvecs):
+        """Generates a trial move."""
+        trial = rvecs.copy()
+        # Generate triangular trial.
+        delta = 2*self.internal_ampl*(np.random.uniform(size=(3, 3)) - 0.5)
+        delta[0, 1] = 0
+        delta[0, 2] = 0
+        delta[1, 2] = 0
+        trial += delta
+        for i in range(3): # Flip box vectors if necessary.
+            if trial[i, i] < 0:
+                trial[i, :] *= (-1.0)
+                print('flipping box vector {}'.format(i))
+        # Transform to reduced form.
+        trial[2, :] = trial[2, :] - trial[1, :]*np.round(trial[2, 1]/trial[1, 1])
+        trial[2, :] = trial[2, :] - trial[0, :]*np.round(trial[2, 0]/trial[0, 0])
+        trial[1, :] = trial[1, :] - trial[0, :]*np.round(trial[1, 0]/trial[0, 0])
+        return trial
+
+    def perform_trial(self, iterative, trial):
+        """
+        Performs a trial move.
+
+        **ARGUMENTS**
+
+        iterative (`Iterative` instance)
+            Iterative containing the `ForceField` instance.
+
+        frac (2darray)
+            Contains fractional coordinates of all nodes.
+
+        trial (1darray of length 6)
+            Contains trial cell in the internal representation.
+
+        """
+        rvecs = iterative.rvecs.copy()
+        assert rvecs[0, 1] == 0
+        assert rvecs[0, 2] == 0
+        assert rvecs[1, 2] == 0
+        pos = iterative.pos.copy()
+        # Translate particles to first rectangular(!) periodic box.
+        for i in range(pos.shape[0]):
+            pos[i, :] -= rvecs[2, :]*np.floor(pos[i, 2]/rvecs[2, 2])
+            pos[i, :] -= rvecs[1, :]*np.floor(pos[i, 1]/rvecs[1, 1])
+            pos[i, :] -= rvecs[0, :]*np.floor(pos[i, 0]/rvecs[0, 0])
+        for i in range(pos.shape[0]):
+            assert np.all(np.abs(pos[i, :]) < np.diag(rvecs))
+
+        # Scale rectangular axes.
+        scale_x = trial[0, 0] / rvecs[0, 0]
+        scale_y = trial[1, 1] / rvecs[1, 1]
+        scale_z = trial[2, 2] / rvecs[2, 2]
+        pos_trial = pos.copy()
+        pos_trial[:, 0] *= scale_x
+        pos_trial[:, 1] *= scale_y
+        pos_trial[:, 2] *= scale_z
+
+        # Update force field with trial.
+        iterative.mmf.update_rvecs(trial) 
+        iterative.mmf.update_pos(pos_trial)
+
+        E0 = iterative.epot # initial potential energy
+        E1 = iterative.mmf.compute() # trial potential energy
+        V0 = np.linalg.det(rvecs)
+        V1 = np.linalg.det(trial) # new volume
+        J1 = trial[0, 0]**2*trial[1, 1] # a_x ** 2 * b_y
+        J0 = rvecs[0, 0]**2*rvecs[1, 1]
+        natom = pos.shape[0]
+        ndim  = pos.shape[1] # number of dimensions is always 3
+
+        # The trial is accepted based on an acceptance ratio of the form
+        # np.exp(-exponent), where exponent is an expression that contains
+        # multiple contributions.
+        exponent = 0
+        exponent -= self.beta * self.pressure * (V1 - V0) # volume change
+        exponent -= self.beta * (E1 - E0) # energy change
+        exponent += (natom - 2) * np.log(V1 / V0) # jacobian
+        exponent += np.log(J1 / J0) # jacobian
+        #print('volume: ', np.linalg.det(trial) / angstrom ** 3)
+        #print('PV contrib: ', self.beta * self.pressure * (V1 - V0))
+        #print('jacobian contrib: ', (natom - 2) * np.log(V1 / V0) * np.log(J1 / J0))
+        #print('{}   /   {}'.format(self.internal_accepts, self.internal_trials))
+        #accepted = (exponent < 0) or (np.random.uniform(0, 1) < np.exp(exponent))
+        accepted = np.random.uniform(0, 1) < np.exp(exponent)
+
+        if accepted: # Update iterative gpos and acceleration if accepted.
+            iterative.pos[:]  = pos_trial
+            iterative.rvecs[:] = trial
+            iterative.gpos[:] = 0.0
+            iterative.mmf.update_pos(pos_trial)
+            iterative.mmf.update_rvecs(trial)
+            iterative.epot = iterative.mmf.compute(iterative.gpos)
+            iterative.acc = -iterative.gpos/iterative.masses.reshape(-1,1)
+        else: # Revert iterative if not accepted.
+            iterative.mmf.update_pos(pos)
+            iterative.mmf.update_rvecs(rvecs)
+        return accepted
+
+    def adjust_amplitudes(self):
+        """Adjust amplitudes based on the trial/acceptance statistics."""
+        if self.internal_trials >= 10:
+            if self.internal_accepts < 0.25 * self.internal_trials:
+                self.internal_ampl /= 1.1
+                self.internal_accepts = 0
+                self.internal_trials = 0
+            elif self.internal_accepts > 0.75 * self.internal_trials:
+                self.internal_ampl *= 1.1
+                self.internal_accepts = 0
+                self.internal_trials = 0
+
 
 

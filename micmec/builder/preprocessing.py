@@ -155,7 +155,7 @@ class SimulationProperties(object):
                 dset_sys_masses = h5f['system/masses']
                 
                 # The 'trajectory/cell' dataset is a time series of the cell matrix.
-                dset_traj_cell = h5f['trajectory/cell']
+                dset_traj_cell = h5f['trajectory/domain']
                 dset_traj_temp = h5f['trajectory/temp']
                 dset_traj_press = h5f['trajectory/press']
                 
@@ -172,9 +172,9 @@ class SimulationProperties(object):
         
         L = len(traj_cell)
         
-        self.cellt = traj_cell[L//2:]
-        self.tempt = traj_temp[L//2:]
-        self.presst = traj_press[L//2:]
+        self.cellt = traj_cell[:]
+        self.tempt = traj_temp[:]
+        self.presst = traj_press[:]
 
         L_ = len(self.cellt)
         

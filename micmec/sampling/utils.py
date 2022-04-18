@@ -390,5 +390,46 @@ def stabilized_cholesky_decomp(mat):
         return L*D
 
 
+def transform_lower_triangular(pos, rvecs, reorder=False):
+    """
+    Transforms coordinate axes such that cell matrix is lower diagonal.
+
+    The transformation is derived from the QR decomposition and performed
+    in-place. Because the lower triangular form puts restrictions on the size
+    of off-diagonal elements, lattice vectors are by default reordered from
+    largest to smallest; this feature can be disabled using the reorder
+    keyword.
+    The domain vector lengths and angles remain exactly the same.
+
+    **ARGUMENTS**
+
+    pos : array_like
+        (natoms, 3) array containing atomic positions.
+
+    rvecs : array_like
+        (3, 3) array with domain vectors as rows.
+
+    reorder : bool
+        Whether domain vectors are reordered from largest to smallest.
+
+    """
+    if reorder: # Reorder domain vectors as k, l, m with |k| >= |l| >= |m|.
+        norms = np.linalg.norm(rvecs, axis=1)
+        ordering = np.argsort(norms)[::-1] # largest first
+        a = rvecs[ordering[0], :].copy()
+        b = rvecs[ordering[1], :].copy()
+        c = rvecs[ordering[2], :].copy()
+        rvecs[0, :] = a[:]
+        rvecs[1, :] = b[:]
+        rvecs[2, :] = c[:]
+    q, r = np.linalg.qr(rvecs.T)
+    flip_vectors = np.eye(3) * np.diag(np.sign(r)) # reflections after rotation
+    rotation = np.linalg.inv(q.T) @ flip_vectors # full (improper) rotation
+    pos[:]   = pos @ rotation
+    rvecs[:] = rvecs @ rotation
+    assert np.allclose(rvecs, np.linalg.cholesky(rvecs @ rvecs.T), atol=1e-6)
+    rvecs[0, 1] = 0
+    rvecs[0, 2] = 0
+    rvecs[1, 2] = 0
 
 

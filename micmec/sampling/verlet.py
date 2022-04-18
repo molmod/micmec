@@ -113,15 +113,15 @@ class VerletIntegrator(Iterative):
     def propagate(self):
 
         self.call_verlet_hooks("pre")
-            
-        # Regular verlet step
+        
+        # Regular verlet step.
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
         self.pos += self.timestep*self.vel
         self.mmf.update_pos(self.pos)
         self.gpos[:] = 0.0
         self.vtens[:] = 0.0
-        # Compute gradient and potential energy
+        # Compute gradient and potential energy.
         self.epot = self.mmf.compute(self.gpos, self.vtens)
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
@@ -129,12 +129,12 @@ class VerletIntegrator(Iterative):
         
         self.call_verlet_hooks("post")
 
-        # Calculate the total position change
+        # Calculate the total position change.
         self.posnew = self.pos.copy()
         self.delta[:] = self.posnew - self.posold
         self.posold[:] = self.posnew
 
-        # Common post-processing of a single step
+        # Common post-processing of a single step.
         self.time += self.timestep
         self.compute_properties()
         Iterative.propagate(self)
