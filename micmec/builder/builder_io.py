@@ -45,7 +45,7 @@ def build_output(data, colors_types, grid, pbc):
                     output["type" + str(key) + "/" + str(key_)] = value
             output["type" + str(key) + "/name"] = name
             output["type" + str(key) + "/color"] = color
-            
+        
         output["grid"] = grid
         output["pbc"] = pbc
         
@@ -150,9 +150,10 @@ def build_output(data, colors_types, grid, pbc):
             data_type = data[type_]
             
             cell_matrices.append(data_type["cell"])
-            inv_cell_matrices.append([np.linalg.inv(cell) for cell in data_type["cell"]])
+            inv_cell_matrices.append(np.linalg.inv(data_type["cell"]))
             elasticity_tensors.append(data_type["elasticity"])
-            free_energies.append(data_type["free_energy"]) 
+            free_energies.append(data_type["free_energy"])
+            print(data_type["effective_temp"])
             effective_temps.append(data_type["effective_temp"])
 
             # Iterate over the eight neighboring nodes of the cell.
