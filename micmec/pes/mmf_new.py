@@ -7,7 +7,6 @@
 """The calculation of forces acting on the nodes of the micromechanical model."""
 
 import numpy as np
-import numba as nb
 
 from molmod import boltzmann
 
@@ -237,9 +236,9 @@ class ForcePartMechanical(ForcePart):
                 else:
                     pass
 
-                xderivs.append(xderiv)
-                yderivs.append(yderiv)
-                zderivs.append(zderiv)
+                xderivs.append(xderiv.T)
+                yderivs.append(yderiv.T)
+                zderivs.append(zderiv.T)
             
             self.cell_xderivs.append(xderivs)
             self.cell_yderivs.append(yderivs)
@@ -259,7 +258,6 @@ class ForcePartMechanical(ForcePart):
         # Initialize an empty list to store the cell matrices and their inverses in.
         self.cell_mats = []
         self.cell_invs = []
-        self.cell_dets = []
         self.cell_strains = []
         self.cell_epots = []
         self.cell_weights = []
@@ -270,46 +268,57 @@ class ForcePartMechanical(ForcePart):
             vertices = np.zeros((8,), int)
             for neighbor_idx, node_idx in enumerate(self.system.surrounding_nodes[cell_idx]):
                 vertices[neighbor_idx] = node_idx
-            # Calculate the position of each vertex.
-            r0 = self.system.pos[vertices[0]]
-            r1 = r0 + self.delta(vertices[0], vertices[1])
-            r2 = r0 + self.delta(vertices[0], vertices[2])
-            r3 = r0 + self.delta(vertices[0], vertices[3])
-            r4 = r0 + self.delta(vertices[0], vertices[4])
-            r5 = r0 + self.delta(vertices[0], vertices[5])
-            r6 = r0 + self.delta(vertices[0], vertices[6])
-            r7 = r0 + self.delta(vertices[0], vertices[7])
             # Store each edge vector of the current cell in an array.
             edges = np.zeros((12, 3), float)
             # Edges pointing in the x-direction.
-            edges[0] = r1 - r0
-            edges[1] = r4 - r2
-            edges[2] = r5 - r3
-            edges[3] = r7 - r6
+            edges[0] = self.delta(vertices[0], vertices[1])
+            edges[1] = self.delta(vertices[2], vertices[4])
+            edges[2] = self.delta(vertices[3], vertices[5])
+            edges[3] = self.delta(vertices[6], vertices[7])
+            if self.system.grid.shape[0] == 2:
+                for k in range(0, 4):
+                    if edges[k, 0] < 0.0:
+                        edges[k] += self.system.domain.rvecs[0] 
             # Edges pointing in the y-direction.            
-            edges[4] = r2 - r0
-            edges[5] = r4 - r1
-            edges[6] = r6 - r3
-            edges[7] = r7 - r5
+            edges[4] = self.delta(vertices[0], vertices[2])
+            edges[5] = self.delta(vertices[1], vertices[4])
+            edges[6] = self.delta(vertices[3], vertices[6])
+            edges[7] = self.delta(vertices[5], vertices[7])
+            if self.system.grid.shape[1] == 2:
+                for k in range(4, 8):
+                    if edges[k, 1] < 0.0:
+                        edges[k] += self.system.domain.rvecs[1]
             # Edges pointing in the z-direction.
-            edges[8] = r3 - r0
-            edges[9] = r6 - r2
-            edges[10] = r5 - r1
-            edges[11] = r7 - r4
+            edges[8] = self.delta(vertices[0], vertices[3])
+            edges[9] = self.delta(vertices[2], vertices[6])
+            edges[10] = self.delta(vertices[1], vertices[5])
+            edges[11] = self.delta(vertices[4], vertices[7])
+            if self.system.grid.shape[2] == 2:
+                for k in range(8, 12):
+                    if edges[k, 2] < 0.0:
+                        edges[k] += self.system.domain.rvecs[2]
             # Construct each possible cell matrix of the current cell.
-            h0 = np.array([edges[0], edges[4], edges[8]])
-            h1 = np.array([edges[0], edges[5], edges[10]])
-            h2 = np.array([edges[1], edges[4], edges[9]])
-            h3 = np.array([edges[2], edges[6], edges[8]])
-            h4 = np.array([edges[1], edges[5], edges[11]])
-            h5 = np.array([edges[2], edges[7], edges[10]])
-            h6 = np.array([edges[3], edges[6], edges[9]])
-            h7 = np.array([edges[3], edges[7], edges[11]])
+            h0 = np.array([edges[0], edges[4], edges[8]]).T
+            h1 = np.array([edges[0], edges[5], edges[10]]).T
+            h2 = np.array([edges[1], edges[4], edges[9]]).T
+            h3 = np.array([edges[2], edges[6], edges[8]]).T
+            h4 = np.array([edges[1], edges[5], edges[11]]).T
+            h5 = np.array([edges[2], edges[7], edges[10]]).T
+            h6 = np.array([edges[3], edges[6], edges[9]]).T
+            h7 = np.array([edges[3], edges[7], edges[11]]).T
+            # Calculate the position of each vertex.
+            r0 = self.system.pos[vertices[0]]
+            r1 = r0 + edges[0]
+            r2 = r0 + edges[4]
+            r3 = r0 + edges[8]
+            r4 = r0 + edges[1] + edges[4]
+            r5 = r0 + edges[2] + edges[8]
+            r6 = r0 + edges[6] + edges[8]
+            r7 = r0 + edges[11] + edges[1] + edges[4]
             # Construct the cell properties:
             # the cell matrix, the determinant of the cell matrix (i.e. the cell vollume)
             # and the inverse cell matrix.
             cell_mat = np.array([h0, h1, h2, h3, h4, h5, h6, h7])
-            cell_det = np.linalg.det(cell_mat)
             cell_inv = np.linalg.inv(cell_mat)
             cell_vert = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
             # Load the equilibrium cell properties.
@@ -320,11 +329,12 @@ class ForcePartMechanical(ForcePart):
             cell_strain_lst = []
             cell_epot_lst = []
             # Iterate over each metastable state.
-            for cell0_inv, cell0_elast, cell0_efree in zip(self.system.equilibrium_inv_cell_matrices[cell_idx], 
-                                                            self.system.elasticity_tensors[cell_idx], 
-                                                            self.system.free_energies[cell_idx]):
+            for cell0_inv, cell0_elast, cell0_efree, cell0_det in zip(self.system.equilibrium_inv_cell_matrices[cell_idx], 
+                                                                    self.system.elasticity_tensors[cell_idx], 
+                                                                    self.system.free_energies[cell_idx],
+                                                                    self.system.equilibrium_cell_volumes[cell_idx]):
                 cell_strain = self.strain(cell_mat, cell0_inv)
-                cell_epot = self.elastic_energy(cell_strain, cell0_elast, cell_det)
+                cell_epot = self.elastic_energy(cell_strain, cell0_elast, cell0_det)
                 cell_strain_lst.append(cell_strain)
                 cell_epot_lst.append(cell_epot + cell0_efree)
             cell_epot_lst = np.array(cell_epot_lst)
@@ -335,7 +345,6 @@ class ForcePartMechanical(ForcePart):
             # Store the cell matrices, the inverse cell matrices, the determinants and the strain tensors.
             self.cell_mats.append(cell_mat)
             self.cell_invs.append(cell_inv)
-            self.cell_dets.append(cell_det)
             self.cell_strains.append(cell_strain_lst)
             self.cell_epots.append(cell_epot)
             self.cell_weights.append(cell_weight_lst)
@@ -349,6 +358,7 @@ class ForcePartMechanical(ForcePart):
         """
         if gpos is None:
             return None
+        
         self.cell_gpos_contribs = np.zeros((self.system.ncells, 8, 3))
         # Iterate over each node
         for node_idx in range(self.system.nnodes):
@@ -363,12 +373,12 @@ class ForcePartMechanical(ForcePart):
                 # Load the equilibrium properties.
                 cell0_inv_lst = self.system.equilibrium_inv_cell_matrices[cell_idx]
                 cell0_elast_lst = self.system.elasticity_tensors[cell_idx]
+                cell0_det_lst = self.system.equilibrium_cell_volumes[cell_idx]
                 # Load the precalculated properties of the cell:
                 # the cell matrix, the inverse cell matrix, the determinant of the cell matrix (i.e. the cell volume),
                 # the strain tensors for each metastable state and the thermodynamic weights for each metastable state.
                 cell_mat = self.cell_mats[cell_idx]
                 cell_inv = self.cell_invs[cell_idx]
-                cell_det = self.cell_dets[cell_idx]
                 cell_strain_lst = self.cell_strains[cell_idx]
                 cell_weight_lst = self.cell_weights[cell_idx]
                 # Normalize the thermodynamic weights.
@@ -376,10 +386,11 @@ class ForcePartMechanical(ForcePart):
                 # Initialize the force contribution acting on the node due to the deformation of the current cell.
                 f = np.zeros(3)
                 # Iterate over each metastable state of the current cell.
-                for cell0_inv, cell0_elast, cell_strain, cell_weight in zip(cell0_inv_lst, 
-                                                                            cell0_elast_lst, 
-                                                                            cell_strain_lst, 
-                                                                            cell_weight_lst_norm):              
+                for cell0_inv, cell0_elast, cell0_det, cell_strain, cell_weight in zip(cell0_inv_lst, 
+                                                                                        cell0_elast_lst,
+                                                                                        cell0_det_lst,
+                                                                                        cell_strain_lst, 
+                                                                                        cell_weight_lst_norm):              
                     cell_xderiv = self.cell_xderivs[neighbor_idx]
                     cell_yderiv = self.cell_yderivs[neighbor_idx]
                     cell_zderiv = self.cell_zderivs[neighbor_idx]
@@ -390,9 +401,9 @@ class ForcePartMechanical(ForcePart):
                                                 cell_yderiv, 
                                                 cell_zderiv, 
                                                 cell0_inv, 
-                                                cell0_elast, 
+                                                cell0_elast,
+                                                cell0_det,
                                                 cell_strain, 
-                                                cell_det, 
                                                 cell_inv)
                 # Store the f contribution to calculate the virial tensor for later.
                 self.cell_gpos_contribs[cell_idx][neighbor_idx] -= f
@@ -405,7 +416,7 @@ class ForcePartMechanical(ForcePart):
         if (vtens is None) or (gpos is None):
             return None
         vtens_ = np.zeros((3, 3))
-        vtens_ += np.einsum("ijk,ijl->kl", self.cell_verts, self.cell_gpos_contribs)
+        vtens_ += np.einsum("ijk,ijl->kl", self.cell_gpos_contribs, self.cell_verts)
         vtens[:] = vtens_
         return None
 
@@ -418,7 +429,7 @@ class ForcePartMechanical(ForcePart):
         return dvec
 
     @staticmethod
-    def elastic_energy(eps, C0, h_det):
+    def elastic_energy(eps, C0, h0_det):
         """
         Elastic deformation energy in the harmonic approximation.
         eps
@@ -428,7 +439,7 @@ class ForcePartMechanical(ForcePart):
         h_det
             determinant of cell matrix (volume of cell)
         """
-        return 0.0625*np.einsum("a,aij,ijkl,akl", h_det, eps, C0, eps)
+        return 0.0625*h0_det*np.einsum("aij,ijkl,akl", eps, C0, eps)
 
     @staticmethod
     def strain(h, h0_inv):
@@ -444,8 +455,8 @@ class ForcePartMechanical(ForcePart):
         return 0.5*(np.einsum("...ji,...jk->...ik", mat, mat) - iden)
     
     @staticmethod
-    def force(h, h_xderiv, h_yderiv, h_zderiv, h0_inv, C0, eps=None, h_det=None, h_inv=None):
-        #    8x3x3,8x3x3,    8x3x3,    8x3x3,    3x3,  3x3x3x3, 8x3x3, 8,          8x3x3
+    def force(h, h_xderiv, h_yderiv, h_zderiv, h0_inv, C0, h0_det, eps=None, h_inv=None):
+        #    8x3x3,8x3x3,    8x3x3,    8x3x3,    3x3,  3x3x3x3, 1, 8x3x3,    8x3x3
         """
         Micromechanical force.
         h
@@ -458,22 +469,16 @@ class ForcePartMechanical(ForcePart):
             (equilibrium) elasticity tensor
         eps
             strain tensor
-        h_det
-            determinant of cell matrix (volume of cell)
+        h0_det
+            determinant of equilibrium cell matrix (volume of cell)
         h_inv
             inverse cell matrix
         """
         f = np.zeros((3, 8))
         if eps is None:
             eps = strain(h, h0_inv)
-        if h_det is None:
-            h_det = np.linalg.det(h)
         if h_inv is None:
             h_inv = np.linalg.inv(h)
-        
-        h_xtrace = np.einsum("...ij,...ji", h_inv, h_xderiv) #8
-        h_ytrace = np.einsum("...ij,...ji", h_inv, h_yderiv)
-        h_ztrace = np.einsum("...ij,...ji", h_inv, h_zderiv)
 
         mat = np.einsum("...ij,jk->...ki", h, h0_inv)
         xmat = np.einsum("...ij,...jk->...ik", mat, np.einsum("...ij,jk->...ik", h_xderiv, h0_inv)) #8x3x3
@@ -485,28 +490,24 @@ class ForcePartMechanical(ForcePart):
         eps_zderiv = 0.5*(np.einsum("...ji", zmat) + zmat)
 
         stress = np.einsum("ijkl,...kl->...ij", C0, eps) #8x3x3
-        quad_form = np.einsum("...ij,...ij", eps, stress) #8
         
         # Compute the contribution of cell (kappa, lambda, mu) to the x component
         # of the force acting on node (k, l, m).
         xterm = np.einsum("...ji,...ij", eps_xderiv, stress) #8
-        f[0] += h_xtrace*quad_form
         f[0] += 2.0*xterm
         
         # Compute the contribution of cell (kappa, lambda, mu) to the y component
         # of the force acting on node (k, l, m).
         yterm = np.einsum("...ji,...ij", eps_yderiv, stress)
-        f[1] += h_ytrace*quad_form
         f[1] += 2.0*yterm
         
         # Compute the contribution of cell (kappa, lambda, mu) to the y component
         # of the force acting on node (k, l, m).
         zterm = np.einsum("...ji,...ij", eps_zderiv, stress)
-        f[2] += h_ztrace*quad_form
         f[2] += 2.0*zterm
         
         # Scale the contribution of cell (kappa, lambda, mu) according to the volume of the cell.
-        return -0.0625*np.einsum("i,...i", h_det, f)
+        return -0.0625*h0_det*np.einsum("...i->...", f)
 
 
 class ForcePartPressure(ForcePart):

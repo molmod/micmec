@@ -9,7 +9,6 @@
 import numpy as np
 
 from molmod import boltzmann
-from jax import jit
 
 from ..log import log, timer
 
@@ -237,9 +236,9 @@ class ForcePartMechanical(ForcePart):
                 else:
                     pass
 
-                xderivs.append(xderiv.T)
-                yderivs.append(yderiv.T)
-                zderivs.append(zderiv.T)
+                xderivs.append(xderiv)
+                yderivs.append(yderiv)
+                zderivs.append(zderiv)
             
             self.cell_xderivs.append(xderivs)
             self.cell_yderivs.append(yderivs)
@@ -270,53 +269,41 @@ class ForcePartMechanical(ForcePart):
             vertices = np.zeros((8,), int)
             for neighbor_idx, node_idx in enumerate(self.system.surrounding_nodes[cell_idx]):
                 vertices[neighbor_idx] = node_idx
+            # Calculate the position of each vertex.
+            r0 = self.system.pos[vertices[0]]
+            r1 = r0 + self.delta(vertices[0], vertices[1])
+            r2 = r0 + self.delta(vertices[0], vertices[2])
+            r3 = r0 + self.delta(vertices[0], vertices[3])
+            r4 = r0 + self.delta(vertices[0], vertices[4])
+            r5 = r0 + self.delta(vertices[0], vertices[5])
+            r6 = r0 + self.delta(vertices[0], vertices[6])
+            r7 = r0 + self.delta(vertices[0], vertices[7])
             # Store each edge vector of the current cell in an array.
             edges = np.zeros((12, 3), float)
             # Edges pointing in the x-direction.
-            edges[0] = self.delta(vertices[0], vertices[1])
-            edges[1] = self.delta(vertices[2], vertices[4])
-            edges[2] = self.delta(vertices[3], vertices[5])
-            edges[3] = self.delta(vertices[6], vertices[7])
-            if self.system.grid.shape[0] == 2:
-                for k in range(0, 4):
-                    if edges[k, 0] < 0.0:
-                        edges[k] += self.system.domain.rvecs[0] 
+            edges[0] = r1 - r0
+            edges[1] = r4 - r2
+            edges[2] = r5 - r3
+            edges[3] = r7 - r6
             # Edges pointing in the y-direction.            
-            edges[4] = self.delta(vertices[0], vertices[2])
-            edges[5] = self.delta(vertices[1], vertices[4])
-            edges[6] = self.delta(vertices[3], vertices[6])
-            edges[7] = self.delta(vertices[5], vertices[7])
-            if self.system.grid.shape[1] == 2:
-                for k in range(4, 8):
-                    if edges[k, 1] < 0.0:
-                        edges[k] += self.system.domain.rvecs[1]
+            edges[4] = r2 - r0
+            edges[5] = r4 - r1
+            edges[6] = r6 - r3
+            edges[7] = r7 - r5
             # Edges pointing in the z-direction.
-            edges[8] = self.delta(vertices[0], vertices[3])
-            edges[9] = self.delta(vertices[2], vertices[6])
-            edges[10] = self.delta(vertices[1], vertices[5])
-            edges[11] = self.delta(vertices[4], vertices[7])
-            if self.system.grid.shape[2] == 2:
-                for k in range(8, 12):
-                    if edges[k, 2] < 0.0:
-                        edges[k] += self.system.domain.rvecs[2]
+            edges[8] = r3 - r0
+            edges[9] = r6 - r2
+            edges[10] = r5 - r1
+            edges[11] = r7 - r4
             # Construct each possible cell matrix of the current cell.
-            h0 = np.array([edges[0], edges[4], edges[8]]).T
-            h1 = np.array([edges[0], edges[5], edges[10]]).T
-            h2 = np.array([edges[1], edges[4], edges[9]]).T
-            h3 = np.array([edges[2], edges[6], edges[8]]).T
-            h4 = np.array([edges[1], edges[5], edges[11]]).T
-            h5 = np.array([edges[2], edges[7], edges[10]]).T
-            h6 = np.array([edges[3], edges[6], edges[9]]).T
-            h7 = np.array([edges[3], edges[7], edges[11]]).T
-            # Calculate the position of each vertex.
-            r0 = self.system.pos[vertices[0]]
-            r1 = r0 + edges[0]
-            r2 = r0 + edges[4]
-            r3 = r0 + edges[8]
-            r4 = r0 + edges[1] + edges[4]
-            r5 = r0 + edges[2] + edges[8]
-            r6 = r0 + edges[6] + edges[8]
-            r7 = r0 + edges[11] + edges[1] + edges[4]
+            h0 = np.array([edges[0], edges[4], edges[8]])
+            h1 = np.array([edges[0], edges[5], edges[10]])
+            h2 = np.array([edges[1], edges[4], edges[9]])
+            h3 = np.array([edges[2], edges[6], edges[8]])
+            h4 = np.array([edges[1], edges[5], edges[11]])
+            h5 = np.array([edges[2], edges[7], edges[10]])
+            h6 = np.array([edges[3], edges[6], edges[9]])
+            h7 = np.array([edges[3], edges[7], edges[11]])
             # Construct the cell properties:
             # the cell matrix, the determinant of the cell matrix (i.e. the cell vollume)
             # and the inverse cell matrix.
@@ -417,7 +404,7 @@ class ForcePartMechanical(ForcePart):
         if (vtens is None) or (gpos is None):
             return None
         vtens_ = np.zeros((3, 3))
-        vtens_ += np.einsum("ijk,ijl->kl", self.cell_gpos_contribs, self.cell_verts)
+        vtens_ += np.einsum("ijk,ijl->kl", self.cell_verts, self.cell_gpos_contribs)
         vtens[:] = vtens_
         return None
 
@@ -426,8 +413,7 @@ class ForcePartMechanical(ForcePart):
         boundary = self.system.boundary_nodes
         dvec = self.system.pos[j] - self.system.pos[i]
         if (i in boundary) and (j in boundary):
-            pass
-        self.system.domain.mic(dvec)
+            self.system.domain.mic(dvec)
         return dvec
 
     @staticmethod
