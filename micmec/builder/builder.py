@@ -8,19 +8,20 @@
 import tkinter as tk
 import pickle as pkl
 
+import os
+
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
 
 import numpy as np
 
-from molmod.io.chk import *
+from molmod.io.chk import load_chk, dump_chk
 from builder_io import build_input, build_output
 
 
 class Application(tk.Tk):
-
-    """ The main application window. """
+    """The main application window."""
 
     _title = "Micromechanical Model Builder"
     _geometry = "1024x600"
@@ -59,23 +60,23 @@ class Application(tk.Tk):
         
     
     def event_show(self, name):
-        """ Show one of the pages in the application. """
+        """Show one of the pages in the application."""
         frame = self.frames[name]
         frame.tkraise()
         
 
     def event_quit(self):
-        """ Ask for confirmation and close the application. """
+        """Ask for confirmation and close the application."""
         if messagebox.askokcancel("QUIT", "Are you sure you want to quit?"):
             self.destroy()
     
 
     def event_load(self):
-        """ Load a previous .chk file to edit the build. """
+        """Load a previous .chk file to view or edit the build."""
         homepage = self.frames[self.pages[0]]
         filename = filedialog.askopenfilename(
             title="Select Data",
-            initialdir="/home/joachim/Scripts/micmec",
+            initialdir=os.getcwd(), #"/home/joachim/Scripts/micmec"
             filetypes=(("CHECKPOINT FILES", "*.chk"), 
                        ("ALL FILES", "*.*"))
         )
@@ -101,7 +102,7 @@ class Application(tk.Tk):
     
 
     def event_save(self):
-        """ Save the current build to a .chk file."""
+        """Save the current build to a .chk file."""
         homepage = self.frames[self.pages[0]]
         pbc = []
         pbc.append(homepage.builder_widget.buttons.pbc_x.get())
@@ -113,7 +114,7 @@ class Application(tk.Tk):
         output4 = pbc
         output_all = build_output(output1, output2, output3, output4)
         filename = filedialog.asksaveasfilename(
-            initialdir="/home/joachim/Scripts/micmec", 
+            initialdir=os.getcwd(),
             title="Save File",
             filetypes=(("CHECKPOINT FILES", "*.chk"), 
                        ("ALL FILES", "*.*"))
@@ -124,8 +125,7 @@ class Application(tk.Tk):
 
 
 class MenuBar(tk.Menu):
-
-    """ The main menubar of the application. """
+    """The main menubar of the application."""
 
     def __init__(self, manager):
         
@@ -147,8 +147,7 @@ class MenuBar(tk.Menu):
 
 
 class Page(tk.Frame):
-    
-    """ Generic class for any page that is part of the main application. """
+    """Generic class for any page that is part of the main application. """
 
     _height = 600
     _width = 1024
@@ -165,9 +164,7 @@ class Page(tk.Frame):
 
    
 class HomePage(Page):
-
-    """ 
-    The homepage of the application, where the input (micromechanical data)
+    """The homepage of the application, where the input (micromechanical data)
     and the output (a node network built by the user) of the application are handled. 
     """
     
@@ -204,8 +201,7 @@ class AboutPage(Page):
 
     
 class Widget(ttk.LabelFrame):
-    
-    """ Generic class for any widget that is part of the main application. """
+    """Generic class for any widget that is part of the main application."""
     
     def __init__(self, master, widget_label):
         
@@ -215,8 +211,7 @@ class Widget(ttk.LabelFrame):
 
 
 class DataWidget(Widget):
-    
-    """ Widget that handles the adding, removing, reading and layout of micromechanical data. """
+    """Handles the adding, removing, reading and layout of micromechanical data."""
     
     _widget_label = "DATA"
     
@@ -234,19 +229,19 @@ class DataWidget(Widget):
         
         
     def add_data(self, filename, dictionary):
-        """ Add data to the list of nanocell types. """
+        """Add data to the list of nanocell types."""
         self.data[filename] = dictionary
         self.update_data()
         
 
     def remove_data(self, filename):
-        """ Remove data from the list of nanocell types. """
+        """Remove data from the list of nanocell types."""
         self.data.pop(filename)
         self.update_data()
         
 
     def update_data(self):
-        """ Update the list of nanocell types, refresh the view and push the changes to the builder widget. """
+        """Update the list of nanocell types, refresh the view and push the changes to the builder widget."""
         self.treeview.reinsert_data()
         self.master.builder_widget.update_colors_types()
         
@@ -274,25 +269,29 @@ class DataWidgetButtons(ttk.Frame):
                      ("PICKLE FILES", "*.pkl"),
                      ("ALL FILES", "*.*"))
         
-        filepath = filedialog.askopenfilename(
+        filepaths = filedialog.askopenfilenames(
             title="Select Data",
-            initialdir="/home/joachim/Scripts/micmec",
+            initialdir=os.getcwd(),
             filetypes=filetypes)
-        
-        with open(filepath, "rb") as loadfile:
-            dictionary = pkl.load(loadfile)
-        
-        filename = filepath.split("/")[-1]
-        if "pkl" in filename:
-            filename = filename[:-4]
-        if "pickle" in filename:
-            filename = filename[:-7]
-        
-        self.widget.add_data(filename, dictionary)
+
+        if len(filepaths) == 0:
+            return None 
+
+        for filepath in filepaths:
+            with open(filepath, "rb") as loadfile:
+                dictionary = pkl.load(loadfile)
+            
+            filename = filepath.split("/")[-1]
+            if "pkl" in filename:
+                filename = filename[:-4]
+            if "pickle" in filename:
+                filename = filename[:-7]
+            
+            self.widget.add_data(filename, dictionary)
             
 
     def select_remove_data(self):
-        """ Via user input, select a file to remove from the list of nanocell types. """
+        """Via user input, select a file to remove from the list of nanocell types."""
         for selected in self.widget.treeview.view.selection():
             values = self.widget.treeview.view.item(selected)["values"]
             self.widget.remove_data(values[0])
@@ -360,8 +359,7 @@ class DataWidgetTreeview(ttk.Frame):
 
 
 class BuilderWidget(Widget):
-
-    """ Widget that handles the building and layout of the micromechanical node network. """
+    """Handles the building and layout of the micromechanical node network."""
     
     _widget_label = "BUILDER"
     _colors = ["#e41a1c", "#377eb8", "#4daf4a", 

@@ -34,9 +34,14 @@ class System(object):
         self.pos = pos
         self.domain = Cell(rvecs)
 
+        self.grid = grid
+
         self.equilibrium_cell_matrices = equilibrium_cell_matrices
         self.equilibrium_inv_cell_matrices = equilibrium_inv_cell_matrices
         self.elasticity_tensors = elasticity_tensors
+        
+        #dt = 0.10*np.pi*np.sqrt(np.min(masses)/(np.max(equilibrium_cell_matrices)*np.max(elasticity_tensors)))
+        #print("RECOMMENDED TIMESTEP: ", dt/femtosecond)
 
         self.free_energies = free_energies
         self.effective_temps = effective_temps
@@ -46,9 +51,9 @@ class System(object):
 
         self.boundary_nodes = boundary_nodes
 
-        self.nnodes = len(self.surrounding_cells) 
+        self.nnodes = len(self.surrounding_cells)
         self.ncells = len(self.surrounding_nodes)
-        
+                
         with log.section("SYS"):
             self._init_log()
 
@@ -74,7 +79,7 @@ class System(object):
                                 "free_energies",
                                 "effective_temps",
                                 "surrounding_cells", "surrounding_nodes",
-                                "boundary_nodes"]
+                                "boundary_nodes", "grid"]
                 
                 for key, value in load_chk(fn).items():
                     if key in allowed_keys:
