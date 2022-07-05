@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# File name: mmmb.py
-# Description: Micromechanical Model Builder Application
+# File name: builder.py
+# Description: The Builder Application to build your own micromechanical system.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
-""" An application to build your own micromechanical node network. """
+"""The Micromechanical Model Builder application to build your own micromechanical system."""
 
 import tkinter as tk
 import pickle as pkl
@@ -26,35 +26,25 @@ class Application(tk.Tk):
     _title = "Micromechanical Model Builder"
     _geometry = "1024x600"
     _protocol = "WM_DELETE_WINDOW"
-    _icon = "mmmb_icon.ico"
     
     def __init__(self):
-        
         super(Application, self).__init__()
-
         # Just simply import the azure.tcl file
         #self.tk.call("source", "tkinter_style/azure.tcl")
-
         # Then set the theme you want with the set_theme procedure
         #self.tk.call("set_theme", "dark")
-        
         self.title(Application._title)
         self.geometry(Application._geometry)
         self.protocol(Application._protocol, self.event_quit)
         # self.iconbitmap(Application._icon)
-        
         self.resizable(0, 0)
-        
         self.pages = (HomePage, TutorialPage, AboutPage)
-        
         self.frames = {}
         for page in self.pages:
             frame = page(self)
             frame.grid(row=0, column=0, sticky="nsew")
             self.frames[page] = frame
-        
         self.menubar = MenuBar(self)
-        
         self.event_show(HomePage)
         self.config(menu=self.menubar)
         
@@ -76,7 +66,7 @@ class Application(tk.Tk):
         homepage = self.frames[self.pages[0]]
         filename = filedialog.askopenfilename(
             title="Select Data",
-            initialdir=os.getcwd(), #"/home/joachim/Scripts/micmec"
+            initialdir=os.getcwd(), # initialize search in current working directory
             filetypes=(("CHECKPOINT FILES", "*.chk"), 
                        ("ALL FILES", "*.*"))
         )
@@ -100,7 +90,6 @@ class Application(tk.Tk):
         homepage.builder_widget.buttons.pbc_z.set(pbc[2])
         homepage.builder_widget.update_colors_types()
     
-
     def event_save(self):
         """Save the current build to a .chk file."""
         homepage = self.frames[self.pages[0]]
@@ -128,16 +117,12 @@ class MenuBar(tk.Menu):
     """The main menubar of the application."""
 
     def __init__(self, manager):
-        
         super(MenuBar, self).__init__(manager)
-        
         self.add_command(label="Home", command=lambda:manager.event_show(HomePage))
-        
         menu_file = tk.Menu(self, tearoff=0)
         self.add_cascade(label="File", menu=menu_file)
         menu_file.add_command(label="Load", command=lambda:manager.event_load())
         menu_file.add_command(label="Save", command=lambda:manager.event_save())
-        
         menu_help = tk.Menu(self, tearoff=0)
         self.add_cascade(label="Help", menu=menu_help)
         menu_help.add_command(label="Tutorial", command=lambda:manager.event_show(TutorialPage))
@@ -147,56 +132,92 @@ class MenuBar(tk.Menu):
 
 
 class Page(tk.Frame):
-    """Generic class for any page that is part of the main application. """
+    """Generic class for any page that is part of the main application."""
 
     _height = 600
     _width = 1024
     
     def __init__(self, manager):
-        
         super(Page, self).__init__(manager, 
                                    height=Page._height, 
                                    width=Page._width)
-        
         self.pack_propagate(0)
         
  
 
    
 class HomePage(Page):
-    """The homepage of the application, where the input (micromechanical data)
-    and the output (a node network built by the user) of the application are handled. 
-    """
+    """The homepage of the application, where the input (micromechanical data) and the output (a micromechanical system
+    built by the user) are handled."""
     
     def __init__(self, manager):
-        
         super(HomePage, self).__init__(manager)
-        
         self.data_widget = DataWidget(self)
         self.builder_widget = BuilderWidget(self)
         
 
 
+_tut_text0 = "In order to facilitate designing, building and storing a micromechanical system, I have developed the Micromechanical Model Builder. This is a Python application that allows you to create a micromechanical system with only a few clicks. Let's attempt to build a system. This guide will walk you through the different elements of the GUI.\n\n"
+_tut_text1 = "\n\nOn the left-hand side of the Home page, the data widget is displayed. This is where you can insert data from a higher level of theory into the system, as I will explain shortly.\n\n"
+_tut_text2 = "\n\nIn the data widget, you can add a type file (e.g. `type_test.pickle`, `type_fcu.pickle`...) to the current session. A type file is a .pickle file which contains all relevant information about a single micromechanical cell type, extracted from a higher level of theory. To remove a type file, select its name and click `REMOVE`.\n\n"
+_tut_text3 = "\n\nOn the right-hand side of the Home page, the builder widget is displayed. This is where you can build a micromechanical system, using different types of cells as ingredients.\n\n"
+_tut_text4 = "\n\nThe partitioning of a material is represented by a three-dimensional grid of micromechanical cells. The dimensions of this grid can be easily adapted with the spinboxes at the top of the builder widget.\n\n"
+_tut_text5 = "\n\nFrom the dropdown menu of the builder widget, you can select either the default `UNKNOWN` cell type, which is simply a vacant cell, or one of your own cell types, which you have previously added to the session in the data widget. Each type gets assigned a unique color. The color of the currently selected type is shown next to the dropdown menu.\n\n"
+_tut_text6 = "\n\nIt's time to build. You can click anywhere in the grid to assign the currently selected type to a cell. Alternatively, you can click `#` to fill the entire layer with the current type. You can also click a random row index or column index to fill that row or column. To switch layers in the three-dimensional grid, use the spinbox on the right. \n\nFinally, you can save your build to a structure file (.chk) by clicking `Save` in the `File` tab of the menubar. You can also load pre-existing structure files by clicking `Load`. Please note that doing so will discard your progress in the current session.\n\n"
+
 
 class TutorialPage(Page):
 
     def __init__(self, manager):
-        
         super(TutorialPage, self).__init__(manager)
-        #label1 = tk.Label(self, font=("Verdana", 20), text="Help")
-        #label1.pack(side="top")
+        self.img1 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder1.png")
+        self.img2 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder2.png")
+        self.img3 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder3.png")
+        self.img4 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder4.png")
+        self.img5 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder5.png")
+        self.img6 = tk.PhotoImage(file=os.path.dirname(os.path.realpath(__file__))+"/tutorial_images/builder6.png")
+        label1 = tk.Label(self, font=("Verdana", 16), text="TUTORIAL")
+        label1.pack(side="top")
+        text = tk.Text(self, wrap=tk.WORD, font=("Verdana", 12), padx=30, pady=10)
+        text.insert(tk.END, _tut_text0)
+        text.image_create(tk.END, image=self.img1)
+        text.insert(tk.END, _tut_text1)
+        text.image_create(tk.END, image=self.img2)
+        text.insert(tk.END, _tut_text2)
+        text.image_create(tk.END, image=self.img3)
+        text.insert(tk.END, _tut_text3)
+        text.image_create(tk.END, image=self.img4)
+        text.insert(tk.END, _tut_text4)
+        text.image_create(tk.END, image=self.img5)
+        text.insert(tk.END, _tut_text5)
+        text.image_create(tk.END, image=self.img6)
+        text.insert(tk.END, _tut_text6)
+        text.pack(side="top")
 
 
 
+_about_text0 = "---- Micromechanical Model Builder ----\n by Joachim Vandewalle (joachim.vandewalle@hotmail.be)"
+_about_text1 = "\n\nThe micromechanical model is a coarse-grained force field model to simulate the mechanical behaviour of crystalline materials on a large length scale. MicMec is the first implementation of the micromechanical model, ever. The theoretical groundwork of the model was originally established in:"
+_about_text2 = "\n\nS. M. J. Rogge, “The micromechanical model to computationally investigate cooperative and correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225, pp. 271–285, 2020."
+_about_text3 = "\n\nThe micromechanical model has been the main topic of my master's thesis at the Center for Molecular Modelling (CMM). MicMec is, essentially, a simulation package for coarse-grained, micromechanical systems. Its architecture is intentionally similar to Yaff, a simulation package for atomistic systems, also developed at the CMM. In the process of building MicMec, the original micromechanical model was modified slightly, to ensure user friendliness, accuracy and flexibility. All major changes with respect to the original model are listed in the text of my master's thesis. More recent changes and quality-of-life improvements are listed in the documentation."
+_about_text4 = "\n\nThis application serves as a major quality-of-life improvement for users of the micromechanical model. It allows users to load a number of type files (.pickle) into a session and assign these types to locations in a three-dimensional grid. The three-dimensional grid represents the partitioning of a crystalline material into micromechanical cells. Users can export their builds to a structure file (.chk), which contains all information of the micromechanical system. That information includes the masses and initial positions of the micromechanical nodes, which are calculated automatically, and the coarse-grained parameters, which are extracted from the user-determined types. Details regarding this procedure can be found in `micmec/builder/builder_io.py` and `micmec/utils.py` or in the tutorial section of this application.\n\n"
 
 class AboutPage(Page):
         
     def __init__(self, manager):
-        
         super(AboutPage, self).__init__(manager)
-        #label1 = tk.Label(self, font=("Verdana", 20), text="About")
-        #label1.pack(side="top")
-
+        label1 = tk.Label(self, font=("Verdana", 16), text="ABOUT")
+        label1.pack(side="top")
+        text = tk.Text(self, wrap=tk.WORD, font=("Verdana", 12), padx=30, pady=10)
+        text.tag_configure("centered", justify=tk.CENTER)
+        text.tag_configure("indented", lmargin1=24, lmargin2=24)
+        text.insert(tk.END, _about_text0, "centered")
+        text.insert(tk.END, _about_text1)   
+        text.insert(tk.END, _about_text2, "indented")
+        text.insert(tk.END, _about_text3)
+        text.insert(tk.END, _about_text4)
+        text.config(state=tk.DISABLED)
+        text.pack(side="top")
 
 
     
@@ -204,9 +225,7 @@ class Widget(ttk.LabelFrame):
     """Generic class for any widget that is part of the main application."""
     
     def __init__(self, master, widget_label):
-        
         super(Widget, self).__init__(master, text=widget_label)
-
 
 
 
@@ -216,14 +235,10 @@ class DataWidget(Widget):
     _widget_label = "DATA"
     
     def __init__(self, master):
-        
         super(DataWidget, self).__init__(master, DataWidget._widget_label)
-        
         self.pack(side="left", expand="yes", 
                   fill="both", padx=10, pady=10)
-        
         self.data = {}
-        
         self.treeview = DataWidgetTreeview(self)
         self.buttons = DataWidgetButtons(self)
         
@@ -245,57 +260,45 @@ class DataWidget(Widget):
         self.treeview.reinsert_data()
         self.master.builder_widget.update_colors_types()
         
-   
 
      
 class DataWidgetButtons(ttk.Frame):
     
     def __init__(self, widget):
-        
         super(DataWidgetButtons, self).__init__(widget)
-        
         self.widget = widget
-        
         self.pack(side="bottom", padx=20, pady=20)
         self.button1 = ttk.Button(self, text="Add", command=self.select_add_data)
         self.button1.pack(expand="yes", side="left", padx=5)
         self.button2 = ttk.Button(self, text="Remove", command=self.select_remove_data)
         self.button2.pack(expand="yes", side="left", padx=5)
-    
 
     def select_add_data(self):
         """ Via user input, select a file to add to the list of nanocell types. """
         filetypes = (("PICKLE FILES", "*.pickle"),
                      ("PICKLE FILES", "*.pkl"),
                      ("ALL FILES", "*.*"))
-        
         filepaths = filedialog.askopenfilenames(
             title="Select Data",
             initialdir=os.getcwd(),
             filetypes=filetypes)
-
         if len(filepaths) == 0:
             return None 
-
         for filepath in filepaths:
             with open(filepath, "rb") as loadfile:
                 dictionary = pkl.load(loadfile)
-            
             filename = filepath.split("/")[-1]
             if "pkl" in filename:
                 filename = filename[:-4]
             if "pickle" in filename:
                 filename = filename[:-7]
-            
-            self.widget.add_data(filename, dictionary)
-            
+            self.widget.add_data(filename, dictionary)      
 
     def select_remove_data(self):
         """Via user input, select a file to remove from the list of nanocell types."""
         for selected in self.widget.treeview.view.selection():
             values = self.widget.treeview.view.item(selected)["values"]
             self.widget.remove_data(values[0])
-    
 
     
 
@@ -312,34 +315,24 @@ class DataWidgetTreeview(ttk.Frame):
     ]
     
     def __init__(self, widget):
-        
         super(DataWidgetTreeview, self).__init__(widget)
-        
         self.widget = widget
-        
         self.pack(fill="both", expand="yes", side="top", padx=20, pady=20)
-        
         self.view = ttk.Treeview(self, 
                                  show="headings",
                                  columns=DataWidgetTreeview._columns,
                                  height=30)
         self.view.pack(fill="both", expand="yes", side="bottom")
         self.view.place(x=0, y=0)
-        
         for column in DataWidgetTreeview._columns:
             self.view.heading(column, text=column)
             self.view.column(column, width=80, minwidth=150)
-        
         self.hscroll = ttk.Scrollbar(self, orient="horizontal",
                                      command=self.view.xview)
         self.hscroll.pack(side="bottom", fill="x")
-        
         self.update()
         self.view.configure(xscrollcommand=self.hscroll.set)
-        
         self.insert_data()
-        
-        
         
     def insert_data(self):
         for filename, dictionary in self.widget.data.items():
@@ -353,13 +346,12 @@ class DataWidgetTreeview(ttk.Frame):
 
     def reinsert_data(self):
         self.view.delete(*self.view.get_children())
-        self.insert_data()
-        
+        self.insert_data() 
 
 
 
 class BuilderWidget(Widget):
-    """Handles the building and layout of the micromechanical node network."""
+    """Handles the building and layout of the micromechanical system."""
     
     _widget_label = "BUILDER"
     _colors = ["#e41a1c", "#377eb8", "#4daf4a", 
@@ -372,33 +364,23 @@ class BuilderWidget(Widget):
                "#ccebc5", "#ffed6f"]
     
     def __init__(self, master):
-        
         super(BuilderWidget, self).__init__(master, BuilderWidget._widget_label)
-        
         self.master = master
-        
         self.pack(side="left", expand="yes", 
                   fill="both", padx=10, pady=10)
-        
         self.colors_types = {}
         self.colors_types[int(0)] = ("#FFFFFF", "--NONE--")
-        
         self.selected_key = int(0)
-        
         self.nx = 10
         self.ny = 10
         self.nz = 10
-        
         self.grid = np.zeros((self.nx, self.ny, self.nz), dtype=int)
-        
         self.buttons = BuilderWidgetButtons(self)
         self.selector = BuilderWidgetSelector(self)
         self.canvas = BuilderWidgetCanvas(self)
         
-
     def update_colors_types(self):
         updated_types = self.master.data_widget.data.keys()
-        
         keys_to_remove = []
         for key, value in self.colors_types.items():
             color_ = value[0]
@@ -409,7 +391,6 @@ class BuilderWidget(Widget):
             self.grid = np.where(self.grid == key, 
                                   int(0), self.grid)
             self.colors_types.pop(key)
-        
         for type_ in updated_types:
             current_colors = []
             current_types = []
@@ -426,17 +407,12 @@ class BuilderWidget(Widget):
         
     
     
-
 class BuilderWidgetSelector(ttk.Frame):
     
-    def __init__(self, widget):
-        
+    def __init__(self, widget):    
         super(BuilderWidgetSelector, self).__init__(widget)
-        
         self.widget = widget
-        
         self.pack(fill="x", side="top", padx=20, pady=10)
-        
         self.combobox_types = ttk.Combobox(self, 
                                            postcommand=self.update_list,
                                            state="readonly")
@@ -451,7 +427,6 @@ class BuilderWidgetSelector(ttk.Frame):
         self.label_color.pack(side="left", padx=5)
         tk.Label(self, text="       Layer:").pack(side="left")
         self.spinbox_layers.pack(side="left", padx=5, pady=5)
-        
         self.spinbox_layers.set(1)
     
     def select_key(self, event):
@@ -477,23 +452,12 @@ class BuilderWidgetSelector(ttk.Frame):
     
 
 
-
 class BuilderWidgetButtons(ttk.Frame):
     
-    def __init__(self, widget):
-        
+    def __init__(self, widget):        
         super(BuilderWidgetButtons, self).__init__(widget)
-        
         self.widget = widget
-        
         self.pack(fill="x", side="top", padx=20, pady=10)
-
-        # Create a style for the checkbuttons.
-        #style = ttk.Style()
-        #style.theme_use("alt")
-        #style.configure("new.TCheckbutton", background="#2B2D2F", focusthickness=0, 
-                                        #indicatorrelief=tk.FLAT, indicatormargin=-1, indicatordiameter=-1, indicatorcolor="red")
-        
         # Create checkbuttons to choose whether a direction has periodic boundary conditions or not.
         self.pbc_x = tk.IntVar()
         self.pbc_y = tk.IntVar()
@@ -501,7 +465,6 @@ class BuilderWidgetButtons(ttk.Frame):
         self.check_x = ttk.Checkbutton(self, variable=self.pbc_x) # style="new.TCheckbutton"
         self.check_y = ttk.Checkbutton(self, variable=self.pbc_y)
         self.check_z = ttk.Checkbutton(self, variable=self.pbc_z)
-        
         # Create spinboxes to select the maximum number of nanocells in each direction.
         self.spinbox_nx = ttk.Spinbox(self, from_=2, to=20,
                                         state="readonly",
@@ -512,7 +475,6 @@ class BuilderWidgetButtons(ttk.Frame):
         self.spinbox_nz = ttk.Spinbox(self, from_=2, to=20,
                                         state="readonly",
                                         command=self.update_nz, width=5)
-        
         # Add the checkbuttons and spinboxes to the layout.
         tk.Label(self, text="nx =").pack(side="left")
         self.spinbox_nx.pack(side="left", padx=5, pady=5)
@@ -523,7 +485,6 @@ class BuilderWidgetButtons(ttk.Frame):
         tk.Label(self, text="  nz =").pack(side="left")
         self.spinbox_nz.pack(side="left", padx=5, pady=5)
         self.check_z.pack(side="left")
-        
         # Set the initial values of the checkboxes and spinboxes.
         self.pbc_x.set(1)
         self.pbc_y.set(1)
@@ -531,7 +492,6 @@ class BuilderWidgetButtons(ttk.Frame):
         self.spinbox_nx.set(self.widget.nx)
         self.spinbox_ny.set(self.widget.ny)
         self.spinbox_nz.set(self.widget.nz)
-    
     
     def update_nx(self):
         new_nx = int(self.spinbox_nx.get())
@@ -579,7 +539,6 @@ class BuilderWidgetButtons(ttk.Frame):
         self.widget.canvas.update_grid()
         self.widget.selector.spinbox_layers.configure(to=self.widget.nz)
      
-   
 
 
 class BuilderWidgetCanvas(tk.Canvas):
@@ -587,46 +546,34 @@ class BuilderWidgetCanvas(tk.Canvas):
     _rect_width = 20
     _rect_height = 20
     
-    def __init__(self, widget):
-        
+    def __init__(self, widget):        
         super(BuilderWidgetCanvas, self).__init__(widget)
-        
         self.widget = widget
-        
         self.layer = 0
-        
         self.itemconfigure("palette", width=3)
-        
         self.update_grid()
         self.pack(side="top", fill="both", expand="yes", padx=20, pady=10)
         
     
     def update_grid(self):
-        
         self.delete("all")
-        
         rect_width = BuilderWidgetCanvas._rect_width
         rect_height = BuilderWidgetCanvas._rect_height
-        
         select_all = self.create_text((0, 0), 
                                      anchor="nw", text="#",
                                      tags="SelectAll")#, font=("Courier", 8))
         self.tag_bind(select_all, "<Button-1>", self.set_color_type_all)
-        
         for k0 in range(self.widget.nx):
             select_row = self.create_text((0, (k0 + 1)*rect_height), 
                                      anchor="nw", text=str(k0+1),
                                      tags="SelectRow" + str(k0))#, font=("Courier", 8))
             self.tag_bind(select_row, "<Button-1>", self.set_color_type_row)
-        
         for l0 in range(self.widget.ny):
             select_col = self.create_text(((l0 + 1)*rect_width, 0), 
                                      anchor="nw", text=str(l0+1),
                                      tags="SelectCol" + str(l0))#, font=("Courier", 8))
             self.tag_bind(select_col, "<Button-1>", self.set_color_type_col)
-        
         m0 = self.layer
-        
         for k0 in range(self.widget.nx):
             for l0 in range(self.widget.ny):
                 rect_vert_y = (k0 + 1)*rect_width
@@ -639,7 +586,6 @@ class BuilderWidgetCanvas(tk.Canvas):
                                          rect_vert_y + rect_height), 
                                         fill=color, tags=index_tags)
                 self.tag_bind(rect, "<Button-1>", self.set_color_type)
-    
     
     def set_color_type(self, event):
         current = self.find_withtag("current")[0]
@@ -654,7 +600,6 @@ class BuilderWidgetCanvas(tk.Canvas):
                 pass
         self.widget.grid[k0,l0,m0] = self.widget.selected_key
         self.itemconfigure(self.find_withtag("current")[0], fill=color)
-    
 
     def set_color_type_row(self, event):
         current = self.find_withtag("current")[0]
@@ -669,7 +614,6 @@ class BuilderWidgetCanvas(tk.Canvas):
             self.widget.grid[k0,l0,m0] = self.widget.selected_key
             self.itemconfigure(self.find_withtag(index_tag)[l0], fill=color)
             
-
     def set_color_type_col(self, event):
         current = self.find_withtag("current")[0]
         color = self.widget.colors_types[self.widget.selected_key][0]
@@ -683,7 +627,6 @@ class BuilderWidgetCanvas(tk.Canvas):
             self.widget.grid[k0,l0,m0] = self.widget.selected_key
             self.itemconfigure(self.find_withtag(index_tag)[k0], fill=color)
         
-
     def set_color_type_all(self, event):
         color = self.widget.colors_types[self.widget.selected_key][0]
         m0 = self.layer
