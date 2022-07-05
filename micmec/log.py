@@ -6,8 +6,8 @@
 
 """
 This module holds the main screen loging object of MicMec. 
-The ``log`` object is an instance off the ``ScreenLog`` class in the module ``molmod.log``.
-The logger also comes with a timer infrastructure, which is also implemented in the ``molmod.log`` module.
+The `log` object is an instance off the `ScreenLog` class in the module `molmod.log`.
+The logger also comes with a timer infrastructure, which is also implemented in the `molmod.log` module.
 """
 
 import atexit
@@ -19,27 +19,48 @@ __all__ = ['log', 'timer']
 
 
 head_banner = r"""
-Welcome to MicMec.
- ||==================================||  
- ||   __      __    ___     _____    ||
- ||    \      /      |     /    /    ||
- ||    |\    /|      |     |         ||
- ||    | \  / |      |     |         ||
- ||   _|_ \/ _|_    _|_    |____|    ||
- ||   __      __  _______   _____    ||
- ||    \      /    |    /  /    /    ||
- ||    |\    /|    |____   |         ||
- ||    | \  / |    |       |         ||
- ||   _|_ \/ _|_  _|____|  |____|    ||
- ||                                  ||
- ||==================================||
+================================================================================
+                     _____    _____    _____      _______     
+                      |  \    /  |      | |      / /  /_/
+                      | \ \  / / |      | |     / /
+                      | |\ \/ /| |      | |     | |    
+                      | | \__/ | |      | |     | |   ___
+                     _|_|_    _|_|_    _|_|_    |_|___|_|
+
+                     _____    _____  _________    _______
+                      |  \    /  |    | |  |_|   / /  /_/
+                      | \ \  / / |    | | __    / /
+                      | |\ \/ /| |    | |/_/    | |    
+                      | | \__/ | |    | |  ___  | |   ___
+                     _|_|_    _|_|_  _|_|__|_|  |_|___|_|
+
+                                 ________________
+                                /__/__/__/__/__/|
+                               /__/__/__/__/__/||
+                              /__/__/__/__/__/|||
+                              |__|__|__|__|__||||
+                              |__|__|__|__|__||||
+                              |__|__|__|__|__|||/
+                              |__|__|__|__|__||/
+                              |__|__|__|__|__|/
+
+
+                             Welcome to MicMec 1.0,
+                         written by Joachim Vandewalle
+                        (joachim.vandewalle@hotmail.be).
+
+================================================================================                                   
 """
 
 
 foot_banner = r"""
-End of file. Come back soon!
+================================================================================
+
+                          End of file. Come back soon!
+
+================================================================================
 """
 
 timer = TimerGroup()
-log = ScreenLog("MICMEC", "v1.0", head_banner, foot_banner, timer)
+log = ScreenLog("MICMEC", "1.0", head_banner, foot_banner, timer)
 atexit.register(log.print_footer)
