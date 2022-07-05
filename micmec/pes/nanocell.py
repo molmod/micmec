@@ -1,7 +1,17 @@
 #!/usr/bin/env python
+# File name: nanocell.py
+# Description: The (correct) description of a nanocell in the micromechanical model, by means of the elastic deformation energy and its gradient.
+# Author: Joachim Vandewalle
+# Date: 17-10-2021
+
+"""The (correct) description of a nanocell in the micromechanical model, 
+by means of the elastic deformation energy and its gradient."""
+# In the comments, we refer to equations in the master's thesis of Joachim Vandewalle.
 
 import numpy as np
 
+# Construct a multiplicator array.
+# This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
 multiplicator = np.array([
     [[-1, 1, 0, 0, 0, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
     [[-1, 1, 0, 0, 0, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 0, 1, 0, 0]],
@@ -61,10 +71,9 @@ for neighbor_cell in neighbor_cells:
 
 
 def elastic_energy(vertices, h0, C0):
-    
     # (3.20)
     matrices = np.einsum("...i,ij->...j", multiplicator, vertices)
-    
+
     # (3.23)
     matrices_ = np.einsum("...ji,kj->...ik", matrices, np.linalg.inv(h0))
     identity_ = np.array([np.identity(3) for _ in range(8)])
@@ -78,7 +87,6 @@ def elastic_energy(vertices, h0, C0):
 
 
 def grad_elastic_energy(vertices, h0, C0):
-    
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)
     

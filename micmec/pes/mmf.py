@@ -4,27 +4,24 @@
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
 
-"""The calculation of forces acting on the nodes of the micromechanical model."""
+"""MicroMechanicalField. The calculation of forces acting on the nodes of the micromechanical model."""
 
 import numpy as np
+from .nanocell_original import *
 
 from molmod import boltzmann
-from jax import jit
-
+from molmod.units import kjmol
 from ..log import log, timer
-
 from time import time
 
 __all__ = [
     "MicMecForceField", 
     "ForcePart", 
-    "ForcePartMechanical", 
-    "ForcePartPressure"
+    "ForcePartMechanical"
 ]
 
 class ForcePart(object):
-    """
-    Base class for anything that can compute energies (and optionally 
+    """Base class for anything that can compute energies (and optionally 
     gradient and virial) for a `System` object.
     """
     def __init__(self, name, system):
@@ -74,8 +71,7 @@ class ForcePart(object):
         self.clear()
 
     def compute(self, gpos=None, vtens=None):
-        """
-        Compute the energy of this part of the MicMecForceField.
+        """Compute the energy of this part of the MicMecForceField.
         
         The only variable inputs for the compute routine are the nodal
         positions and the domain vectors, which can be changed through the
@@ -188,383 +184,117 @@ class ForcePartMechanical(ForcePart):
             with log.section("FPINIT"):
                 log("Force part: %s" % self.name)
                 log.hline()
+        self.temp_eff = {}
+        self.efree = {}
+        self.efun = {}
+        self.grad_efun = {}
+        for type_ in set(self.system.types):
+            if int(type_) == 0:
+                continue
+            efun_states = []
+            grad_efun_states = []
+            h0 = self.system.params[f"type{int(type_)}/cell"]
+            C0 = self.system.params[f"type{int(type_)}/elasticity"]
+            for h0_state, C0_state in zip(h0, C0):
+                efun_state = lambda state: elastic_energy(state, h0_state, C0_state)
+                grad_efun_state = lambda state: grad_elastic_energy(state, h0_state, C0_state)
+                efun_states.append(efun_state)
+                grad_efun_states.append(grad_efun_state)
+            self.efun[int(type_)] = efun_states
+            self.grad_efun[int(type_)] = grad_efun_states
+            self.efree[int(type_)] = self.system.params[f"type{int(type_)}/free_energy"]
+            self.temp_eff[int(type_)] = self.system.params[f"type{int(type_)}/effective_temp"]
 
-        # Each node in a grid has eight neighboring cells.
-        # These neighbors are indexed from 0 to 7 in a fixed order.
-        neighbor_cells = [
-            np.array(( 0, 0, 0)),
-            np.array((-1, 0, 0)),
-            np.array(( 0,-1, 0)),
-            np.array(( 0, 0,-1)),
-            np.array((-1,-1, 0)),
-            np.array((-1, 0,-1)),
-            np.array(( 0,-1,-1)),
-            np.array((-1,-1,-1))
-        ]
-
-        # Initialize the derivatives of the neighboring cell matrices to x, y and z.
-        self.cell_xderivs = []
-        self.cell_yderivs = []
-        self.cell_zderivs = []
-
-        # Construct the derivatives of the neighboring cell matrices to x, y and z.
-        # These derivatives are constant matrices, because the cell matrices are linear in the node coordinates.
-        for neighbor_cell in neighbor_cells:
-            xderivs = []
-            yderivs = []
-            zderivs = []
-            
-            for neighbor_cell_ in neighbor_cells:
-                
-                xderiv = np.zeros((3, 3))
-                yderiv = np.zeros((3, 3))
-                zderiv = np.zeros((3, 3))
-
-                deriv = np.where(neighbor_cell == -1.0, 1.0, -1.0)
-                deriv = np.array([1.0 if n == -1 else -1.0 for n in neighbor_cell])
-                
-                dist_vec = np.abs(neighbor_cell - neighbor_cell_)
-                dist = np.sum(dist_vec)           
-
-                if dist == 0.0:
-                    xderiv[:, 0] = deriv
-                    yderiv[:, 1] = deriv
-                    zderiv[:, 2] = deriv
-                elif dist == 1.0:
-                    xderiv[dist_vec == 1.0, 0] = deriv[dist_vec == 1.0]
-                    yderiv[dist_vec == 1.0, 1] = deriv[dist_vec == 1.0]
-                    zderiv[dist_vec == 1.0, 2] = deriv[dist_vec == 1.0]
-                else:
-                    pass
-
-                xderivs.append(xderiv.T)
-                yderivs.append(yderiv.T)
-                zderivs.append(zderiv.T)
-            
-            self.cell_xderivs.append(xderivs)
-            self.cell_yderivs.append(yderivs)
-            self.cell_zderivs.append(zderivs)
     
     def _internal_compute(self, gpos, vtens):
         with timer.section("MMFF"):
             self._compute_cell_properties()
             self._compute_gpos(gpos)
-            self._compute_vtens(gpos, vtens)
-                       
-            return np.sum(self.cell_epots)
+            self._compute_vtens(gpos, vtens)       
+            return np.sum(self.epot_cells) # (3.27) and (3.36)
         
     
     def _compute_cell_properties(self):
         """Compute the cell properties."""
-        # Initialize an empty list to store the cell matrices and their inverses in.
-        self.cell_mats = []
-        self.cell_invs = []
-        self.cell_dets = []
-        self.cell_strains = []
-        self.cell_epots = []
-        self.cell_weights = []
-        self.cell_verts = []
-        
+        self.epot_cells = []
+        self.weights_cells = []
+        self.gpos_cells = []
+        self.verts_cells = []
         for cell_idx in range(self.system.ncells):
+            type_ = int(self.system.types[cell_idx])
             # Store the nodal index of each vertex of the current cell in an array.
-            vertices = np.zeros((8,), int)
-            for neighbor_idx, node_idx in enumerate(self.system.surrounding_nodes[cell_idx]):
-                vertices[neighbor_idx] = node_idx
-            # Store each edge vector of the current cell in an array.
-            edges = np.zeros((12, 3), float)
-            # Edges pointing in the x-direction.
-            edges[0] = self.delta(vertices[0], vertices[1])
-            edges[1] = self.delta(vertices[2], vertices[4])
-            edges[2] = self.delta(vertices[3], vertices[5])
-            edges[3] = self.delta(vertices[6], vertices[7])
-            if self.system.grid.shape[0] == 2:
-                for k in range(0, 4):
-                    if edges[k, 0] < 0.0:
-                        edges[k] += self.system.domain.rvecs[0] 
-            # Edges pointing in the y-direction.            
-            edges[4] = self.delta(vertices[0], vertices[2])
-            edges[5] = self.delta(vertices[1], vertices[4])
-            edges[6] = self.delta(vertices[3], vertices[6])
-            edges[7] = self.delta(vertices[5], vertices[7])
-            if self.system.grid.shape[1] == 2:
-                for k in range(4, 8):
-                    if edges[k, 1] < 0.0:
-                        edges[k] += self.system.domain.rvecs[1]
-            # Edges pointing in the z-direction.
-            edges[8] = self.delta(vertices[0], vertices[3])
-            edges[9] = self.delta(vertices[2], vertices[6])
-            edges[10] = self.delta(vertices[1], vertices[5])
-            edges[11] = self.delta(vertices[4], vertices[7])
-            if self.system.grid.shape[2] == 2:
-                for k in range(8, 12):
-                    if edges[k, 2] < 0.0:
-                        edges[k] += self.system.domain.rvecs[2]
-            # Construct each possible cell matrix of the current cell.
-            h0 = np.array([edges[0], edges[4], edges[8]]).T
-            h1 = np.array([edges[0], edges[5], edges[10]]).T
-            h2 = np.array([edges[1], edges[4], edges[9]]).T
-            h3 = np.array([edges[2], edges[6], edges[8]]).T
-            h4 = np.array([edges[1], edges[5], edges[11]]).T
-            h5 = np.array([edges[2], edges[7], edges[10]]).T
-            h6 = np.array([edges[3], edges[6], edges[9]]).T
-            h7 = np.array([edges[3], edges[7], edges[11]]).T
+            verts_idxs = self.system.surrounding_nodes[cell_idx]
             # Calculate the position of each vertex.
-            r0 = self.system.pos[vertices[0]]
-            r1 = r0 + edges[0]
-            r2 = r0 + edges[4]
-            r3 = r0 + edges[8]
-            r4 = r0 + edges[1] + edges[4]
-            r5 = r0 + edges[2] + edges[8]
-            r6 = r0 + edges[6] + edges[8]
-            r7 = r0 + edges[11] + edges[1] + edges[4]
-            # Construct the cell properties:
-            # the cell matrix, the determinant of the cell matrix (i.e. the cell vollume)
-            # and the inverse cell matrix.
-            cell_mat = np.array([h0, h1, h2, h3, h4, h5, h6, h7])
-            cell_det = np.linalg.det(cell_mat)
-            cell_inv = np.linalg.inv(cell_mat)
-            cell_vert = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
-            # Load the equilibrium cell properties.
-            # Each metastable state has a different equilibrium inverse cell matrix, elasticity tensor
-            # and free energy. The effective temperature is an additional fitting parameter.
-            cell0_eff_temp = self.system.effective_temps[cell_idx]
-            # Initialize the list of strain tensors and potential energies for each metastable state.
-            cell_strain_lst = []
-            cell_epot_lst = []
+            r0 = self.system.pos[verts_idxs[0]]
+            r1 = r0 + self.delta(verts_idxs[0], verts_idxs[1])
+            r2 = r0 + self.delta(verts_idxs[0], verts_idxs[2])
+            r3 = r0 + self.delta(verts_idxs[0], verts_idxs[3])
+            r4 = r0 + self.delta(verts_idxs[0], verts_idxs[4])
+            r5 = r0 + self.delta(verts_idxs[0], verts_idxs[5])
+            r6 = r0 + self.delta(verts_idxs[0], verts_idxs[6])
+            r7 = r0 + self.delta(verts_idxs[0], verts_idxs[7])
+            verts = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
+            temp_eff_ = self.temp_eff[type_]
+            gpos_states = []
+            epot_states = []
             # Iterate over each metastable state.
-            for cell0_inv, cell0_elast, cell0_efree in zip(self.system.equilibrium_inv_cell_matrices[cell_idx], 
-                                                            self.system.elasticity_tensors[cell_idx], 
-                                                            self.system.free_energies[cell_idx]):
-                cell_strain = self.strain(cell_mat, cell0_inv)
-                cell_epot = self.elastic_energy(cell_strain, cell0_elast, cell_det)
-                cell_strain_lst.append(cell_strain)
-                cell_epot_lst.append(cell_epot + cell0_efree)
-            cell_epot_lst = np.array(cell_epot_lst)
-            cell_epot_min = np.min(cell_epot_lst)
-            cell_weight_lst = np.exp(-(cell_epot_lst - cell_epot_min)/(boltzmann*cell0_eff_temp))
-            cell_epot = cell_epot_min - cell0_eff_temp*boltzmann*np.log(np.sum(cell_weight_lst))
-
-            # Store the cell matrices, the inverse cell matrices, the determinants and the strain tensors.
-            self.cell_mats.append(cell_mat)
-            self.cell_invs.append(cell_inv)
-            self.cell_dets.append(cell_det)
-            self.cell_strains.append(cell_strain_lst)
-            self.cell_epots.append(cell_epot)
-            self.cell_weights.append(cell_weight_lst)
-            self.cell_verts.append(cell_vert)
+            for efree_state, efun_state, grad_efun_state in zip(self.efree[type_], 
+                                                                self.efun[type_], 
+                                                                self.grad_efun[type_]):
+                epot_states.append(efun_state(verts) + efree_state)
+                gpos_states.append(grad_efun_state(verts).reshape((8, 3)))
+            epot_states = np.array(epot_states)
+            epot_min = np.min(epot_states)
+            weights_states = np.exp(-(epot_states - epot_min)/(boltzmann*temp_eff_)) # (3.41)
+            weights_states_norm = np.array(weights_states)/np.sum(weights_states)
+            epot_cell = epot_min - temp_eff_*boltzmann*np.log(np.sum(weights_states)) # (3.37)
+            gpos_cell = np.zeros((8, 3))
+            for weight_state, gpos_state in zip(weights_states_norm, gpos_states):
+                gpos_cell += weight_state*gpos_state # (3.40)
+            # Store everything.
+            self.epot_cells.append(epot_cell)
+            self.weights_cells.append(weights_states)
+            self.gpos_cells.append(gpos_cell)
+            self.verts_cells.append(verts)
         return None
     
+    
     def _compute_gpos(self, gpos):
-        """
-        Compute the gradient of the potential energy for each node in the network.
-        The output has the same shape as the array of positions: (N, 3).
-        """
+        """Compute the gradient of the total potential energy."""
         if gpos is None:
             return None
-        self.cell_gpos_contribs = np.zeros((self.system.ncells, 8, 3))
         # Iterate over each node
         for node_idx in range(self.system.nnodes):
             # Initialize the total force acting on the node.
-            ftot = np.zeros(3)
+            gpos_node = np.zeros(3)
             # Iterate over each surrounding cell of the node.
             for neighbor_idx, cell_idx in enumerate(self.system.surrounding_cells[node_idx]):
                 if cell_idx < 0:
                     # Skip the iteration if the current cell is empty or non-existent.
-                    # An empty or non-existent cell does not contribute to the force acting on the node.
                     continue
-                # Load the equilibrium properties.
-                cell0_inv_lst = self.system.equilibrium_inv_cell_matrices[cell_idx]
-                cell0_elast_lst = self.system.elasticity_tensors[cell_idx]
-                # Load the precalculated properties of the cell:
-                # the cell matrix, the inverse cell matrix, the determinant of the cell matrix (i.e. the cell volume),
-                # the strain tensors for each metastable state and the thermodynamic weights for each metastable state.
-                cell_mat = self.cell_mats[cell_idx]
-                cell_inv = self.cell_invs[cell_idx]
-                cell_det = self.cell_dets[cell_idx]
-                cell_strain_lst = self.cell_strains[cell_idx]
-                cell_weight_lst = self.cell_weights[cell_idx]
-                # Normalize the thermodynamic weights.
-                cell_weight_lst_norm = np.array(cell_weight_lst)/np.sum(cell_weight_lst)
-                # Initialize the force contribution acting on the node due to the deformation of the current cell.
-                f = np.zeros(3)
-                # Iterate over each metastable state of the current cell.
-                for cell0_inv, cell0_elast, cell_strain, cell_weight in zip(cell0_inv_lst, 
-                                                                            cell0_elast_lst, 
-                                                                            cell_strain_lst, 
-                                                                            cell_weight_lst_norm):              
-                    cell_xderiv = self.cell_xderivs[neighbor_idx]
-                    cell_yderiv = self.cell_yderivs[neighbor_idx]
-                    cell_zderiv = self.cell_zderivs[neighbor_idx]
-                    # Calculate the force contribution due to every representation and
-                    # multiply with the appropriate thermodynamic weight for each metastable state.
-                    f += cell_weight*self.force(cell_mat, 
-                                                cell_xderiv, 
-                                                cell_yderiv, 
-                                                cell_zderiv, 
-                                                cell0_inv, 
-                                                cell0_elast, 
-                                                cell_strain, 
-                                                cell_det, 
-                                                cell_inv)
-                # Store the f contribution to calculate the virial tensor for later.
-                self.cell_gpos_contribs[cell_idx][neighbor_idx] -= f
-                # Add the contribution of the current cell to the total force acting on the node.               
-                ftot += f
-            gpos[node_idx, :] = -ftot
+                gpos_node += self.gpos_cells[cell_idx][neighbor_idx]
+            gpos[node_idx, :] = gpos_node
         return None
 
+    
     def _compute_vtens(self, gpos, vtens):
         if (vtens is None) or (gpos is None):
             return None
-        vtens_ = np.zeros((3, 3))
-        vtens_ += np.einsum("ijk,ijl->kl", self.cell_gpos_contribs, self.cell_verts)
-        vtens[:] = vtens_
+        vtens[:] = np.einsum("ijk,ijl->kl", self.gpos_cells, self.verts_cells) # (4.1)
         return None
 
     
     def delta(self, i, j):
         boundary = self.system.boundary_nodes
         dvec = self.system.pos[j] - self.system.pos[i]
+        if boundary is None:
+            self.system.domain.mic(dvec)
+            return dvec
         if (i in boundary) and (j in boundary):
             pass
+
         self.system.domain.mic(dvec)
         return dvec
 
-    @staticmethod
-    def elastic_energy(eps, C0, h_det):
-        """
-        Elastic deformation energy in the harmonic approximation.
-        eps
-            strain tensor
-        C0
-            elasticity tensor 
-        h_det
-            determinant of cell matrix (volume of cell)
-        """
-        return 0.0625*np.einsum("a,aij,ijkl,akl", h_det, eps, C0, eps)
-
-    @staticmethod
-    def strain(h, h0_inv):
-        """
-        Mechanical strain.  
-        h   
-            cell matrix
-        h0_inv
-            inverse equilibrium cell matrix
-        """
-        mat = np.einsum("...ij,jk->...ik", h, h0_inv)
-        iden = np.array([np.identity(3) for _ in range(8)])
-        return 0.5*(np.einsum("...ji,...jk->...ik", mat, mat) - iden)
-    
-    @staticmethod
-    def force(h, h_xderiv, h_yderiv, h_zderiv, h0_inv, C0, eps=None, h_det=None, h_inv=None):
-        #    8x3x3,8x3x3,    8x3x3,    8x3x3,    3x3,  3x3x3x3, 8x3x3, 8,          8x3x3
-        """
-        Micromechanical force.
-        h
-            cell matrix
-        h_xderiv, h_yderiv, h_zderiv
-            partial derivatives of cell matrix to the cartesian coordinates of a node
-        h0_inv
-            inverse equilibrium cell matrix
-        C0
-            (equilibrium) elasticity tensor
-        eps
-            strain tensor
-        h_det
-            determinant of cell matrix (volume of cell)
-        h_inv
-            inverse cell matrix
-        """
-        f = np.zeros((3, 8))
-        if eps is None:
-            eps = strain(h, h0_inv)
-        if h_det is None:
-            h_det = np.linalg.det(h)
-        if h_inv is None:
-            h_inv = np.linalg.inv(h)
-        
-        h_xtrace = np.einsum("...ij,...ji", h_inv, h_xderiv) #8
-        h_ytrace = np.einsum("...ij,...ji", h_inv, h_yderiv)
-        h_ztrace = np.einsum("...ij,...ji", h_inv, h_zderiv)
-
-        mat = np.einsum("...ij,jk->...ki", h, h0_inv)
-        xmat = np.einsum("...ij,...jk->...ik", mat, np.einsum("...ij,jk->...ik", h_xderiv, h0_inv)) #8x3x3
-        ymat = np.einsum("...ij,...jk->...ik", mat, np.einsum("...ij,jk->...ik", h_yderiv, h0_inv))
-        zmat = np.einsum("...ij,...jk->...ik", mat, np.einsum("...ij,jk->...ik", h_zderiv, h0_inv))
-        
-        eps_xderiv = 0.5*(np.einsum("...ji", xmat) + xmat)
-        eps_yderiv = 0.5*(np.einsum("...ji", ymat) + ymat)
-        eps_zderiv = 0.5*(np.einsum("...ji", zmat) + zmat)
-
-        stress = np.einsum("ijkl,...kl->...ij", C0, eps) #8x3x3
-        quad_form = np.einsum("...ij,...ij", eps, stress) #8
-        
-        # Compute the contribution of cell (kappa, lambda, mu) to the x component
-        # of the force acting on node (k, l, m).
-        xterm = np.einsum("...ji,...ij", eps_xderiv, stress) #8
-        f[0] += h_xtrace*quad_form
-        f[0] += 2.0*xterm
-        
-        # Compute the contribution of cell (kappa, lambda, mu) to the y component
-        # of the force acting on node (k, l, m).
-        yterm = np.einsum("...ji,...ij", eps_yderiv, stress)
-        f[1] += h_ytrace*quad_form
-        f[1] += 2.0*yterm
-        
-        # Compute the contribution of cell (kappa, lambda, mu) to the y component
-        # of the force acting on node (k, l, m).
-        zterm = np.einsum("...ji,...ij", eps_zderiv, stress)
-        f[2] += h_ztrace*quad_form
-        f[2] += 2.0*zterm
-        
-        # Scale the contribution of cell (kappa, lambda, mu) according to the volume of the cell.
-        return -0.0625*np.einsum("i,...i", h_det, f)
-
-
-class ForcePartPressure(ForcePart):
-    """Applies a constant istropic pressure."""
-    def __init__(self, system, pext):
-        """
-        **ARGUMENTS**
-        system
-            An instance of the `System` class.
-        pext
-            The external pressure. (Positive will shrink the system.) In
-            case of 2D-PBC, this is the surface tension. In case of 1D, this
-            is the linear strain.
-
-        This force part is only applicable to systems that are periodic.
-        """
-        if system.domain.nvec == 0:
-            raise ValueError("The system must be periodic in order to apply a pressure")
-        ForcePart.__init__(self, "press", system)
-        self.system = system
-        self.pext = pext
-        if log.do_medium:
-            with log.section("FPINIT"):
-                log("Force part: %s" % self.name)
-                log.hline()
-
-    def _internal_compute(self, gpos, vtens):
-        with timer.section("Pressure"):
-            domain = self.system.domain
-            if (vtens is not None):
-                rvecs = domain.rvecs
-                if domain.nvec == 1:
-                    vtens += self.pext/domain.volume*np.outer(rvecs[0], rvecs[0])
-                elif domain.nvec == 2:
-                    vtens += self.pext/domain.volume*(
-                          np.dot(rvecs[0], rvecs[0])*np.outer(rvecs[1], rvecs[1])
-                        + np.dot(rvecs[0], rvecs[0])*np.outer(rvecs[1], rvecs[1])
-                        - np.dot(rvecs[1], rvecs[0])*np.outer(rvecs[0], rvecs[1])
-                        - np.dot(rvecs[0], rvecs[1])*np.outer(rvecs[1], rvecs[0])
-                    )
-                elif domain.nvec == 3:
-                    gvecs = domain.gvecs
-                    vtens += self.pext*domain.volume*np.identity(3)
-                else:
-                    raise NotImplementedError
-            return domain.volume*self.pext
 
 

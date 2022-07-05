@@ -61,7 +61,6 @@ for neighbor_cell in neighbor_cells:
 
 
 def elastic_energy(vertices, h0, C0):
-    
     # (3.20)
     matrices = np.einsum("...i,ij->...j", multiplicator, vertices)
     
@@ -78,19 +77,18 @@ def elastic_energy(vertices, h0, C0):
 
 
 def grad_elastic_energy(vertices, h0, C0):
-    
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)
     
     # (3.20)
-    matrix = np.einsum("...i,ij->...j", multiplicator, vertices) # [8x3x8].[8x3] = [8x3x3]
-    matrix_ = np.einsum("...ji,kj->...ik", matrix, h0_inv) # [3x3]
+    matrix = 0.125*np.einsum("abi,ij->bj", multiplicator, vertices) # [8x3x8].[8x3] = [3x3]
+    matrix_ = np.einsum("ji,kj->ik", matrix, h0_inv) # [3x3]
     h_inv = np.linalg.inv(matrix) # [3x3]
     
     # (3.31)
-    xmat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_xderivs, h0_inv) # [8x3x3].[[8x8x3x3].[3x3]] = [8x8x3x3]
-    ymat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_yderivs, h0_inv) 
-    zmat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_zderivs, h0_inv)
+    xmat = np.einsum("...ki,...km,jm->...ij", matrix_, cell_xderiv, h0_inv) # [3x3].[[8x3x3].[3x3]] = [8x3x3]
+    ymat = np.einsum("...ki,...km,jm->...ij", matrix_, cell_yderiv, h0_inv) 
+    zmat = np.einsum("...ki,...km,jm->...ij", matrix_, cell_zderiv, h0_inv)
     eps_xderiv = 0.5*(np.einsum("...ji", xmat) + xmat) # [8x8x3x3]
     eps_yderiv = 0.5*(np.einsum("...ji", ymat) + ymat) 
     eps_zderiv = 0.5*(np.einsum("...ji", zmat) + zmat)
