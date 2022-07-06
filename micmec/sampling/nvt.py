@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+# File name: nvt.py
+# Description: Thermostats for temperature control in a micromechanical MD simulation.
+# Author: Joachim Vandewalle
+# Date: 16-02-2022
+
+"""Thermostats for temperature control in a micromechanical MD simulation."""
 
 import numpy as np
 
 from molmod import boltzmann, femtosecond
 
-from ..log import log
-from .iterative import Iterative, StateItem
-from .utils import get_random_vel, clean_momenta, \
+from micmec.log import log
+from micmec.sampling.iterative import Iterative, StateItem
+from micmec.sampling.utils import get_random_vel, clean_momenta, \
     get_ndof_internal_md, stabilized_cholesky_decomp
-from .verlet import VerletHook
+from micmec.sampling.verlet import VerletHook
 
 
 __all__ = [
@@ -27,28 +33,25 @@ class AndersenThermostat(VerletHook):
     kind = "stochastic"
     method = "thermostat"
     def __init__(self, temp, start=0, step=1, select=None, annealing=1.0):
-        """
-        This is an implementation of the Andersen thermostat. The method
-        is described in:
+        """The Andersen thermostat. 
+        
+        The method is described in:
             Andersen, H. C. J. Chem. Phys. 1980, 72, 2384-2393.
 
-        **ARGUMENTS**
-        temp
-            The average temperature of the NVT ensemble
-        
-        **OPTIONAL ARGUMENTS**
-        start
+        Parameters
+        ----------
+        temp : float
+            The average temperature of the (N, V, T) ensemble.
+        start : int, optional
             The first iteration at which this hook is called
-        step
-            The number of iterations between two subsequent calls to this
-            hook.
-        select
-            An array of atom indexes to indicate which atoms controlled by
-            the thermostat.
-        annealing
-            After every call to this hook, the temperature is multiplied
-            with this annealing factor. This effectively cools down the
-            system.
+        step : int, optional
+            The number of iterations between two subsequent calls to this hook.
+        select : array_like, optional
+            The indexes of atoms which are controlled by the thermostat.
+        annealing : float, optional
+            After every call to this hook, the temperature is multiplied with this annealing factor. 
+            This effectively cools down the system.
+        
         """
         self.temp = temp
         self.select = select
@@ -85,23 +88,23 @@ class BerendsenThermostat(VerletHook):
     kind = "deterministic"
     method = "thermostat"
     def __init__(self, temp, start=0, timecon=100*femtosecond, restart=False):
-        """
-        This is an implementation of the Berendsen thermostat. 
+        """The Berendsen thermostat. 
+        
         The algorithm is described in:
-            Berendsen, H. J. C.; Postma, J. P. M.; van Gunsteren, W. F.;
-            Dinola, A.; Haak, J. R. J. Chem. Phys. 1984, 81, 3684-3690
+            Berendsen, H. J. C.; Postma, J. P. M.; van Gunsteren, W. F.; Dinola, A.; Haak, J. R. J.,
+            Chem. Phys. 1984, 81, 3684-3690
         
-        **ARGUMENTS**
-        temp
+        Parameters
+        ----------
+        temp : float
             The temperature of thermostat.
-        
-        **OPTIONAL ARGUMENTS**
-        start
+        start : int
             The step at which the thermostat becomes active.
-        timecon
-            The time constant of the Berendsen thermostat.
-        restart
-            Indicates whether the initalisation should be carried out.
+        timecon : float, optional
+            The time constant of the thermostat.
+        restart : bool, optional
+            Whether the initalisation should be carried out.
+        
         """
         self.temp = temp
         self.timecon = timecon
@@ -132,20 +135,20 @@ class LangevinThermostat(VerletHook):
     kind = "stochastic"
     method = "thermostat"
     def __init__(self, temp, start=0, timecon=100*femtosecond):
-        """
-        This is an implementation of the Langevin thermostat. 
+        """The Langevin thermostat. 
+        
         The algorithm is described in:
             Bussi, G.; Parrinello, M. Phys. Rev. E 2007, 75, 056707
         
-        **ARGUMENTS**
-        temp
+        Parameters
+        ----------
+        temp : float
             The temperature of thermostat.
-        
-        **OPTIONAL ARGUMENTS**
-        start
+        start : int, optional
             The step at which the thermostat becomes active.
-        timecon
-            The time constant of the Langevin thermostat.
+        timecon : float, optional
+            The time constant of the thermostat.
+        
         """
         self.temp = temp
         self.timecon = timecon
@@ -181,23 +184,22 @@ class CSVRThermostat(VerletHook):
     kind = "stochastic"
     method = "thermostat"
     def __init__(self, temp, start=0, timecon=100*femtosecond):
-        """
-        This is an implementation of the CSVR thermostat. The equations are
-        derived in:
-            Bussi, G.; Donadio, D.; Parrinello, M. J. Chem. Phys. 2007,
-            126, 014101
+        """The CSVR thermostat. 
+
+        The equations are derived in:
+            Bussi, G.; Donadio, D.; Parrinello, M. J. Chem. Phys. 2007, 126, 014101
         and the implementation (used here) is derived in:
             Bussi, G.; Parrinello, M. Comput. Phys. Commun. 2008, 179, 26-29.
 
-        **ARGUMENTS**
-        temp
+        Parameters
+        ----------
+        temp : float
             The temperature of thermostat.
-
-        **OPTIONAL ARGUMENTS**
-        start
+        start : int, optional
             The step at which the thermostat becomes active.
-        timecon
-            The time constant of the CSVR thermostat.
+        timecon : float, optional
+            The time constant of the thermostat.
+        
         """
         self.temp = temp
         self.timecon = timecon
@@ -231,24 +233,24 @@ class GLEThermostat(VerletHook):
     kind = "stochastic"
     method = "thermostat"
     def __init__(self, temp, a_p, c_p=None, start=0):
-        """
-        This hook implements the coloured noise thermostat. The equations
-        are derived in:
-            Ceriotti, M.; Bussi, G.; Parrinello, M J. Chem. Theory Comput.
-            2010, 6, 1170-1180.
+        """The coloured noise thermostat. 
+
+        The equations are derived in:
+            Ceriotti, M.; Bussi, G.; Parrinello, M., J. Chem. Theory Comput. 2010, 6, 1170-1180.
         
-        **ARGUMENTS**
-        temp
+        Parameters
+        ----------
+        temp : float
             The temperature of thermostat.
-        a_p
+        a_p : numpy.ndarray
             Square drift matrix, with elements fitted to the specific problem.
-        
-        **OPTIONAL ARGUMENTS**
-        c_p
-            Square static covariance matrix. In equilibrium, its elements are fixed.
+        c_p : numpy.ndarray
+            Square static covariance matrix. 
+            In equilibrium, its elements are fixed.
             For non-equilibrium dynamics, its elements should be fitted.
-        start
+        start : int
             The step at which the thermostat becomes active.
+        
         """
         self.temp = temp
         self.ns = int(a_p.shape[0]-1)
@@ -384,33 +386,30 @@ class NHCThermostat(VerletHook):
     kind = "deterministic"
     method = "thermostat"
     def __init__(self, temp, start=0, timecon=100*femtosecond, chainlength=3, chain_pos0=None, chain_vel0=None, restart=False):
-        """
-        This hook implements the Nose-Hoover chain thermostat. The equations
-        are derived in:
-            Martyna, G. J.; Klein, M. L.; Tuckerman, M. J. Chem. Phys. 1992,
-            97, 2635-2643.
-        The implementation (used here) of a symplectic integrator of the
-        Nose-Hoover chain thermostat is discussed in:
-            Martyna, G. J.;  Tuckerman, M. E.;  Tobias, D. J.;  Klein,
-            M. L. Mol. Phys. 1996, 87, 1117-1157.
+        """The Nose-Hoover chain thermostat. 
 
-        **ARGUMENTS**
-        temp
+        The equations are derived in:
+            Martyna, G. J.; Klein, M. L.; Tuckerman, M. J. Chem. Phys. 1992, 97, 2635-2643.
+        The implementation (used here) of a symplectic integrator of the Nose-Hoover chain thermostat is discussed in:
+            Martyna, G. J.;  Tuckerman, M. E.;  Tobias, D. J.;  Klein, M. L. Mol. Phys. 1996, 87, 1117-1157.
+
+        Parameters
+        ----------
+        temp : float
             The temperature of thermostat.
-
-        **OPTIONAL ARGUMENTS**
-        start
+        start : int, optional
             The step at which the thermostat becomes active.
-        timecon
-            The time constant of the Nose-Hoover thermostat.
-        chainlength
+        timecon : float, optional
+            The time constant of the thermostat.
+        chainlength : int, optional, default 3
             The number of beads in the Nose-Hoover chain.
-        chain_pos0
+        chain_pos0 : array_like, optional
             The initial thermostat chain positions.
-        chain_vel0
+        chain_vel0 : array_like, optional
             The initial thermostat chain velocities.
-        restart
-            Indicates whether the initalisation should be carried out.
+        restart : bool, optional, default False
+            Whether the initalisation should be carried out.
+        
         """
         self.temp = temp
         self.restart = restart

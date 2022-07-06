@@ -9,26 +9,31 @@ from molmod import boltzmann
 import numpy as np
 
 def get_random_vel(temp0, scalevel0, masses, select=None):
-    """
-    Generate random nodal velocities using a Maxwell-Boltzmann distribution.
+    """Generate random nodal velocities using a Maxwell-Boltzmann distribution.
     
-    **ARGUMENTS**
-    temp0
+    Parameters
+    ----------
+    temp0 : float
         The temperature for the Maxwell-Boltzmann distribution.
-    scalevel0
-        When set to True, the velocities are rescaled such that the
-        instantaneous temperature coincides with temp0.
-    masses
-        An (N,) array with nodal masses.
-    
-    **OPTIONAL ARGUMENTS**
-    select
-        When given, this must be an array of integer indexes. Only for these
-        nodes (masses) initial velocities will be generated.
+    scalevel0 : bool
+        When set to True, the velocities are rescaled such that the instantaneous temperature coincides with temp0.
+    masses : 
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
+    select : list of int
+        When given, this must be an array of integer indexes. 
+        Only for these nodes (masses) initial velocities will be generated.
 
-    **RETURNS** 
-    An (N, 3) array with random nodal velocities. When the select option is used,
-    the shape of the results is (M, 3), where M is the length of the selected array.
+    Returns
+    -------
+    vel0 : 
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The random nodal velocities. 
+    
     """
     if select is not None:
         masses = masses[select]
@@ -42,17 +47,27 @@ def get_random_vel(temp0, scalevel0, masses, select=None):
 
 
 def remove_com_moment(vel, masses):
-    """
-    Zero the global linear momentum.
+    """Zero the global linear momentum.
 
-    **ARGUMENTS**
-    vel
-        An (N, 3) array with nodal velocities. This array is modified in-place.
-    masses
-        An (N,) array with nodal masses.
+    Parameters
+    ----------
+    vel :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal velocities. 
+        This array is modified in-place.
+    masses :
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
     
-    The zero linear center-of-mass momentum is achieved by subtracting 
-    translational rigid body motion from the nodal velocities.
+    Notes
+    -----
+    The zero linear center-of-mass momentum is achieved by subtracting translational rigid body motion from 
+    the nodal velocities.
+    
     """
     # Compute the center of mass velocity.
     velcom = np.dot(masses, vel)/np.sum(masses)
@@ -61,21 +76,35 @@ def remove_com_moment(vel, masses):
 
 
 def remove_angular_moment(pos, vel, masses):
-    """
-    Zero the global angular momentum.
+    """Zero the global angular momentum.
 
-    **ARGUMENTS**
-    pos
-        An (N, 3) array with nodal positions. This array is not modified.
-    vel
-        An (N, 3) array with nodal velocities. This array is modified in-place.
-    masses
-        An (N,) array with nodal masses.
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+        This array is modified in-place.
+    vel :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal velocities. 
+        This array is modified in-place.
+    masses :
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
     
-    The zero angular momentum is achieved by subtracting angular rigid body motion 
-    from the nodal velocities. The angular momentum is measured with respect to the 
-    center of mass to avoid that this routine reintroduces a linear center-of-mass 
-    velocity. This is also beneficial for the numerical stability.
+    Notes
+    -----
+    The zero angular momentum is achieved by subtracting angular rigid body motion from the nodal velocities. 
+    The angular momentum is measured with respect to the center of mass to avoid that this routine reintroduces a 
+    linear center-of-mass velocity. 
+    This is also beneficial for the numerical stability.
+    
     """
     # Translate a copy of the positions, such that the center of mass lies in the origin.
     pos = pos.copy()
@@ -92,18 +121,30 @@ def remove_angular_moment(pos, vel, masses):
 
 
 def clean_momenta(pos, vel, masses, domain):
-    """
-    Remove any relevant external momenta.
+    """Remove any relevant external momenta.
     
-    **ARGUMENTS**
-    pos
-        An (N, 3) array with nodal positions. This array is not modified.
-    vel
-        An (N, 3) array with nodal velocities. This array is modified in-place.
-    masses
-        An (N,) array with nodal masses.
-    domain
-        An instance of a simulation domain describing the periodic boundary conditions.
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+        This array is modified in-place.
+    vel :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal velocities. 
+        This array is modified in-place.
+    masses :
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
+    domain : yaff.pes.ext.Cell object
+        An instance of the simulation domain describing the periodic boundary conditions.
+    
     """
     remove_com_moment(vel, masses)
     if domain.nvec == 0:
@@ -115,35 +156,63 @@ def clean_momenta(pos, vel, masses, domain):
 
 
 def inertia_tensor(pos, masses):
-    """
-    Compute the inertia tensor for a given set of point particles.
+    """Compute the inertia tensor for a given set of point particles.
     
-    **ARGUMENTS**
-    pos
-        An (N, 3) array with nodal positions.
-    masses
-        An (N,) array with nodal masses.
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+        This array is modified in-place.
+    masses :
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
     
-    **RETURNS** 
-    A (3, 3) array containing the inertia tensor.
+    Returns
+    -------
+    itens : 
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The inertia tensor.
     """
-    return np.identity(3)*(masses.reshape(-1,1)*pos**2).sum() - np.dot(pos.T, masses.reshape(-1,1)*pos)
+    itens = np.identity(3)*(masses.reshape(-1,1)*pos**2).sum() - np.dot(pos.T, masses.reshape(-1,1)*pos)
+    return itens
 
 
 def angular_moment(pos, vel, masses):
-    """
-    Compute the angular moment of a set of point particles.
+    """Compute the angular moment of a set of point particles.
         
-    **ARGUMENTS**
-    pos
-        An (N, 3) array with atomic positions.
-    vel
-        An (N, 3) array with atomic velocities.
-    masses
-        An (N,) array with atomic masses.
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+    vel :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal velocities. 
+    masses :
+        SHAPE: (nnodes,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal masses.
         
-    **RETURNS** 
-    A (3,) array with the angular momentum vector.
+    Returns
+    -------
+    ang_mom : 
+        SHAPE: (3,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The angular momentum vector.
+    
     """
     lin_moms = masses.reshape(-1,1)*vel
     ang_mom = np.zeros(3, float)
@@ -154,27 +223,37 @@ def angular_moment(pos, vel, masses):
 
 
 def angular_velocity(amom, itens, epsilon=1e-10):
-    """
-    Derive the angular velocity from the angular moment and the inertia tensor.
+    """Derive the angular velocity from the angular moment and the inertia tensor.
     
-    **ARGUMENTS**
-    amom
-        An (3,) array with angular momenta.
-    itens
-        A (3, 3) array with the inertia tensor.
+    Parameters
+    ----------
+    amom : 
+        SHAPE: (3,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The angular momentum vector.
+    itens : 
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The inertia tensor.
+    epsilon : float
+        A threshold for the low eigenvalues of the inertia tensor. 
+        When an eigenvalue is below this threshold, it is assumed to be zero plus some (irrelevant) numerical noise.
     
-    **OPTIONAL ARGUMENTS**
-    epsilon
-        A threshold for the low eigenvalues of the inertia tensor. When an
-        eigenvalue is below this threshold, it is assumed to be zero plus
-        some (irrelevant) numerical noise.
-    
-    **RETURNS** 
-    A (3,) array with the angular velocity vector.
-    In principle this routine should merely return:
-        np.linalg.solve(itens, amom).
-    However, when the inertia tensor has zero eigenvalues, this routine will 
-    use a proper pseudo-inverse of the inertia tensor.
+    Returns
+    -------
+    avel : 
+        SHAPE: (3,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The angular velocity vector.
+
+    Notes
+    -----
+    In principle, this routine should merely return: `np.linalg.solve(itens, amom)`.
+    However, when the inertia tensor has zero eigenvalues, this routine will use a proper pseudo-inverse of 
+    the inertia tensor.
     """
     evals, evecs = np.linalg.eigh(itens)
     # Select the significant part of the decomposition.
@@ -182,22 +261,35 @@ def angular_velocity(amom, itens, epsilon=1e-10):
     evals = evals[mask]
     evecs = evecs[:, mask]
     # Compute the pseudoinverse.
-    return np.dot(evecs, np.dot(evecs.T, amom)/evals)
+    avel = np.dot(evecs, np.dot(evecs.T, amom)/evals)
+    return avel
 
 
 def rigid_body_angular_velocities(pos, avel):
-    """
-    Generate the velocities of a set of nodes that move as a rigid body.
+    """Generate the velocities of a set of nodes that move as a rigid body.
 
-    **ARGUMENTS**
-    pos
-        An (N, 3) array with nodal positions.
-    avel
-        An (3,) array with the angular velocity vector of the rigid body.
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+    avel : 
+        SHAPE: (3,)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The angular velocity vector of the rigid body.
     
-    **RETURNS** 
-    An (N, 3) array with nodal velocities in the rigid body.
-    The linear momentum of the rigid body is zero.
+    Returns
+    -------
+    vel : 
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal velocities in the rigid body.
+        The linear momentum of the rigid body is zero.
+    
     """
     vel = np.zeros(pos.shape, float)
     vel[:,0] = (avel[1]*pos[:,2] - avel[2]*pos[:,1])
@@ -207,14 +299,15 @@ def rigid_body_angular_velocities(pos, avel):
 
 
 def get_ndof_internal_md(nnodes, nper):
-    """
-    Return the effective number of internal degrees of freedom for MD simulations.
+    """Return the effective number of internal degrees of freedom for MD simulations.
 
-    **ARGUMENTS**
-    nnodes
+    Parameters
+    ----------
+    nnodes : int
         The number of nodes.
-    nper
+    nper : int
         The number of periodic boundary conditions (0 for isolated systems).
+    
     """
     if nper == 0:
         # There are at least eight nodes in a micromechanical system.
@@ -230,19 +323,18 @@ def get_ndof_internal_md(nnodes, nper):
 
 
 def domain_symmetrize(mmf, vector_lst = None, tensor_lst = None):
-    """
-    Symmetrizes the simulation domain tensor, and updates the position vectors.
+    """Symmetrize the simulation domain tensor, and update the position vectors.
     
-    **ARGUMENTS**
-    mmf
-        A MicMecForceField instance.
-    
-    **OPTIONAL ARGUMENTS**
-    vector_lst
-        A list of numpy vectors which should be transformed under the symmetrization. 
+    Parameters
+    ----------
+    mmf : micmec.pes.mmff.MicMecForceField object
+        A micromechanical force field.
+    vector_lst : list of numpy.ndarray
+        A list of vectors which should be transformed under the symmetrization. 
         Note that the positions are already transformed automatically.
-    tensor_lst
-        A list of numpy tensors of rank 2 which should be transformed under the symmetrization.
+    tensor_lst : list of numpy.ndarray
+        A list of tensors which should be transformed under the symmetrization.
+    
     """
     # Store the unit domain tensor.
     domain = mmf.system.domain.rvecs.copy()
@@ -271,20 +363,38 @@ def domain_symmetrize(mmf, vector_lst = None, tensor_lst = None):
 
 
 def domain_lower(rvecs):
-    """
-    Transform the simulation domain matrix to its lower diagonal form. The transformation
-    is described here https://lammps.sandia.gov/doc/Howto_triclinic.html,
+    """Transform the simulation domain matrix to its lower diagonal form. 
+    The transformation is described here:
+        https://lammps.sandia.gov/doc/Howto_triclinic.html,
     bearing in mind that domain vectors are stored as rows, not columns.
     
-    **ARGUMENTS**
-    rvecs
-        A (3,3) array representing a domain matrix.
+    Parameters
+    ----------
+    rvecs :
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The cell matrix of the simulation domain.
     
-    **RETURNS**
-    new_rvecs
-        A (3,3) array representing a lower-diagonal form of rvecs.
-    rot
-        A (3,3) array representing the rotation matrix to go from rvecs to new_rvecs.
+    Returns
+    -------
+    new_rvecs :
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The lower-diagonal form of `rvecs`.
+    rot :
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The rotation matrix to go from `rvecs` to `new_rvecs`.
+
+    Notes
+    -----
+    The transformation is described here:
+        https://lammps.sandia.gov/doc/Howto_triclinic.html,
+    bearing in mind that domain vectors are stored as rows, not columns.
+    
     """
     assert rvecs.shape == (3,3), "Only 3D periodic systems supported!"
     new_rvecs = np.zeros(rvecs.shape)
@@ -311,14 +421,15 @@ def domain_lower(rvecs):
 
 
 def get_random_vel_press(mass, temp):
-    """
-    Generates symmetric tensor of barostat velocities.
+    """Generate symmetric tensor of barostat velocities.
     
-    **ARGUMENTS**
-    mass
-        The Barostat mass.
-    temp
+    Parameters
+    ----------
+    mass : float
+        The mass of the barostat.
+    temp : float
         The temperature at which the velocities are selected.
+    
     """
     shape = (3, 3)
     # Generate random 3x3 tensor.
@@ -338,16 +449,17 @@ def get_random_vel_press(mass, temp):
 
 
 def get_ndof_baro(dim, anisotropic, vol_constraint):
-    """    
-    Calculates the number of degrees of freedom associated with the simulation domain fluctuation.
+    """Calculate the number of degrees of freedom associated with the simulation domain fluctuation.
     
-    **ARGUMENTS**
-    dim
+    Parameters
+    ----------
+    dim : int
         The dimensionality of the system.
-    anisotropic
-        Boolean value determining whether anisotropic domain fluctuations are allowed.
-    vol_constraint
-        Boolean value determining whether the domain volume can change.
+    anisotropic : bool
+        Whether anisotropic domain fluctuations are allowed.
+    vol_constraint : bool
+        Whether the domain volume can change.
+    
     """
     ndof = 1
     # Degrees of freedom for a symmetric domain tensor.
@@ -363,9 +475,8 @@ def get_ndof_baro(dim, anisotropic, vol_constraint):
 
 
 def stabilized_cholesky_decomp(mat):
-    """
-    Do LDL^T and transform to MM^T with negative diagonal entries of D put equal to zero.
-    Assume mat is square and symmetric (but not necessarily positive definite).
+    """Do (LDL)^T and transform to (MM)^T with negative diagonal entries of D put equal to zero.
+    Assume `mat` is square and symmetric (but not necessarily positive definite).
     """
     if np.all(np.linalg.eigvals(mat) > 0):
         return np.linalg.cholesky(mat)  # usual cholesky decomposition
@@ -391,24 +502,26 @@ def stabilized_cholesky_decomp(mat):
 
 
 def transform_lower_triangular(pos, rvecs, reorder=False):
-    """
-    Transforms coordinate axes such that cell matrix is lower diagonal.
+    """Transform coordinate axes such that the cell matrix is lower diagonal.
 
-    The transformation is derived from the QR decomposition and performed
-    in-place. Because the lower triangular form puts restrictions on the size
-    of off-diagonal elements, lattice vectors are by default reordered from
-    largest to smallest; this feature can be disabled using the reorder
-    keyword.
+    The transformation is derived from the QR decomposition and performed in-place. 
+    Because the lower triangular form puts restrictions on the size of off-diagonal elements, lattice vectors are by 
+    default reordered from largest to smallest; this feature can be disabled using the reorder keyword.
     The domain vector lengths and angles remain exactly the same.
 
-    **ARGUMENTS**
-
-    pos : array_like
-        (natoms, 3) array containing atomic positions.
-
-    rvecs : array_like
-        (3, 3) array with domain vectors as rows.
-
+    Parameters
+    ----------
+    pos :
+        SHAPE: (nnodes,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The nodal positions (Cartesian coordinates). 
+    rvecs :
+        SHAPE: (3,3)
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The cell matrix of the simulation domain.
+        The domain vectors appear as rows in this matrix.
     reorder : bool
         Whether domain vectors are reordered from largest to smallest.
 

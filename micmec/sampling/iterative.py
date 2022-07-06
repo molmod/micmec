@@ -171,25 +171,23 @@ class EPotContribStateItem(StateItem):
         StateItem.__init__(self, "epot_contribs")
 
     def get_value(self, iterative):
-        return np.array([part.energy for part in iterative.ff.parts])
+        return np.array([part.energy for part in iterative.mmf.parts])
 
     def iter_attrs(self, iterative):
-        yield "epot_contrib_names", np.array([part.name for part in iterative.ff.parts], dtype="S")
+        yield "epot_contrib_names", np.array([part.name for part in iterative.mmf.parts], dtype="S")
 
 
 class Hook(object):
-    
     name = None
     kind = None
     method = None
-    
     def __init__(self, start=0, step=1):
         """
-        **Optional arguments:**
-        
-        start
+        Parameters
+        ----------
+        start : int
             The first iteration at which this hook should be called.
-        step
+        step : int
             The hook will be called every `step` iterations.
         
         """

@@ -1,17 +1,25 @@
 #!/usr/bin/env python
 # File name: mmf.py
-# Description: MicroMechanicalField. The calculation of forces acting on the micromechanical nodes.
+# Description: MicMecForceField. The calculation of forces acting on the micromechanical nodes.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
 
-"""MicroMechanicalField. The calculation of forces acting on the nodes of the micromechanical model."""
+"""MicMecForceField. The calculation of forces acting on the nodes of the micromechanical model."""
 
 import numpy as np
-from .nanocell_original import *
+
+# CHOOSE ONE OF THE FOLLOWING:
+#   nanocell (default, recommended, fast)
+#   nanocell_jax (recommended, slow)
+#   nanocell_thesis (not recommended)
+#   nanocell_original (not recommended)
+from .nanocell import *
+# Set JAX to True if you are using nanocell_jax
+JAX = False
 
 from molmod import boltzmann
 from molmod.units import kjmol
-from ..log import log, timer
+from micmec.log import log, timer
 from time import time
 
 __all__ = [
@@ -21,19 +29,19 @@ __all__ = [
 ]
 
 class ForcePart(object):
-    """Base class for anything that can compute energies (and optionally 
-    gradient and virial) for a `System` object.
-    """
+    """Base class for anything that can compute energies (and optionally gradient and virial) for a `System` object."""
     def __init__(self, name, system):
         """
-        **ARGUMENTS**
-        name
-            A name for this part of the micromechanical force field. 
-            This name must adhere to the following conventions: all lower case, 
-            no white space, and short. It is used to construct part_* 
-            attributes in the MicMecForceField class, where * is the name.
-        system
+        Parameters
+        ----------
+        name : str
+            A name for this part of the micromechanical force field (MMFF). 
+            This name must adhere to the following conventions: all lower case, no white space, and short. 
+            It is used to construct part_* attributes in the MicMecForceField class, where * is the name.
+        
+        system : micmec.system.System object
             The system to which this part of the MMFF applies.
+        
         """
         self.name = name
         # backup copies of last call to compute:
@@ -43,60 +51,80 @@ class ForcePart(object):
         self.clear()
 
     def clear(self):
-        """
-        Fill in nan values in the cached results to indicate that they have become invalid.
-        """
+        """Fill in nan values in the cached results to indicate that they have become invalid."""
         self.energy = np.nan
         self.gpos[:] = np.nan
         self.vtens[:] = np.nan
 
     def update_rvecs(self, rvecs):
-        """
-        Let the `ForcePart` object know that the domain vectors have changed.
+        """Let the `ForcePart` object know that the domain vectors have changed.
 
-        **ARGUMENTS**
-        rvecs
-            The new domain vectors.
+        Parameters
+        ----------
+        rvecs :
+            SHAPE: (ndim, 3) 
+            TYPE: numpy.ndarray
+            DTYPE: float
+            The new (Cartesian) domain vectors.
+        
         """
         self.clear()
 
     def update_pos(self, pos):
-        """
-        Let the `ForcePart` object know that the nodal positions have changed.
+        """Let the `ForcePart` object know that the nodal positions have changed.
 
-        **ARGUMENTS**
-        pos
-            The new nodal coordinates.
+        Parameters
+        ----------
+        pos : 
+            SHAPE: (nnodes, 3) 
+            TYPE: numpy.ndarray
+            DTYPE: float
+            The new (Cartesian) nodal coordinates.
+        
         """
         self.clear()
 
     def compute(self, gpos=None, vtens=None):
         """Compute the energy of this part of the MicMecForceField.
         
-        The only variable inputs for the compute routine are the nodal
-        positions and the domain vectors, which can be changed through the
-        `update_rvecs` and `update_pos` methods. All other aspects of
-        the micromechanical field are considered to be fixed between subsequent 
-        compute calls. If changes other than positions or domain vectors are needed,
-        one must construct a new MicMecForceField instance.
+        The only variable inputs for the compute routine are the nodal positions and the domain vectors, which can be 
+        changed through the `update_rvecs` and `update_pos` methods. 
+        All other aspects of the MMFF are considered to be fixed between subsequent compute calls. 
+        If changes other than positions or domain vectors are needed, one must construct a new MMFF instance.
         
-        **OPTIONAL ARGUMENTS**
-        gpos
-            The derivatives of the energy towards the Cartesian coordinates
-            of the nodes. ("g" stands for gradient and "pos" for positions.)
-            This must be a writeable numpy array with shape (N, 3) where N
-            is the number of nodes.
-        vtens
-            The force contribution to the pressure tensor. This is also
-            known as the virial tensor. It represents the derivative of the
-            energy towards uniform deformations, including changes in the
-            shape of the unit domain. (v stands for virial and "tens" stands
-            for tensor.) This must be a writeable numpy array with shape (3,
-            3). Note that the factor 1/V is not included.
+        Parameters
+        ----------
+        gpos : optional
+            SHAPE: (nnodes, 3) 
+            TYPE: numpy.ndarray (writable)
+            DTYPE: float
+            The derivatives of the energy towards the Cartesian coordinates of the nodes. 
+            ("g" stands for gradient and "pos" for positions.)
+        vtens : optional
+            SHAPE: (3, 3) 
+            TYPE: numpy.ndarray (writable)
+            DTYPE: float
+            The force contribution to the pressure tensor, also known as the virial tensor. 
+            It represents the derivative of the energy towards uniform deformations, including changes in the shape 
+            of the unit domain. 
+            (v stands for virial and "tens" stands for tensor.)
+            Note that the factor 1/V is not included.
         
-        The energy is returned. The optional arguments are Fortran-style
-        output arguments. When they are present, the corresponding results
-        are computed and **added** to the current contents of the array.
+        Raises
+        ------
+        ValueError
+            If the energy is not-a-number (nan) or if the gpos or vtens array contains a nan.
+    
+        Returns
+        -------
+        float
+            The (potential) energy (of the MMFF) is returned. 
+
+        Notes
+        -----
+        The optional arguments are Fortran-style output arguments. 
+        When they are present, the corresponding results are computed and added to the current contents of the array.
+        
         """
         if gpos is None:
             mmf_gpos = None
@@ -134,12 +162,13 @@ class MicMecForceField(ForcePart):
     """A complete micromechanical force field model."""
     def __init__(self, system, parts):
         """
-        **ARGUMENTS**
-        system
-            An instance of the `System` class.
-        parts
-            A list of instances of subclasses of `ForcePart`. These are
-            the different types of contributions to the micromechanical force field.
+        Parameters
+        ----------
+        system : micmec.system.System object
+            The micromechanical system.
+        parts : list of micmec.pes.mmff.ForcePart objects
+            The different types of contributions to the MMFF.
+        
         """
         ForcePart.__init__(self, "all", system)
         self.system = system
@@ -177,13 +206,14 @@ class MicMecForceField(ForcePart):
 class ForcePartMechanical(ForcePart):
     
     def __init__(self, system):
-
         ForcePart.__init__(self, "micmec", system)
         self.system = system
         if log.do_medium:
             with log.section("FPINIT"):
                 log("Force part: %s" % self.name)
                 log.hline()
+        # Initialize dictionaries for the effective temperature, the free energy, the elastic energy function and
+        # the gradient of the elastic energy function, for each type.
         self.temp_eff = {}
         self.efree = {}
         self.efun = {}
@@ -196,10 +226,18 @@ class ForcePartMechanical(ForcePart):
             h0 = self.system.params[f"type{int(type_)}/cell"]
             C0 = self.system.params[f"type{int(type_)}/elasticity"]
             for h0_state, C0_state in zip(h0, C0):
-                efun_state = lambda state: elastic_energy(state, h0_state, C0_state)
-                grad_efun_state = lambda state: grad_elastic_energy(state, h0_state, C0_state)
+                if JAX:
+                    import jax
+                    # Just-In-Time compilation for speed.
+                    efun_state = jax.jit(lambda verts: elastic_energy(verts, h0_state, C0_state))
+                    # Automatic differentiation.
+                    grad_efun_state = jax.jit(jax.grad(lambda verts: elastic_energy(verts, h0_state, C0_state)))
+                else:
+                    efun_state = lambda verts: elastic_energy(verts, h0_state, C0_state)
+                    grad_efun_state = lambda verts: grad_elastic_energy(verts, h0_state, C0_state)
                 efun_states.append(efun_state)
                 grad_efun_states.append(grad_efun_state)
+            # The energy function of a type (and its other parameters) can be accessed with an integer key.
             self.efun[int(type_)] = efun_states
             self.grad_efun[int(type_)] = grad_efun_states
             self.efree[int(type_)] = self.system.params[f"type{int(type_)}/free_energy"]
@@ -215,7 +253,9 @@ class ForcePartMechanical(ForcePart):
         
     
     def _compute_cell_properties(self):
-        """Compute the cell properties."""
+        """Compute the instantaneous micromechanical cell properties."""
+        # The cell properties include: the potential energy of the cell, the thermodynamic weights of its states,
+        # its contribution to the forces acting on its surrounding nodes and the coordinates of its surrounding nodes.
         self.epot_cells = []
         self.weights_cells = []
         self.gpos_cells = []
@@ -260,7 +300,7 @@ class ForcePartMechanical(ForcePart):
     
     
     def _compute_gpos(self, gpos):
-        """Compute the gradient of the total potential energy."""
+        """Compute the gradient of the (potential) energy (of the MMFF)."""
         if gpos is None:
             return None
         # Iterate over each node
@@ -278,22 +318,35 @@ class ForcePartMechanical(ForcePart):
 
     
     def _compute_vtens(self, gpos, vtens):
+        """Compute the virial tensor of the simulation domain."""
         if (vtens is None) or (gpos is None):
             return None
         vtens[:] = np.einsum("ijk,ijl->kl", self.gpos_cells, self.verts_cells) # (4.1)
+        # In the future, it would be best to implement this as an energy derivative.
         return None
 
     
     def delta(self, i, j):
+        """Compute the difference vector between node i and node j, taking into account the minimum image convention.
+
+        Parameters
+        ----------
+        i, j : int
+            The indices of the two micromechanical nodes in question.
+
+        Returns
+        -------
+        numpy.ndarray
+            The (Cartesian) difference vector between node i and node j.
+        
+        """
         boundary = self.system.boundary_nodes
         dvec = self.system.pos[j] - self.system.pos[i]
         if boundary is None:
             self.system.domain.mic(dvec)
             return dvec
         if (i in boundary) and (j in boundary):
-            pass
-
-        self.system.domain.mic(dvec)
+            self.system.domain.mic(dvec)
         return dvec
 
 

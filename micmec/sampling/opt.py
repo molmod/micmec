@@ -1,17 +1,22 @@
 #!/usr/bin/env python
+# File name: opt.py
+# Description: Geometry/Domain optimization.
+# Author: Joachim Vandewalle
+# Date: 26-10-2021
 
 """Geometry/Domain optimization."""
 
 import numpy as np
 
-# The implementation in scipy is often more robust
+# The implementation in scipy is often more robust.
 from scipy.linalg import eigh
+import time
 
 from molmod.minimizer import ConjugateGradient, QuasiNewton, NewtonLineSearch, Minimizer
 
 from micmec.log import log
 from micmec.sampling.iterative import Iterative, AttributeStateItem, \
-    PosStateItem, VolumeStateItem, DomainStateItem, Hook
+    PosStateItem, VolumeStateItem, DomainStateItem, EPotContribStateItem, Hook
 
 
 __all__ = [
@@ -51,7 +56,6 @@ class BaseOptimizer(Iterative):
         AttributeStateItem("counter"),
         AttributeStateItem("epot"),
         PosStateItem(),
-        DipoleStateItem(),
         VolumeStateItem(),
         DomainStateItem(),
         EPotContribStateItem(),
@@ -60,22 +64,20 @@ class BaseOptimizer(Iterative):
 
     def __init__(self, dof, state=None, hooks=None, counter0=0):
         """
-        **ARGUMENTS**
-        dof
-            A specification of the degrees of freedom. The convergence
-            criteria are also part of this argument. This must be a DOF
-            instance.
-        
-        **OPTIONAL ARGUMENTS**
-        state
-            A list with state items. State items are simple objects
-            that take or derive a property from the current state of the
-            iterative algorithm.
-        hooks
-            A function (or a list of functions) that is called after every
-            iterative.
-        counter0
+        Parameters
+        ----------
+        dof : micmec.sampling.dof.DOF object
+            A specification of the degrees of freedom. 
+            The convergence criteria are also part of this argument.
+        state : list
+            A list with state items. 
+            State items are simple objects that take or derive a property from the current state of the iterative 
+            algorithm.
+        hooks : 
+            A function (or a list of functions) that is called after every iterative.
+        counter0 :
             The counter value associated with the initial state.
+        
         """
         self.dof = dof
         Iterative.__init__(self, dof.mmf, state, hooks, counter0)
@@ -110,6 +112,7 @@ class BaseOptimizer(Iterative):
 
 
 class CGOptimizer(BaseOptimizer):
+    """A conjugate gradient optimizer."""
     log_name = "CGOPT"
 
     def __init__(self, dof, state=None, hooks=None, counter0=0):
@@ -138,13 +141,13 @@ class CGOptimizer(BaseOptimizer):
 class HessianModel(object):
     def __init__(self, ndof, hessian0=None):
         """
-        **ARGUMENTS**
-        ndof
+        Parameters
+        ----------
+        ndof : int
             The number of degrees of freedom.
-
-        **OPTIONAL ARGUMENTS**
-        hessian0
+        hessian0 : optional
             An initial guess for the hessian.
+        
         """
         self.ndof = ndof
         if hessian0 is None:
@@ -197,71 +200,37 @@ class SR1HessianModel(HessianModel):
 
 
 class QNOptimizer(BaseOptimizer):
-    """
-    A Quasi-Newtonian optimizer
-    This is just a basic implementation of the algorithm, but it has the
-    potential to become more advanced and efficient. The following
-    improvements will be made when time permits:
-    1) Support for non-linear constraints. This should be relatively easy. We
-      need a routine that can bring the unknowns back to the constraints,
-      and a routine to solve a constrained second order problem with linear
-      equality/inequality constraints. These should be methods of an object
-      that is an attribute of the dof object, which is need to give the
-      constraint code access to the Cartesian coordinates. In the code
-      below, some comments are added to mark where the constraint methods
-      should be called.
-    2) The Hessian updates and the diagonalization are currently very slow
-      for big systems. This can be fixed with a rank-1 update algorithm for
-      the spectral decomposition.
-    3) The optimizer would become much more efficient if redundant
-      coordinates were used. This can be implemented efficiently by using
-      the same machinery as the constraint code, but using the dlist and
-      iclist concepts for the sake of efficiency.
-    4) It is in practice not needed to keep track of the full Hessian. The
-      L-BFGS algorithm is a nice method to obtain a linear memory usage and
-      computational cost. However, L-BFGS is not compatible with the trust
-      radius used in this class, while we want to keep the trust radius for
-      the sake of efficiency, robustness and support for constraints. Using
-      the rank-1 updates mentioned above, it should be relatively easy to
-      keep track of the decomposition of a subspace of the Hessian.
-      This subspace can be defined as the basis of the last N rank-1
-      updates. Simple assumptions about the remainder of the spectrum should
-      be sufficient to keep the algorithm efficient.
-    """
+    """A Quasi-Newtonian optimizer."""
     log_name = "QNOPT"
 
     def __init__(self, dof, state=None, hooks=None, counter0=0, trust_radius=1.0, small_radius=1e-5, too_small_radius=1e-10, hessian0=None):
         """
-        **ARGUMENTS**
-        dof
-            A specification of the degrees of freedom. The convergence
-            criteria are also part of this argument. This must be a DOF
-            instance.
-
-        **OPTIONAL ARGUMENTS**
-        state
-            A list with state items. State items are simple objects
-            that take or derive a property from the current state of the
-            iterative algorithm.
-        hooks
-            A function (or a list of functions) that is called after every
-            iterative.
-        counter0
+        Parameters
+        ----------
+        dof : micmec.sampling.dof.DOF object
+            A specification of the degrees of freedom. 
+            The convergence criteria are also part of this argument.
+        state : list
+            A list with state items. 
+            State items are simple objects that take or derive a property from the current state of the iterative 
+            algorithm.
+        hooks : 
+            A function (or a list of functions) that is called after every iterative.
+        counter0 :
             The counter value associated with the initial state.
-        trust_radius
-            The initial value for the trust radius. It is adapted by the
-            algorithm after every step. The adapted trust radius is never
-            allowed to increase above this initial value.
-        small_radius
-            If the trust radius goes below this limit, the decrease in
-            energy is no longer essential. Instead a decrease in the norm
-            of the gradient is used to accept/reject a step.
-        too_small_radius
-            If the trust radius becomes smaller than this parameter, the
-            optimizer gives up. Insanely small trust radii are typical for
-            potential energy surfaces that are not entirely smooth.
-        hessian0
+        trust_radius : float
+            The initial value for the trust radius. 
+            It is adapted by the algorithm after every step. 
+            The adapted trust radius is never allowed to increase above this initial value.
+        small_radius : float
+            If the trust radius goes below this limit, the decrease in energy is no longer essential. 
+            Instead a decrease in the norm of the gradient is used to accept/reject a step.
+        too_small_radius : float
+            If the trust radius becomes smaller than this parameter, the optimizer gives up. 
+            Insanely small trust radii are typical for potential energy surfaces that are not entirely smooth.
+        hessian0 : 
             An initial guess for the Hessian.
+        
         """
         self.x_old = dof.x0
         self.hessian = SR1HessianModel(len(dof.x0), hessian0)
@@ -305,9 +274,8 @@ class QNOptimizer(BaseOptimizer):
         grad_eigen = np.dot(evecs.T, self.g_old)
 
         while True:
-            # Find the step with the given radius. If the hessian is positive
-            # definite and the unconstrained step is smaller than the trust
-            # radius, this step is returned.
+            # Find the step with the given radius. If the hessian is positive definite and the unconstrained step is 
+            # smaller than the trust radius, this step is returned.
             delta_eigen = solve_trust_radius(grad_eigen, evals, self.trust_radius)
             radius = np.linalg.norm(delta_eigen)
 
@@ -332,8 +300,8 @@ class QNOptimizer(BaseOptimizer):
                 must_shrink = True
 
             if (self.trust_radius < self.small_radius and delta_norm_g > 0):
-                # When the trust radius becomes small, the numerical noise on
-                # the energy may be too large to detect an increase energy.
+                # When the trust radius becomes small, the numerical noise on the energy may be too large to detect 
+                # an increase energy.
                 # In that case the norm of the gradient is used instead.
                 if log.do_high:
                     log("Gradient norm increases.")
@@ -349,8 +317,7 @@ class QNOptimizer(BaseOptimizer):
                 # If we get here, we are done with the trust radius loop.
                 if log.do_high:
                     log.hline()
-                # It is fine to increase the trust radius a little after a
-                # successful step.
+                # It is fine to increase the trust radius a little after a successful step.
                 if self.trust_radius < self.initial_trust_radius:
                     self.trust_radius *= 2.0
                 # Return the results of the successful step.
@@ -358,9 +325,8 @@ class QNOptimizer(BaseOptimizer):
 
 
 def solve_trust_radius(grad, evals, radius, threshold=1e-5):
-    """Find a step in eigen space with the given radius."""
-    # First try an unconstrained step if the eigenvalues are all strictly
-    # positive.
+    """Find a step in eigenspace with the given radius."""
+    # First try an unconstrained step if the eigenvalues are all strictly positive.
     if evals.min() > 0:
         step = -grad/evals
         if np.linalg.norm(step) <= radius:

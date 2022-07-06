@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-# File name: system.py
-# Description: The construction of a system of micromechanical nodes.
+# File name: builder_io.py
+# Description: Build the input and output structure files (.chk) used in the Micromechanical Model Builder.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
+
+"""Build the input and output structure files (.chk) used in the Micromechanical Model Builder."""
 
 import numpy as np
 
@@ -11,7 +13,7 @@ from micmec.utils import build_system
 __all__ = ["build_output", "build_input"]
 
 def build_output(data, colors_types, grid, pbc):
-    """Build the user-defined output of the Builder Application (builder.py) and store it as a dictionary.
+    """Build the user-defined output of the Builder application (builder.py) and store it as a dictionary.
     
     Parameters
     ----------
@@ -19,17 +21,16 @@ def build_output(data, colors_types, grid, pbc):
         A dictionary with the names of the micromechanical cell types as keys. 
         The corresponding values are dictionaries which contain information about the cell type.
         Example: 
-            data["fcu"] = {"elasticity": [np.array([[[[...]]]])], "cell": ...} 
-            # the parameters of the cell type "fcu", including the elasticity tensor, equilibirum cell matrix etc.
-
+            data["fcu"] = {"elasticity": [...], "cell": [...]} 
+            # The parameters of the cell type "fcu" include the elasticity tensor of each metastable state, 
+            # the equilibirum cell matrix of each metastable state, etc.
     colors_types : dict
         A dictionary with integer keys. 
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
         Example: 
             colors_types[1] = ("#0000FF", "fcu") 
-            # type 1 corresponds to the color blue and the name `fcu`
-
+            # Type 1 corresponds to the color blue and the name `fcu`.
     grid : 
         SHAPE: (nx, ny, nz) 
         TYPE: numpy.ndarray
@@ -40,7 +41,6 @@ def build_output(data, colors_types, grid, pbc):
         Example: 
             grid[kappa, lambda, mu] = 0 # empty cell at location (kappa, lambda, mu)
             grid[kappa_, lambda_, mu_] = 1 # cell of type 1 (`fcu`) at location (kappa_, lambda_, mu_)
-
     pbc : list of bools
         The domain vectors for which periodic boundary conditions should be enabled.
         Example:
@@ -70,7 +70,7 @@ def build_output(data, colors_types, grid, pbc):
 
 
 def build_input(output):
-    """Build the input of the Builder Application (builder.py) from a complete dictionary.
+    """Build the input of the Builder application (builder.py) from a complete dictionary.
     
     Parameters
     ----------
@@ -84,17 +84,16 @@ def build_input(output):
         A dictionary with the names of the micromechanical cell types as keys. 
         The corresponding values are dictionaries which contain information about the cell type.
         Example: 
-            data["fcu"] = {"elasticity": [np.array([[[[...]]]])], "cell": ...} 
-            # the parameters of the cell type "fcu", including the elasticity tensor, equilibirum cell matrix etc.
-
+            data["fcu"] = {"elasticity": [...], "cell": [...]} 
+            # The parameters of the cell type "fcu" include the elasticity tensor of each metastable state, 
+            # the equilibirum cell matrix of each metastable state, etc.
     colors_types : dict
         A dictionary with integer keys. 
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
         Example: 
             colors_types[1] = ("#0000FF", "fcu") 
-            # type 1 corresponds to the color blue and the name `fcu`
-
+            # Type 1 corresponds to the color blue and the name `fcu`.
     grid : 
         SHAPE: (nx, ny, nz) 
         TYPE: numpy.ndarray
@@ -105,7 +104,6 @@ def build_input(output):
         Example: 
             grid[kappa, lambda, mu] = 0 # empty cell at location (kappa, lambda, mu)
             grid[kappa_, lambda_, mu_] = 1 # cell of type 1 (`fcu`) at location (kappa_, lambda_, mu_)
-
     pbc : list of bools
         The domain vectors for which periodic boundary conditions should be enabled.
         Example:

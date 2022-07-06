@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # File name: builder.py
-# Description: The Builder Application to build your own micromechanical system.
+# Description: The Micromechanical Model Builder, an application to build your own micromechanical system.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
-"""The Micromechanical Model Builder application to build your own micromechanical system."""
+
+"""The Micromechanical Model Builder, an application to build your own micromechanical system."""
 
 import tkinter as tk
 import pickle as pkl
@@ -17,7 +18,8 @@ from tkinter import ttk
 import numpy as np
 
 from molmod.io.chk import load_chk, dump_chk
-from builder_io import build_input, build_output
+
+from micmec.builder.builder_io import build_input, build_output
 
 
 class Application(tk.Tk):

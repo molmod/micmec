@@ -1,14 +1,19 @@
 #!/usr/bin/env python
 # File name: nanocell.py
-# Description: The (correct) description of a nanocell in the micromechanical model, by means of the elastic deformation energy and its gradient.
+# Description: The (correct) description of a nanocell in the micromechanical model.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
 
-"""The (correct) description of a nanocell in the micromechanical model, 
-by means of the elastic deformation energy and its gradient."""
+"""The (correct) description of a nanocell in the micromechanical model.
+
+A nanocell, on the micromechanical level, is described by means of its elastic deformation energy and the gradient 
+of that energy, which represents the forces acting on the micromechanical nodes.
+"""
 # In the comments, we refer to equations in the master's thesis of Joachim Vandewalle.
 
 import numpy as np
+
+__all__ = ["elastic_energy", "grad_elastic_energy"]
 
 # Construct a multiplicator array.
 # This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
@@ -71,8 +76,40 @@ for neighbor_cell in neighbor_cells:
 
 
 def elastic_energy(vertices, h0, C0):
+    """The elastic energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
+        
+    Parameters
+    ----------
+    vertices : 
+        SHAPE: (8, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
+    h0 :
+        SHAPE: (3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float    
+        The equilibrium cell matrix.
+    C0 :
+        SHAPE: (3, 3, 3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The elasticity tensor.
+
+    Returns
+    -------
+    float
+        The elastic energy.
+    
+    Notes
+    -----
+    At first sight, the equations for bistable nanocells might seem absent from this derivation.
+    They are absent here, but they have been implemented in the `mmff.py` script.
+    This elastic energy is only the energy of a single metastable state of a nanocell.
+    
+    """
     # (3.20)
-    matrices = np.einsum("...i,ij->...j", multiplicator, vertices)
+    matrices = np.einsum("...i,ij->...j", multiplicator, vertices) # [8x3x8].[8x3] = [8x3x3]
 
     # (3.23)
     matrices_ = np.einsum("...ji,kj->...ik", matrices, np.linalg.inv(h0))
@@ -87,6 +124,36 @@ def elastic_energy(vertices, h0, C0):
 
 
 def grad_elastic_energy(vertices, h0, C0):
+    """The gradient of the elastic energy of a nanocell (with respect to one of its metastable states with parameters 
+    h0 and C0), towards the Cartesian coordinates of its surrounding nodes.
+        
+    Parameters
+    ----------
+    vertices : 
+        SHAPE: (8, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
+    h0 :
+        SHAPE: (3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float    
+        The equilibrium cell matrix.
+    C0 :
+        SHAPE: (3, 3, 3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The elasticity tensor.
+
+    Returns
+    -------
+    numpy.ndarray
+        SHAPE: (8, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The gradient of the elastic energy.
+
+    """
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)
     

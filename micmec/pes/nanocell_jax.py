@@ -1,24 +1,23 @@
 #!/usr/bin/env python
 # File name: nanocell_jax.py
-# Description: The (correct) description of a nanocell in the micromechanical model, by means of the elastic deformation energy and its gradient, which is automatically derived with JAX.
+# Description: The (correct) description of a nanocell in the micromechanical model, using JAX.
 # Author: Joachim Vandewalle
 # Date: 10-06-2022
 
-"""The (correct) description of a nanocell in the micromechanical model, 
-by means of the elastic deformation energy and its gradient, which is automatically derived with JAX."""
+"""The (correct) description of a nanocell in the micromechanical model, using JAX.
+
+This implementation is very generally applicable, but it is slower than the default (`nanocell.py`).
+Its slowness is likely due to the computational overhead of jax.numpy.
+It is not recommended to use this script, at least not until someone properly compares its results to the results 
+of the default.
+"""
+
 # In the comments, we refer to equations in the master's thesis of Joachim Vandewalle.
 
-# (JV) This implementation is very generally applicable, but it is slower than the default (`nanocell.py`).
-# Its slowness can be due to:
-#   1) a bad application of JAX's Just-In-Time compilation,
-#   2) or the fact that I'm using the CPU version of CUDA, instead of the GPU version.
-# I do not recommend using this script, at least not until someone properly compares its results to the results 
-# of the default and finds a way to speed it up.
-
 import numpy as np
-
-import jax
 import jax.numpy as jnp
+
+__all__ = ["elastic_energy"]
 
 # Construct a multiplicator array.
 # This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
@@ -34,11 +33,45 @@ multiplicator = jnp.array([
 ])
 
 
-# Just-In-Time compilation for computational speed-up.
-@jax.jit
 def elastic_energy(vertices_flat, h0, C0):
+    """The elastic energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
+        
+    Parameters
+    ----------
+    vertices_flat : 
+        SHAPE: (24,) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
+    h0 :
+        SHAPE: (3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float    
+        The equilibrium cell matrix.
+    C0 :
+        SHAPE: (3, 3, 3, 3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The elasticity tensor.
+
+    Returns
+    -------
+    float
+        The elastic energy.
+    
+    Notes
+    -----
+    At first sight, the equations for bistable nanocells might seem absent from this derivation.
+    They are absent here, but they have been implemented in the `mmff.py` script.
+    This elastic energy is only the energy of a single metastable state of a nanocell.
+    
+    """
     vertices = vertices_flat.reshape((8, 3))
 
+    # The equations below are the same as in the default (`nanocell.py`).
+    # Feel free to plug in a different energy expression; its gradient will be computed automatically.
+    # You do, however, need to use jax.numpy, which has some limitations and some computational overhead.
+    
     # (3.20)
     matrices = jnp.einsum("...i,ij->...j", multiplicator, vertices)
     
@@ -53,10 +86,6 @@ def elastic_energy(vertices_flat, h0, C0):
     
     return energy
 
-
-# Automatic differentiation.
-def grad_(fun):
-    return jax.grad(fun)
     
 
 

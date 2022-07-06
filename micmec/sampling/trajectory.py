@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # File name: trajectory.py
-# Description: Trajectory writer for the micromechanical model.
+# Description: Trajectory writers for the micromechanical model.
 # Author: Joachim Vandewalle
 # Date: 18-11-2021
 
@@ -19,15 +19,15 @@ class BaseHDF5Writer(Hook):
 
     def __init__(self, f, start=0, step=1):
         """
-        **ARGUMENTS**
-        f
-            An h5.File object to write the trajectory to.
-        
-        **OPTIONAL ARGUMENTS**
-        start
+        Parameters
+        ----------
+        f : h5py.File object (open)
+            An .h5 file to write the trajectory to.
+        start : int, optional
             The first iteration at which this hook should be called.
-        step
+        step : int, optional
             The hook will be called every `step` iterations.
+        
         """
         self.f = f
         Hook.__init__(self, start, step)
@@ -81,17 +81,16 @@ class XYZWriter(Hook):
 
     def __init__(self, fn_xyz, select=None, start=0, step=1):
         """
-        **ARGUMENTS**
-        fn_xyz
+        Parameters
+        ----------
+        fn_xyz : str
             A filename to write the XYZ trajectory to.
-
-        **OPTIONAL ARGUMENTS**
-        select
-            A list of node indexes that should be written to the trajectory
-            output. If not given, all nodes are included.
-        start
+        select : list, optional
+            A selection of nodes whose degrees of freedom are included. 
+            If no list is given, all nodal coordinates are included.
+        start : int, optional
             The first iteration at which this hook should be called.
-        step
+        step : int, optional
             The hook will be called every `step` iterations.
         
         """

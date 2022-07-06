@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 # File name: verlet.py
-# Description: The velocity verlet algorithm.
+# Description: The velocity Verlet algorithm.
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
-"""The velocity verlet algorithm."""
+
+"""The velocity Verlet algorithm."""
 
 import numpy as np
 import time
 
 from molmod import boltzmann, kjmol, kelvin
 
-from .iterative import Iterative, Hook, StateItem, AttributeStateItem, PosStateItem, \
+from micmec.sampling.iterative import Iterative, Hook, StateItem, AttributeStateItem, PosStateItem, \
                         TemperatureStateItem, VolumeStateItem, DomainStateItem
-from .utils import get_random_vel, clean_momenta
-from ..log import log, timer
+from micmec.sampling.utils import get_random_vel, clean_momenta
+from micmec.log import log, timer
 
 
 __all__ = [
@@ -21,7 +22,6 @@ __all__ = [
     "VerletHook",
     "VerletScreenLog",
     "ConsErrTracker", 
-    "KineticAnnealing",
 ]
 
 
@@ -125,7 +125,7 @@ class VerletIntegrator(Iterative):
         self.epot = self.mmf.compute(self.gpos, self.vtens)
         self.acc = -self.gpos/self.masses.reshape(-1,1)
         self.vel += 0.5*self.acc*self.timestep
-        self.ekin = self._compute_ekin()      
+        self.ekin = self._compute_ekin()
         
         self.call_verlet_hooks("post")
 
@@ -171,10 +171,9 @@ class VerletIntegrator(Iterative):
     
     def call_verlet_hooks(self, kind):
         from .npt import BerendsenBarostat, TBCombination
-        # In this call, the state items are not updated. The pre and post calls
-        # of the verlet hooks can rely on the specific implementation of the
-        # VerletIntegrator and need not to rely on the generic state item
-        # interface.
+        # In this call, the state items are not updated. 
+        # The pre and post calls of the verlet hooks can rely on the specific implementation of the VerletIntegrator 
+        # and need not rely on the generic state item interface.
         with timer.section("%s special hooks" % self.log_name):
             for hook in self.hooks:
                 if isinstance(hook, VerletHook) and hook.expects_call(self.counter):
@@ -199,7 +198,7 @@ class VerletIntegrator(Iterative):
             baro = None
             index_baro = 0
 
-            # Look for the presence of a thermostat and/or barostat
+            # Look for the presence of a thermostat and/or barostat.
             if hasattr(self.hooks, "__len__"):
                 for index, hook in enumerate(self.hooks):
                     if hook.method == "thermostat":
@@ -214,7 +213,7 @@ class VerletIntegrator(Iterative):
                 elif self.hooks.method == "barostat":
                     baro = self.hooks
 
-            # If both are present, delete them and generate TBCombination element
+            # If both are present, delete them and generate TBCombination element.
             if thermo is not None and baro is not None:
                 from .npt import TBCombination
                 if log.do_warning:
@@ -243,11 +242,10 @@ class VerletIntegrator(Iterative):
 
 
 class ConsErrTracker(object):
-    """
-    A class that tracks the errors on the conserved quantity.
-    Given its superior numerical accuracy, the algorithm below
-    is used to calculate the running average. Its properties are discussed
-    in Donald Knuth"s Art of Computer Programming, vol. 2, p. 232, 3rd edition.
+    """A class that tracks the errors on the conserved quantity.
+    
+    Given its superior numerical accuracy, the algorithm below is used to calculate the running average. 
+    Its properties are discussed in Donald Knuth"s Art of Computer Programming, vol. 2, p. 232, 3rd edition.
     """
     def __init__(self):
         self.counter = 0
@@ -279,17 +277,19 @@ class ConsErrTracker(object):
 
 
 class VerletHook(Hook):
-    """
-    Specialized Verlet hook. 
+    """Specialized Verlet hook. 
+    
     This is mainly used for the implementation of thermostats and barostats.
     """
     def __init__(self, start=0, step=1):
         """
-        **OPTIONAL ARGUMENTS**
-        start
+        Parameters
+        ----------
+        start : int
             The first iteration at which this hook should be called.
-        step
+        step : int
             The hook will be called every `step` iterations.
+        
         """
         self.econs_correction = 0.0
         Hook.__init__(self, start=0, step=1)
@@ -308,9 +308,7 @@ class VerletHook(Hook):
 
 
 class VerletScreenLog(Hook):
-    """
-    A screen logger for the Verlet algorithm.
-    """
+    """A screen logger for the Verlet algorithm."""
     def __init__(self, start=0, step=1):
         Hook.__init__(self, start, step)
         self.time0 = None
@@ -335,44 +333,5 @@ class VerletScreenLog(Hook):
                 time.time() - self.time0,
             ))
 
-
-class KineticAnnealing(VerletHook):
-    def __init__(self, annealing=0.99999, select=None, start=0, step=1):
-        """
-        This annealing hook is designed to be used with a plain Verlet integrator. 
-        At every call, the velocities are rescaled with the annealing parameter.
-
-        **ARGUMENTS**
-        annealing
-            After every call to this hook, the temperature is multiplied with this annealing factor. 
-            This effectively cools down the system.
-        select
-            An array mask or a list of indexes to indicate which atomic velocities should be annealed.
-        start
-            The first iteration at which this hook is called
-        step
-            The number of iterations between two subsequent calls to this hook.
-        """
-        self.annealing = annealing
-        self.select = select
-        VerletHook.__init__(self, start, step)
-
-    def init(self, iterative):
-        pass
-
-    def pre(self, iterative):
-        pass
-
-    def post(self, iterative):
-        # Compute the kinetic energy before the annealing to correct the conserved quantity.
-        ekin_before = iterative._compute_ekin()
-        # Change the velocities.
-        if self.select is None:
-            iterative.vel[:] *= self.annealing
-        else:
-            iterative.vel[self.select] *= self.annealing
-        # Update the correction for the conserved quantity.
-        ekin_after = iterative._compute_ekin()
-        self.econs_correction += ekin_before - ekin_after
 
 

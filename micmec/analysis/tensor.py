@@ -1,19 +1,28 @@
 #!/usr/bin/env python
 # File name: tensor.py
-# Description:
+# Description: Auxiliary routines for tensors.
 # Author: Joachim Vandewalle
 # Date: 26-10-2021
 
+"""Auxiliary routines for tensors."""
+
 import numpy as np
-import matplotlib.pyplot as plt
 
 from molmod.units import *
 from molmod.constants import *
 
-__all__ = ["print_tensor", "print_matrix", "voigt", "voigt_inv", "plot_directional_young_modulus"]
+__all__ = [
+    "print_3x3x3x3_tensor", 
+    "print_6x6_matrix", 
+    "voigt",
+    "voigt_inv", 
+    "plot_directional_young_modulus"
+]
 
-def print_tensor(C):
-    """Print out a fourth-order 3x3x3x3 tensor as a square to allow the user a better overview."""
+# The following routines improve the layout of tensors or matrices printed in a console.
+
+def print_3x3x3x3_tensor(C):
+    """Print out a (3 x 3 x 3 x 3) tensor as a square to allow the user a better overview."""
     C_print = str(C)
     C_print_new = ""
     C_print_lst = C_print.split("\n")
@@ -25,11 +34,11 @@ def print_tensor(C):
         else:
             pass
     print(C_print_new)
-    return None
+    return C_print_new
 
 
-def print_matrix(C):
-    """Print out a 6x6 matrix as a square to allow the user a better overview."""
+def print_6x6_matrix(C):
+    """Print out a (6 x 6) matrix as a square to allow the user a better overview."""
     C_print = str(C)
     C_print_new = ""
     C_print_lst = C_print.split("\n")
@@ -41,7 +50,7 @@ def print_matrix(C):
         else: 
             pass
     print(C_print_new)
-    return None
+    return C_print_new
 
 
 V = {
@@ -55,7 +64,33 @@ V = {
 
 
 def voigt(tensor, mode=None):
-    """Maps a 3x3x3x3 tensor into a 6x6 voigt notation matrix."""
+    """Maps a (3 x 3 x 3 x 3) tensor to a (6 x 6) Voigt notation matrix.
+    
+    Parameters
+    ----------
+    tensor : 
+        SHAPE: (3,3,3,3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The tensor to be mapped to a Voigt notation matrix.
+    mode : str, optional, default "compliance"
+        Declare whether the input tensor is a compliance tensor (mode="compliance") or an elasticity tensor 
+        (mode="elasticity" or mode="stiffness").
+
+    Returns
+    -------
+    matrix :     
+        SHAPE: (6,6) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The resulting Voigt notation matrix.
+
+    Notes
+    -----
+    Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
+    hence the (optional) keyword `mode`.
+        
+    """
     
     matrix = np.zeros((6,6))
     
@@ -71,16 +106,40 @@ def voigt(tensor, mode=None):
         for index, _ in np.ndenumerate(matrix):
             matrix[index] = tensor[V[index[0]] + V[index[1]]]
     else:
-        raise ValueError("Method voigt() did not receive valid input for keyword 'mode'.") 
+        raise IOError("Method `voigt_inv` did not receive valid input for keyword `mode`.") 
 
     return matrix
 
 
 def voigt_inv(matrix, mode=None):
-    """Maps a 6x6 voigt notation matrix into a 3x3x3x3 tensor."""
+    """Maps a (6 x 6) Voigt notation matrix to a (3 x 3 x 3 x 3) tensor.
     
+    Parameters
+    ----------
+    matrix : 
+        SHAPE: (6,6) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The Voigt notation matrix to be mapped to a tensor.
+    mode : str, optional, default "compliance"
+        Declare whether the input matrix is a compliance matrix (mode="compliance") or an elasticity matrix 
+        (mode="elasticity" or mode="stiffness").
+
+    Returns
+    -------
+    tensor :     
+        SHAPE: (3,3,3,3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        The resulting tensor.
+
+    Notes
+    -----
+    Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
+    hence the (optional) keyword `mode`.
+        
+    """
     tensor = np.zeros((3,3,3,3))
-    
     if (mode is None) or (mode == "compliance"):
         for index, _ in np.ndenumerate(tensor):
             ij = tuple(sorted(index[0:2]))
@@ -95,7 +154,6 @@ def voigt_inv(matrix, mode=None):
                 tensor[index] *= 0.5
             if V_kl >= 3:
                 tensor[index] *= 0.5
-    
     elif (mode == "elasticity") or (mode == "stiffness"):
         for index, _ in np.ndenumerate(tensor):
             ij = tuple(sorted(index[0:2]))
@@ -107,13 +165,26 @@ def voigt_inv(matrix, mode=None):
                     V_kl = key          
             tensor[index] = matrix[(V_ij, V_kl)]
     else:
-        raise ValueError("Method voigt_inv() did not receive valid input for keyword 'mode'.")
-    
+        raise ValueError("Method `voigt_inv` did not receive valid input for keyword `mode`.")
     return tensor
 
 
-def plot_directional_young_modulus(compliance_tensor):
-    """Plot the 3D directional Young modulus, based on the compliance tensor."""
+def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_modulus.png"):
+    """Plot the three-dimensional directional Young modulus, based on the compliance tensor.
+
+    Parameters
+    ----------
+    compliance_tensor : 
+        SHAPE: (3,3,3,3) 
+        TYPE: numpy.ndarray
+        DTYPE: float
+        A fourth-order compliance tensor, expressed in atomic units.
+    fn_png : str, optional
+        The .png filename to write the figure to.
+    
+    """
+    import matplotlib.pyplot as plt
+    gigapascal = 1e9*pascal
     
     # Create the mesh in spherical coordinates and compute corresponding E.
     theta = np.linspace(0, np.pi, 100)
@@ -134,11 +205,10 @@ def plot_directional_young_modulus(compliance_tensor):
 
 
     def set_axes_equal(ax: plt.Axes):
-        """Set 3D plot axes to equal scale.
+        """Set three-dimensional plot axes to equal scale.
 
-        Make axes of 3D plot have equal scale so that spheres appear as
-        spheres and cubes as cubes.  Required since `ax.axis('equal')`
-        and `ax.set_aspect('equal')` don't work on 3D.
+        Make the axes of a three-dimensional plot have equal scale so that spheres appear as spheres and cubes as cubes.  
+        Required since `ax.axis("equal")` and `ax.set_aspect("equal")` don't work on three-dimensional plots.
         """
         limits = np.array([
             ax.get_xlim3d(),
@@ -151,6 +221,7 @@ def plot_directional_young_modulus(compliance_tensor):
 
     def _set_axes_radius(ax, origin, radius):
         x, y, z = origin
+        # Alter the limits manually if these automatic limits are not to your liking.
         ax.set_xlim3d([x - radius, x + radius])
         ax.set_ylim3d([y - radius, y + radius])
         ax.set_zlim3d([z - radius, z + radius])
@@ -159,7 +230,7 @@ def plot_directional_young_modulus(compliance_tensor):
     # Plot the surface.
     fig = plt.figure()
 
-    ax = fig.add_subplot(projection='3d')
+    ax = fig.add_subplot(projection="3d")
 
     ax.set_box_aspect([1,1,1])
     ax.plot_surface(X, Y, Z)
@@ -167,6 +238,33 @@ def plot_directional_young_modulus(compliance_tensor):
     ax.set_xlabel(r"$\mathrm{E_x \; [GPa]}$")
     ax.set_ylabel(r"$\mathrm{E_y \; [GPa]}$")
     ax.set_zlabel(r"$\mathrm{E_z \; [GPa]}$")
+    
+    ax = plt.gca()
+    # Delete the tick labels of one or more axes.
+    #ax.xaxis.set_ticklabels([])
+    #ax.yaxis.set_ticklabels([])
+    #ax.zaxis.set_ticklabels([])
+    
+    # Reduce the number of tick labels for better visibility.
+    every_nth = 2
+    for n, label in enumerate(ax.xaxis.get_ticklabels()):
+        if n % every_nth != 0:
+            label.set_visible(False)
+    for n, label in enumerate(ax.yaxis.get_ticklabels()):
+        if n % every_nth != 0:
+            label.set_visible(False)
+    for n, label in enumerate(ax.zaxis.get_ticklabels()):
+        if n % every_nth != 0:
+            label.set_visible(False)
+
+    # Delete the tick lines of one or more axes.
+    #for line in ax.xaxis.get_ticklines():
+    #    line.set_visible(False)
+    #for line in ax.yaxis.get_ticklines():
+    #    line.set_visible(False)
+    #for line in ax.zaxis.get_ticklines():
+    #    line.set_visible(False)
+    
     plt.show()
 
 
