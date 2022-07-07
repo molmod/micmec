@@ -4,12 +4,10 @@
 # Author: Joachim Vandewalle
 # Date: 10-06-2022
 
-"""The (correct) description of a nanocell in the micromechanical model, using JAX.
+"""Micromechanical description of a single nanocell state (JAX).
 
-This implementation is very generally applicable, but it is slower than the default (`nanocell.py`).
-Its slowness is likely due to the computational overhead of jax.numpy.
-It is not recommended to use this script, at least not until someone properly compares its results to the results 
-of the default.
+This implementation is very generally applicable, but it is slower than the default (``nanocell.py``).
+Its slowness is likely due to the computational overhead of ``jax.numpy``.
 """
 
 # In the comments, we refer to equations in the master's thesis of Joachim Vandewalle.
@@ -34,37 +32,27 @@ multiplicator = jnp.array([
 
 
 def elastic_energy(vertices_flat, h0, C0):
-    """The elastic energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
+    """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
         
     Parameters
     ----------
-    vertices_flat : 
-        SHAPE: (24,) 
-        TYPE: numpy.ndarray
-        DTYPE: float
-        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
-    h0 :
-        SHAPE: (3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float    
+    vertices : numpy.ndarray, shape=(8, 3)
+        The coordinates of the surrounding nodes (i.e. the vertices).
+    h0 : numpy.ndarray, shape=(3, 3)   
         The equilibrium cell matrix.
-    C0 :
-        SHAPE: (3, 3, 3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    C0 : numpy.ndarray, shape=(3, 3, 3, 3)
         The elasticity tensor.
 
     Returns
     -------
-    float
-        The elastic energy.
+    energy : float
+        The elastic deformation energy.
     
     Notes
     -----
     At first sight, the equations for bistable nanocells might seem absent from this derivation.
-    They are absent here, but they have been implemented in the `mmff.py` script.
-    This elastic energy is only the energy of a single metastable state of a nanocell.
-    
+    They are absent here, but they have been implemented in the ``mmff.py`` script.
+    This elastic deformation energy is only the energy of a single metastable state of a nanocell.
     """
     vertices = vertices_flat.reshape((8, 3))
 

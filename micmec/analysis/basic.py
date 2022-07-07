@@ -28,17 +28,16 @@ def plot_energies(f, fn_png="energies.png", **kwargs):
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        A .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     
     Notes
     -----
-    The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+    The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     The units for making the plot are taken from the screen logger. 
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     start, end, step = get_slice(f, **kwargs)
@@ -69,24 +68,21 @@ def plot_temperature(f, fn_png="temperature.png", **kwargs):
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        An .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     
     Notes
     -----
-    The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+    The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     The units for making the plot are taken from the screen logger. 
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     start, end, step = get_slice(f, **kwargs)
-
     temp = f["trajectory/temp"][start:end:step]
     time, tlabel = get_time(f, start, end, step)
-
     pt.clf()
     pt.plot(time, temp, "k-")
     pt.xlim(time[0], time[-1])
@@ -101,19 +97,18 @@ def plot_pressure(f, fn_png="pressure.png", window = 1, **kwargs):
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        An .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     window : int, optional
         The window over which the pressure is averaged.
     
     Notes
     -----
-    The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+    The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     The units for making the plot are taken from the screen logger. 
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     start, end, step = get_slice(f, **kwargs)
@@ -137,26 +132,25 @@ def plot_pressure(f, fn_png="pressure.png", window = 1, **kwargs):
 
 
 def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None, **kwargs):
-    """Plots the distribution of the weighted nodal velocities (internal temperature). 
+    """Plot the distribution of the weighted nodal velocities (temperature). 
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        A .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     temp : float
         The (expected) average temperature.
-    select : list, optional
-        A list of node indexes that should be considered for the analysis.
+    select : array_like, optional
+        A list of node indices that should be considered for the analysis.
         By default, information from all nodes is combined.
     start, end, step, max_sample : int, optional
-       The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+       The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
 
     Notes
     -----
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
@@ -238,24 +232,23 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
 
     Parameters
     ----------
-    f : h5py.File object (open)
-        A .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     temp : float
         The (expected) average temperature.
     press : float, optional
         The (expected) average pressure.
-    select : list, optional
-        A list of node indexes that should be considered for the analysis.
+    select : array_like, optional
+        A list of node indices that should be considered for the analysis.
         By default, information from all nodes is combined.
     start, end, step, max_sample : int, optional
-       The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+       The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
 
     Notes
     -----
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
@@ -331,27 +324,25 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
     pt.savefig(fn_png, dpi=500.0)
 
 
-
 def plot_volume_dist(f, fn_png="volume_dist.png", temp=None, press=None, **kwargs):
-    """Plots the distribution of the volume.
+    """Plot the distribution of the volume.
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        A .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to
+        The PNG filename to write the figure to
     temp : float, optional
         The (expected) average temperature.
     press : float, optional
         The (expected) average pressure.
     start, end, step, max_sample : int, optional
-       The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+       The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
 
     Notes
     -----
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
@@ -416,17 +407,16 @@ def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
     
     Parameters
     ----------
-    f : h5py.File object (open)
-        An .h5 file containing the trajectory data.
+    f : h5py.File
+        An HDF5 file containing the trajectory data.
     fn_png : str, optional
-        The .png filename to write the figure to.
+        The PNG filename to write the figure to.
     
     Notes
     -----
-    The optional arguments of the `get_slice` function are also accepted in the form of keyword arguments.
+    The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     The units for making the plot are taken from the screen logger. 
     This type of plot is essential for checking the sanity of a simulation.
-    
     """
     import matplotlib.pyplot as pt
     start, end, step = get_slice(f, **kwargs)
@@ -446,7 +436,6 @@ def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
         return np.arccos(np.clip((domain[:,i0]*domain[:,i1]).sum(axis=1)/lengths[:,i0]/lengths[:,i1], -1,1))/log.angle.conversion
 
     pt.clf()
-
     if nvec == 3:
         ax1 = pt.subplot(2,1,1)
         pt.plot(time, lengths[:,0], "r-", label="a")

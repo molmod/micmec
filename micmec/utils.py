@@ -4,7 +4,7 @@
 # Author: Joachim Vandewalle
 # Date: 25-03-2022
 
-"""Auxiliary construction routines """
+"""Auxiliary routines for system construction."""
 
 import numpy as np
 
@@ -15,53 +15,35 @@ __all__ = [
 
 
 def build_system(data, grid, pbc):
-    """Build a micromechanical system and store it in a dictionary.
+    """Prepare a micromechanical system and store it in a dictionary.
     
     Parameters
     ----------
     data : dict
         The micromechanical cell types, stored in a dictionary with integer keys. 
         The corresponding values are dictionaries which contain information about the cell type.
-        Example: 
-            data[1] = {
-                "name": "fcu", 
-                "elasticity": [...], 
-                "cell": [...],
-                ...
-            } 
-            # The data of type 1 includes the name of the type ("fcu"), the elasticity tensor of each metastable state,
-            # the equilibrium cell matrix of each metastable state, etc.
-    grid : 
-        SHAPE: (nx, ny, nz) 
-        TYPE: numpy.ndarray
-        DTYPE: int
+    grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
-        An integer value of 1 signifies a cell of type 1, etc.
-        Example: 
-            grid[kappa, lambda, mu] = 0 # empty cell at location (kappa, lambda, mu)
-            grid[kappa_, lambda_, mu_] = 1 # cell of type 1 (`fcu`) at location (kappa_, lambda_, mu_)
-
-    pbc : list of bools
+        An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
+    pbc : list of bool
         The domain vectors for which periodic boundary conditions should be enabled.
-        Example:
-            pbc = [True, True, True] 
-            # periodic boundary conditions enabled for the (Cartesian) a, b and c domain vectors
 
     Returns
     -------
     output : dict
-        A complete dictionary which is ready to be stored as a .chk file.
-        It contains the information of the micromechanical system.
+        A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.
 
     Notes
     -----
-    This method is also used by the Micromechanical Model Builder, specifically by the `builder_io.py` script.
+    This method is also used by the Micromechanical Model Builder, specifically by the ``builder_io.py`` script.
     If the Builder application does not work, the user can still benefit from the automatic creation
     of a micromechanical structure by using this method manually.
-    The output dictionary can be stored as a .chk file by using `molmod.io.chk.dump_chk("output.chk", output)`.
-    Then, the .chk file can be used as the input of a `micmec.system.System` instance.
+    The output dictionary can be stored as a CHK file by using:
     
+        ``molmod.io.chk.dump_chk("output.chk", output)``.
+    
+    Then, the CHK file can be used as the input of a ``micmec.system.System`` instance.
     """
     
     nx, ny, nz = np.shape(grid)

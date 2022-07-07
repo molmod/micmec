@@ -4,7 +4,7 @@
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
 
-"""Build the input and output structure files (.chk) used in the Micromechanical Model Builder."""
+"""Input and output handling of the Micromechanical Model Builder."""
 
 import numpy as np
 
@@ -13,50 +13,32 @@ from micmec.utils import build_system
 __all__ = ["build_output", "build_input"]
 
 def build_output(data, colors_types, grid, pbc):
-    """Build the user-defined output of the Builder application (builder.py) and store it as a dictionary.
+    """Build the output of the Builder application (``builder.py``) and store it as a dictionary.
     
     Parameters
     ----------
     data : dict
         A dictionary with the names of the micromechanical cell types as keys. 
-        The corresponding values are dictionaries which contain information about the cell type.
-        Example: 
-            data["fcu"] = {"elasticity": [...], "cell": [...]} 
-            # The parameters of the cell type "fcu" include the elasticity tensor of each metastable state, 
-            # the equilibirum cell matrix of each metastable state, etc.
+        The corresponding values are dictionaries which contain information about the cell types.
     colors_types : dict
         A dictionary with integer keys. 
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
-        Example: 
-            colors_types[1] = ("#0000FF", "fcu") 
-            # Type 1 corresponds to the color blue and the name `fcu`.
-    grid : 
-        SHAPE: (nx, ny, nz) 
-        TYPE: numpy.ndarray
-        DTYPE: int
+    grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
-        An integer value of 1 signifies a cell of type 1, etc.
-        Example: 
-            grid[kappa, lambda, mu] = 0 # empty cell at location (kappa, lambda, mu)
-            grid[kappa_, lambda_, mu_] = 1 # cell of type 1 (`fcu`) at location (kappa_, lambda_, mu_)
-    pbc : list of bools
+        An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
+    pbc : list of bool
         The domain vectors for which periodic boundary conditions should be enabled.
-        Example:
-            pbc = [True, True, True] 
-            # periodic boundary conditions enabled for the (Cartesian) a, b and c domain vectors
 
     Returns
     -------
     output : dict
-        A complete dictionary which is ready to be stored as a .chk file.
-        It contains the information of the micromechanical system.
+        A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.
 
     Notes
     -----
-    `build_input` is the inverse operation of `build_output`. 
-    
+    ``build_input`` is the inverse operation of ``build_output``. 
     """
     new_data = {}
     for type_key, color_type in colors_types.items():
@@ -70,50 +52,32 @@ def build_output(data, colors_types, grid, pbc):
 
 
 def build_input(output):
-    """Build the input of the Builder application (builder.py) from a complete dictionary.
+    """Build the input of the Builder application (``builder.py``) from a dictionary.
     
     Parameters
     ----------
     output : dict
-        A complete dictionary which is ready to be stored as a .chk file.
-        It contains the information of a micromechanical system.
+        A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.
 
     Returns
     -------
     data : dict
         A dictionary with the names of the micromechanical cell types as keys. 
-        The corresponding values are dictionaries which contain information about the cell type.
-        Example: 
-            data["fcu"] = {"elasticity": [...], "cell": [...]} 
-            # The parameters of the cell type "fcu" include the elasticity tensor of each metastable state, 
-            # the equilibirum cell matrix of each metastable state, etc.
+        The corresponding values are dictionaries which contain information about the cell types.
     colors_types : dict
         A dictionary with integer keys. 
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
-        Example: 
-            colors_types[1] = ("#0000FF", "fcu") 
-            # Type 1 corresponds to the color blue and the name `fcu`.
-    grid : 
-        SHAPE: (nx, ny, nz) 
-        TYPE: numpy.ndarray
-        DTYPE: int
+    grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
-        An integer value of 1 signifies a cell of type 1, etc.
-        Example: 
-            grid[kappa, lambda, mu] = 0 # empty cell at location (kappa, lambda, mu)
-            grid[kappa_, lambda_, mu_] = 1 # cell of type 1 (`fcu`) at location (kappa_, lambda_, mu_)
-    pbc : list of bools
+        An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
+    pbc : list of bool
         The domain vectors for which periodic boundary conditions should be enabled.
-        Example:
-            pbc = [True, True, True] 
-            # periodic boundary conditions enabled for the (Cartesian) a, b and c domain vectors
     
     Notes
     -----
-    `build_input` is the inverse operation of `build_output`. 
-    
+    ``build_input`` is the inverse operation of ``build_output``. 
     """
     data = {}
     colors_types = {}

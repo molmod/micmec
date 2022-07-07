@@ -4,7 +4,7 @@
 # Author: Joachim Vandewalle
 # Date: 26-10-2021
 
-"""Geometry/Domain optimization."""
+"""Geometry optimization."""
 
 import numpy as np
 

@@ -4,10 +4,10 @@
 # Author: Joachim Vandewalle
 # Date: 18-11-2021
 
-"""The main screen loging object of MicMec. 
+"""Screen logger. 
 
-The `log` object is an instance off the `ScreenLog` class in the module `molmod.log`.
-The logger also comes with a timer infrastructure, which is also implemented in the `molmod.log` module.
+The ``log`` object is an instance of the ``molmod.log.ScreenLog`` class.
+The logger comes with a timer infrastructure, which is also implemented in the ``molmod.log`` module.
 """
 
 import atexit
@@ -15,7 +15,7 @@ import atexit
 from molmod.log import ScreenLog, TimerGroup
 
 
-__all__ = ['log', 'timer']
+__all__ = ["log", "timer"]
 
 #================================================================================
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,3 +70,5 @@ foot_banner = r"""
 timer = TimerGroup()
 log = ScreenLog("MICMEC", "1.0", head_banner, foot_banner, timer)
 atexit.register(log.print_footer)
+
+

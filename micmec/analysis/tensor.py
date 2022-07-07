@@ -12,8 +12,8 @@ from molmod.units import *
 from molmod.constants import *
 
 __all__ = [
-    "print_3x3x3x3_tensor", 
-    "print_6x6_matrix", 
+    "pretty_3x3x3x3_tensor", 
+    "pretty_6x6_matrix", 
     "voigt",
     "voigt_inv", 
     "plot_directional_young_modulus"
@@ -21,8 +21,19 @@ __all__ = [
 
 # The following routines improve the layout of tensors or matrices printed in a console.
 
-def print_3x3x3x3_tensor(C):
-    """Print out a (3 x 3 x 3 x 3) tensor as a square to allow the user a better overview."""
+def pretty_3x3x3x3_tensor(C):
+    """Improve the formatting of a (3 x 3 x 3 x 3) tensor.
+
+    Parameters
+    ----------
+    C : numpy.ndarray, shape=(3, 3, 3, 3)
+        A (3 x 3 x 3 x 3) tensor.
+
+    Returns
+    -------
+    C_print_new : str
+        A nicely formatted string version of the (3 x 3 x 3 x 3) tensor.
+    """
     C_print = str(C)
     C_print_new = ""
     C_print_lst = C_print.split("\n")
@@ -33,12 +44,22 @@ def print_3x3x3x3_tensor(C):
             C_print_new += "\n"
         else:
             pass
-    print(C_print_new)
     return C_print_new
 
 
-def print_6x6_matrix(C):
-    """Print out a (6 x 6) matrix as a square to allow the user a better overview."""
+def pretty_6x6_matrix(C):
+    """Improve the formatting of a (6 x 6) matrix.
+
+    Parameters
+    ----------
+    C : numpy.ndarray, shape=(6, 6)
+        A (6 x 6) matrix.
+
+    Returns
+    -------
+    C_print_new : str
+        A nicely formatted string version of the (6 x 6) tensor.
+    """
     C_print = str(C)
     C_print_new = ""
     C_print_lst = C_print.split("\n")
@@ -49,7 +70,6 @@ def print_6x6_matrix(C):
             C_print_new += "\n"
         else: 
             pass
-    print(C_print_new)
     return C_print_new
 
 
@@ -64,36 +84,26 @@ V = {
 
 
 def voigt(tensor, mode=None):
-    """Maps a (3 x 3 x 3 x 3) tensor to a (6 x 6) Voigt notation matrix.
+    """Map a (3 x 3 x 3 x 3) tensor to a (6 x 6) Voigt notation matrix.
     
     Parameters
     ----------
-    tensor : 
-        SHAPE: (3,3,3,3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    tensor : numpy.ndarray, shape=(3, 3, 3, 3)
         The tensor to be mapped to a Voigt notation matrix.
-    mode : str, optional, default "compliance"
-        Declare whether the input tensor is a compliance tensor (mode="compliance") or an elasticity tensor 
-        (mode="elasticity" or mode="stiffness").
+    mode : {"compliance", "elasticity"}, optional
+        Declare whether the input tensor is a compliance tensor or an elasticity tensor.
 
     Returns
     -------
-    matrix :     
-        SHAPE: (6,6) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    matrix : numpy.ndarray, shape=(6, 6)
         The resulting Voigt notation matrix.
 
     Notes
     -----
     Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
-    hence the (optional) keyword `mode`.
-        
+    hence the (optional) keyword ``mode``.
     """
-    
     matrix = np.zeros((6,6))
-    
     if (mode is None) or (mode == "compliance"):
         for index, _ in np.ndenumerate(matrix):
             matrix[index] = tensor[V[index[0]] + V[index[1]]]
@@ -101,43 +111,33 @@ def voigt(tensor, mode=None):
                 matrix[index] *= 2.0
             if index[1] >= 3:
                 matrix[index] *= 2.0
-    
-    elif (mode == "elasticity") or (mode == "stiffness"):
+    elif (mode == "elasticity"):
         for index, _ in np.ndenumerate(matrix):
             matrix[index] = tensor[V[index[0]] + V[index[1]]]
     else:
         raise IOError("Method `voigt_inv` did not receive valid input for keyword `mode`.") 
-
     return matrix
 
 
 def voigt_inv(matrix, mode=None):
-    """Maps a (6 x 6) Voigt notation matrix to a (3 x 3 x 3 x 3) tensor.
+    """Map a (6 x 6) Voigt notation matrix to a (3 x 3 x 3 x 3) tensor.
     
     Parameters
     ----------
-    matrix : 
-        SHAPE: (6,6) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    matrix : numpy.ndarray, shape=(6, 6)
         The Voigt notation matrix to be mapped to a tensor.
-    mode : str, optional, default "compliance"
-        Declare whether the input matrix is a compliance matrix (mode="compliance") or an elasticity matrix 
-        (mode="elasticity" or mode="stiffness").
+    mode : {"compliance", "elasticity"}, optional
+        Declare whether the input matrix is a compliance matrix or an elasticity matrix.
 
     Returns
     -------
-    tensor :     
-        SHAPE: (3,3,3,3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    tensor : numpy.ndarray, shape=(3, 3, 3, 3)
         The resulting tensor.
 
     Notes
     -----
     Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
-    hence the (optional) keyword `mode`.
-        
+    hence the (optional) keyword ``mode``.   
     """
     tensor = np.zeros((3,3,3,3))
     if (mode is None) or (mode == "compliance"):
@@ -154,7 +154,7 @@ def voigt_inv(matrix, mode=None):
                 tensor[index] *= 0.5
             if V_kl >= 3:
                 tensor[index] *= 0.5
-    elif (mode == "elasticity") or (mode == "stiffness"):
+    elif (mode == "elasticity"):
         for index, _ in np.ndenumerate(tensor):
             ij = tuple(sorted(index[0:2]))
             kl = tuple(sorted(index[2:4]))
@@ -174,14 +174,10 @@ def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_
 
     Parameters
     ----------
-    compliance_tensor : 
-        SHAPE: (3,3,3,3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
-        A fourth-order compliance tensor, expressed in atomic units.
+    compliance_tensor : numpy.ndarray, shape=(3, 3, 3, 3)
+        A (3 x 3 x 3 x 3) compliance tensor, expressed in atomic units.
     fn_png : str, optional
-        The .png filename to write the figure to.
-    
+        The PNG filename to write the figure to.
     """
     import matplotlib.pyplot as plt
     gigapascal = 1e9*pascal
@@ -208,7 +204,7 @@ def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_
         """Set three-dimensional plot axes to equal scale.
 
         Make the axes of a three-dimensional plot have equal scale so that spheres appear as spheres and cubes as cubes.  
-        Required since `ax.axis("equal")` and `ax.set_aspect("equal")` don't work on three-dimensional plots.
+        Required since ``ax.axis("equal")`` and ``ax.set_aspect("equal")`` don't work on three-dimensional plots.
         """
         limits = np.array([
             ax.get_xlim3d(),

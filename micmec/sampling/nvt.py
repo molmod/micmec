@@ -4,7 +4,7 @@
 # Author: Joachim Vandewalle
 # Date: 16-02-2022
 
-"""Thermostats for temperature control in a micromechanical MD simulation."""
+"""Thermostats."""
 
 import numpy as np
 
