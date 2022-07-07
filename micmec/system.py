@@ -4,103 +4,72 @@
 # Author: Joachim Vandewalle
 # Date: 17-10-2021
 
-"""Load, save, construct or edit a micromechanical system for use in simulations."""
+"""Representation of a micromechanical system."""
 
 import h5py
 import numpy as np
-import pickle as pkl
 
 from micmec.log import log, timer
+from micmec.analysis.tensor import voigt
 
 from yaff.pes.ext import Cell
 
 from molmod.units import *
 from molmod.io.chk import *
 
+
 __all__ = ["System"]
 
+
 class System(object):
+    """Construct a micromechanical system.
+    
+    Parameters
+    ----------
+    pos : numpy.ndarray, shape=(``nnodes``, 3)
+        The Cartesian coordinates of the micromechanical nodes.
+    masses : numpy.ndarray, shape=(``nnodes``,)
+        The masses of the micromechanical nodes.
+    rvecs : numpy.ndarray, shape=(``nper``, 3)
+        The domain vectors, which represent the periodicity of the simulation domain.
+
+        -   ``nper = 3`` corresponds to periodic boundary conditions in the ``a``, ``b`` and ``c`` directions, where ``a``, ``b`` and ``c`` are the domain vectors.
+        -   ``nper = 0`` corresponds to an absence of periodicity, used to simulate finite (three-dimensional) crystals.
+        
+    surrounding_cells : numpy.ndarray, dtype=int, shape=(``nnodes``, 8)
+        The cells adjacent to each node.
+        Each node has, at most, eight surrounding cells.
+        In some cases, nodes have less than eight surrounding cells, due to internal surfaces (mesopores)
+        or external surfaces (finite crystals).
+        In that case, the specific order in which the surrounding cells are listed, is preserved, but the indices
+        of the missing cells are replaced with -1.
+    surrounding_nodes : numpy.ndarray, dtype=int, shape=(``ncells``, 8)
+        The nodes adjacent to each cell.
+        Each cell has eight surrounding nodes, always.
+        The order in which the surrounding nodes of a given cell are listed, is specific and must not be changed.
+    boundary_nodes : numpy.ndarray, dtype=int, optional
+        The nodes at the boundary of the micromechanical system.
+        The minimum image convention is only relevant for these boundary nodes.
+    grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``), optional
+        A three-dimensional grid that maps the types of cells present in the micromechanical system.
+        An integer value of 0 in the grid signifies an empty cell, a vacancy.
+        An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
+    types : numpy.ndarray, dtype=int, shape=(``ncells``, 3), optional
+        The cell types present in the micromechanical system.
+    params : dict, optional
+        The coarse-grained parameters of the micromechanical system. 
+        A system may consist of several cell types, each with one or more metastable states.
+        A single metastable state is represented by an equilibrium cell matrix, a free energy, and an elasticity tensor.
+            
+    Notes
+    -----
+    All quantities are expressed in atomic units.
+    The optional arguments of the ``System`` class are technically not required to initialize a system, but all of
+    them are required to perform a simulation.
+    """
     
     def __init__(self, pos, masses, rvecs, surrounding_cells, surrounding_nodes,
                         boundary_nodes=None, grid=None, types=None, params=None):
-        """Construct a micromechanical system for use in simulations.
-        
-        Parameters
-        ----------
-        pos : 
-            SHAPE: (nnodes, 3) 
-            TYPE: numpy.ndarray
-            DTYPE: float
-            The Cartesian coordinates of the micromechanical nodes.
-        masses :
-            SHAPE: (nnodes,) 
-            TYPE: numpy.ndarray
-            DTYPE: float
-            The masses of the micromechanical nodes.
-        rvecs :
-            SHAPE: (ndim, 3) 
-            TYPE: numpy.ndarray
-            DTYPE: float
-            The Cartesian domain vectors, which represent the periodicity of the simulation domain.
-            In the current version of MicMec, only ndim = 3 and ndim = 0 are supported.
-            ndim = 3 corresponds to periodic boundary conditions in the a, b and c directions, where a, b and c
-            are the Cartesian domain vectors.
-            ndim = 0 corresponds to an absence of periodicity, used to simulate finite (three-dimensional) crystals.
-        surrounding_cells :
-            SHAPE: (nnodes, 8) 
-            TYPE: numpy.ndarray
-            DTYPE: int
-            The cells adjacent to each node.
-            Each node has, at most, eight surrounding cells.
-            In some cases, nodes have less than eight surrounding cells, due to internal surfaces (mesopores)
-            or external surfaces (finite crystals).
-            In that case, the specific order in which the surrounding cells are listed, is preserved, but the indices
-            of the missing cells are replaced with -1.
-            Example:
-                surrounding_cells[13] = np.array([-1, 4, 10, 12, 1, 3, 9, 0])
-                # node 13 is surrounded by an empty cell (-1) and cells 4, 10, 12, 1, 3, 9 and 0
-        surrounding_nodes :
-            SHAPE: (ncells, 8) 
-            TYPE: numpy.ndarray
-            DTYPE: int
-            The nodes adjacent to each cell.
-            Each cell has eight surrounding nodes, always.
-            The order in which the surrounding nodes of a given cell are listed, is specific and must not be changed.
-            (Please refer to neighbors.py for a discussion of the order.)
-            Example: 
-                surrounding_nodes[0] = np.array([0, 9, 3, 1, 12, 10, 4, 13])
-                # cell 0 is surrounded by nodes 0, 9, 3, 1, 12, 10, 4 and 13  
-        boundary_nodes : optional
-            TYPE: numpy.ndarray
-            DTYPE: int
-            The nodes at the boundary of the micromechanical system.
-            The minimum image convention is only relevant for these boundary nodes.
-        grid : optional
-            SHAPE: (nx, ny, nz) 
-            TYPE: numpy.ndarray
-            DTYPE: int
-            A three-dimensional grid that maps the types of cells present in the micromechanical system.
-            An integer value of 0 in the grid signifies an empty cell, a vacancy.
-            An integer value of 1 signifies a cell of type 1, etc.
-        types : optional
-            SHAPE: (ncells, 3) 
-            TYPE: numpy.ndarray
-            DTYPE: int
-            The types of cells present in the micromechanical system.
-            Example:
-                types[13] = 1 # cell 13 belongs to type 1
-        params : dict, optional
-            The parameters of the micromechanical system.
-            Example:
-                params["type1/cell"] = np.array([[...], [...], [...]]) # equilibrium cell matrix of type 1
-                
-        Notes
-        -----
-        All quantities are expressed in atomic units.
-        The optional arguments of the `System` class are technically not required to initialize a system, but all of
-        them are required to perform a simulation. 
-        
-        """
         self.masses = masses
         self.pos = pos
         self.domain = Cell(rvecs) # yaff.pes.ext.Cell
@@ -119,32 +88,74 @@ class System(object):
     
     def _init_log(self):
         if log.do_medium:
-            log("PRINT INTERESTING SYSTEM INFORMATION HERE")
+            # Log some interesting system information.
+            log.hline()
+            pbc = (self.domain.rvecs.shape[0] > 0)
+            gigapascal = 1e9*pascal
+            if pbc:
+                log("Periodic boundary conditions have been enabled.")
+            else:
+                log("Periodic boundary conditions have not been enabled. The system is isolated.")
+            log(f"The system is composed of {self.nnodes} nodes and {self.ncells} cells.")
+            ntypes = len(set(self.types))
+            if ntypes == 1:
+                log(f"There is {ntypes} cell type present in the system.")
+            else:
+                log(f"There are {ntypes} distinct cell types present in the system.")
+            log(" ")
+            for type_ in set(self.types):
+                if int(type_) == 0:
+                    # This should never happen, so maybe raise an exception?
+                    continue
+                h0 = self.params[f"type{int(type_)}/cell"]
+                C0 = self.params[f"type{int(type_)}/elasticity"]
+                efree = self.params[f"type{int(type_)}/free_energy"]
+                eff = self.params[f"type{int(type_)}/effective_temp"]
+                nstates = len(h0)
+                if nstates == 1:
+                    log(f"TYPE {type_} has {nstates} metastable state.")
+                else:
+                    log(f"TYPE {type_} has {nstates} metastable states.")
+                for i in range(nstates):   
+                    log(f"TYPE {type_}, STATE {i} : ") 
+                    log(f"free energy [kj/mol] : ")
+                    log(f"      {efree[i]/kjmol}")
+                    log(f"equilibrium cell matrix [Å] :")
+                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][0]/angstrom)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][1]/angstrom)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(h0[i][2]/angstrom)))
+                    log(f"elasticity tensor [GPa] :")
+                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[0]/gigapascal)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[1]/gigapascal)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[2]/gigapascal)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[3]/gigapascal)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[4]/gigapascal)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(voigt(C0[i])[5]/gigapascal)))
+                    log(" ")
             log.hline()
             log.blank()
     
 
     @classmethod
     def from_file(cls, fn, **user_kwargs):
-        """Create a micromechanical system from a .chk file.
+        """Construct a micromechanical system from a CHK file.
 
         Parameters
         ----------
         fn : str
-            The name of the .chk file to load.
+            The name of the CHK file to load.
         user_kwargs : dict, optional
-            Keyword arguments used to create the micromechanical system.
+            Additional information to construct the micromechanical system.
 
         Raises
         ------
         IOError
-            If the input is not a .chk file.
+            If the input is not a CHK file.
 
         Returns
         -------
-        micmec.system.System object
-            The micromechanical system, created from the .chk file.
-
+        micmec.system.System
+            The micromechanical system, constructed from the CHK file.
         """
         with log.section("SYS"):
             kwargs = {}
@@ -174,19 +185,18 @@ class System(object):
     
     @classmethod
     def from_hdf5(cls, f):
-        """Create a micromechanical system from a .h5 file with a system group.
+        """Construct a micromechanical system from an HDF5 file with a system group.
         
         Parameters
         ----------
-        f : h5py.File object (open)
-            A .h5 file with a system group. 
-            The system group must at least contain a `pos` dataset.
+        f : h5py.File
+            An HDF5 file with a system group. 
+            The system group must at least contain a ``pos`` dataset.
         
         Returns
         -------
-        micmec.system.System object
-            The micromechanical system, created from the .h5 file.
-        
+        micmec.system.System
+            The micromechanical system, constructed from the HDF5 file.
         """
         sgrp = f["system"]
         kwargs = {
@@ -212,7 +222,7 @@ class System(object):
 
     
     def to_file(self, fn):
-        """Write the micromechanical system to a .h5 or .xyz file.
+        """Write the micromechanical system to a CHK, HDF5 or XYZ file.
         
         Parameters
         ----------
@@ -222,22 +232,19 @@ class System(object):
         Raises
         ------
         NotImplementedError
-            If the extension of the file does not match `.chk`, `.h5` or `.xyz`.
+            If the extension of the file does not match ``.chk``, ``.h5`` or ``.xyz``.
 
         Notes
         -----
         Supported file formats are:
-        .chk
-            Internal text-based checkpoint format.
-            This format includes all the information of the System object. 
-            All data are stored in atomic units.
-        .h5
-            Internal binary checkpoint format. 
-            This format includes all the information of the System object. 
-            All data are stored in atomic units.
-        .xyz
-            A simple file with node positions.
+        
+        -   CHK (``.chk``) : internal text-based checkpoint format.
+            This format includes all information about the ``System`` instance. 
+        -   HDF5 (``.h5``) : internal binary checkpoint format. 
+            This format includes all information about the ``System`` instance. 
+        -   XYZ (``.xyz``) : a simple file with node positions.
 
+        All data are stored in atomic units.
         """
         if fn.endswith('.chk'):
             from molmod.io import dump_chk
@@ -269,21 +276,20 @@ class System(object):
 
     
     def to_hdf5(self, f):
-        """Write the system to a .h5 file.
+        """Write the system to an HDF5 file.
         
         Parameters
         ----------
-        f : h5py.File object (open)
-            A writable .h5 file.
+        f : h5py.File
+            A writable HDF5 file.
 
         Raises
         ------
         ValueError
-            If the .h5 file already contains a system description.
-        
+            If the HDF5 file already contains a system description.
         """
         if "system" in f:
-            raise ValueError("The .h5 file already contains a system description.")
+            raise ValueError("The HDF5 file already contains a system description.")
         sgrp = f.create_group("system")
         sgrp.create_dataset("pos", data=self.pos)
         if self.masses is not None:

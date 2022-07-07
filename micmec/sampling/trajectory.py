@@ -92,7 +92,6 @@ class XYZWriter(Hook):
             The first iteration at which this hook should be called.
         step : int, optional
             The hook will be called every `step` iterations.
-        
         """
         self.fn_xyz = fn_xyz
         self.select = select

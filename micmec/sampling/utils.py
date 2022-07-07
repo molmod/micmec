@@ -4,6 +4,8 @@
 # Author: Joachim Vandewalle
 # Date: 26-10-2021
 
+"""Auxiliary routines for initial velocities."""
+
 from molmod import boltzmann
 
 import numpy as np

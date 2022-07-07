@@ -4,6 +4,8 @@
 # Author: Joachim Vandewalle
 # Date: 18-11-2021
 
+"""Base class for iterative algorithms."""
+
 import numpy as np
 
 from ..log import log, timer

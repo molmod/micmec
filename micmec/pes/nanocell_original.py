@@ -4,11 +4,11 @@
 # Author: Joachim Vandewalle
 # Date: 10-06-2022
 
-"""The (original) description of a nanocell in the micromechanical model.
+"""Micromechanical description of a single nanocell state (original).
 
 This script contains the original equations of the micromechanical model, as proposed by S. M. J. Rogge.
 It is, however, NOT recommended to use these equations, as they are based on wrong assumptions.
-Use the default script (`nanocell.py`) instead.
+Use the default script (``nanocell.py``) instead.
 """
 
 import numpy as np
@@ -80,37 +80,27 @@ cell_zderiv = [0.25*zderiv[i] for i, zderiv in enumerate(cell_zderivs)]
 
 
 def elastic_energy(vertices, h0, C0):
-    """The elastic energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
+    """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
         
     Parameters
     ----------
-    vertices : 
-        SHAPE: (8, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
-        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
-    h0 :
-        SHAPE: (3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float    
+    vertices : numpy.ndarray, shape=(8, 3)
+        The coordinates of the surrounding nodes (i.e. the vertices).
+    h0 : numpy.ndarray, shape=(3, 3)   
         The equilibrium cell matrix.
-    C0 :
-        SHAPE: (3, 3, 3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    C0 : numpy.ndarray, shape=(3, 3, 3, 3)
         The elasticity tensor.
 
     Returns
     -------
-    float
-        The elastic energy.
+    energy : float
+        The elastic deformation energy.
     
     Notes
     -----
     At first sight, the equations for bistable nanocells might seem absent from this derivation.
-    They are absent here, but they have been implemented in the `mmff.py` script.
-    This elastic energy is only the energy of a single metastable state of a nanocell.
-    
+    They are absent here, but they have been implemented in the ``mmff.py`` script.
+    This elastic deformation energy is only the energy of a single metastable state of a nanocell.
     """
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)
@@ -129,35 +119,22 @@ def elastic_energy(vertices, h0, C0):
 
 
 def grad_elastic_energy(vertices, h0, C0):
-    """The gradient of the elastic energy of a nanocell (with respect to one of its metastable states with parameters 
+    """The gradient of the elastic deformation energy of a nanocell (with respect to one of its metastable states with parameters 
     h0 and C0), towards the Cartesian coordinates of its surrounding nodes.
         
     Parameters
     ----------
-    vertices : 
-        SHAPE: (8, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
-        The (Cartesian) coordinates of the surrounding nodes (i.e. the vertices).
-    h0 :
-        SHAPE: (3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float    
+    vertices : numpy.ndarray, shape=(8, 3)
+        The coordinates of the surrounding nodes (i.e. the vertices).
+    h0 : numpy.ndarray, shape=(3, 3)   
         The equilibrium cell matrix.
-    C0 :
-        SHAPE: (3, 3, 3, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
+    C0 : numpy.ndarray, shape=(3, 3, 3, 3)
         The elasticity tensor.
 
     Returns
     -------
-    numpy.ndarray
-        SHAPE: (8, 3) 
-        TYPE: numpy.ndarray
-        DTYPE: float
-        The gradient of the elastic energy.
-
+    gpos_state : numpy.ndarray, shape=(8, 3)
+        The gradient of the elastic deformation energy (of a single state of the nanocell).
     """
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)

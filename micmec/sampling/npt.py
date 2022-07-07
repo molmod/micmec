@@ -4,7 +4,7 @@
 # Author: Joachim Vandewalle
 # Date: 16-02-2022
 
-"""Barostats for pressure control in a micromechanical MD simulation."""
+"""Barostats."""
 
 import numpy as np
 
