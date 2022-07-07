@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>5. micmec.analysis – Trajectory analysis. &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="4. micmec.sampling – Phase-space sampling." href="rg_micmec_sampling.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_sampling.html" title="4. micmec.sampling – Phase-space sampling."
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">5. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis</span></code> – Trajectory analysis.</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="micmec-analysis-trajectory-analysis">
+<h1><span class="section-number">5. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis</span></code> – Trajectory analysis.<a class="headerlink" href="#micmec-analysis-trajectory-analysis" title="Permalink to this heading">¶</a></h1>
+<section id="module-micmec.analysis.advanced">
+<span id="micmec-analysis-advanced-advanced-trajectory-analysis-routines"></span><h2><span class="section-number">5.1. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis.advanced</span></code> – Advanced trajectory analysis routines.<a class="headerlink" href="#module-micmec.analysis.advanced" title="Permalink to this heading">¶</a></h2>
+<p>Advanced trajectory analysis routines.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.advanced.get_cell0">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.advanced.</span></span><span class="sig-name descname"><span class="pre">get_cell0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.advanced.get_cell0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the equilibrium cell matrix of a simulation domain, based on trajectory data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>cell0</strong><span class="classifier">numpy.ndarray, shape=(3, 3)</span></dt><dd><p>The equilibrium cell matrix, in atomic units.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+Please be aware that the simulation domain in this method can refer to:</p>
+<ul class="simple">
+<li><p>an atomistic force field simulation, in which case the trajectory of the domain is stored in <code class="docutils literal notranslate"><span class="pre">trajectory/cell</span></code>;</p></li>
+<li><p>a micromechanical force field simulation, in which case the trajectory of the domain is stored in <code class="docutils literal notranslate"><span class="pre">trajectory/domain</span></code>.</p></li>
+</ul>
+<p>As such, this method can be used to analyze HDF5 files from both Yaff and MicMec.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.advanced.get_elasticity0">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.advanced.</span></span><span class="sig-name descname"><span class="pre">get_elasticity0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.advanced.get_elasticity0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the elasticity tensor of a simulation domain, based on trajectory data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>elasticity0</strong><span class="classifier">numpy.ndarray, shape=(3, 3, 3, 3)</span></dt><dd><p>The elasticity tensor, in atomic units.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+Please be aware that the simulation domain in this method can refer to:</p>
+<ul class="simple">
+<li><p>an atomistic force field simulation, in which case the trajectory of the domain is stored in <code class="docutils literal notranslate"><span class="pre">trajectory/cell</span></code>;</p></li>
+<li><p>a micromechanical force field simulation, in which case the trajectory of the domain is stored in <code class="docutils literal notranslate"><span class="pre">trajectory/domain</span></code>.</p></li>
+</ul>
+<p>As such, this method can be used to analyze HDF5 files from both Yaff and MicMec.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.advanced.get_mass">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.advanced.</span></span><span class="sig-name descname"><span class="pre">get_mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.advanced.get_mass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the total mass of a simulation domain from an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>mass</strong><span class="classifier">float</span></dt><dd><p>The total mass of the domain, in atomic units.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-micmec.analysis.basic">
+<span id="micmec-analysis-basic-basic-trajectory-analysis-routines"></span><h2><span class="section-number">5.2. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis.basic</span></code> – Basic trajectory analysis routines.<a class="headerlink" href="#module-micmec.analysis.basic" title="Permalink to this heading">¶</a></h2>
+<p>Basic trajectory analysis routines.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_domain_pars">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_domain_pars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'domain_pars.png'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_domain_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the domain parameters as a function of time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+The units for making the plot are taken from the screen logger. 
+This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_energies">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_energies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'energies.png'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_energies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the potential, kinetic, total and conserved energy as a function of time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+The units for making the plot are taken from the screen logger. 
+This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_press_dist">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_press_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'press_dist.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_press_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the distribution of the internal pressure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+<dt><strong>temp</strong><span class="classifier">float</span></dt><dd><p>The (expected) average temperature.</p>
+</dd>
+<dt><strong>press</strong><span class="classifier">float, optional</span></dt><dd><p>The (expected) average pressure.</p>
+</dd>
+<dt><strong>select</strong><span class="classifier">array_like, optional</span></dt><dd><p>A list of node indices that should be considered for the analysis.
+By default, information from all nodes is combined.</p>
+</dd>
+<dt><strong>start, end, step, max_sample</strong><span class="classifier">int, optional</span></dt><dd><p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_pressure">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_pressure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pressure.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the pressure as a function of time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+<dt><strong>window</strong><span class="classifier">int, optional</span></dt><dd><p>The window over which the pressure is averaged.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+The units for making the plot are taken from the screen logger. 
+This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_temp_dist">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_temp_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temp_dist.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_temp_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the distribution of the weighted nodal velocities (temperature).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+<dt><strong>temp</strong><span class="classifier">float</span></dt><dd><p>The (expected) average temperature.</p>
+</dd>
+<dt><strong>select</strong><span class="classifier">array_like, optional</span></dt><dd><p>A list of node indices that should be considered for the analysis.
+By default, information from all nodes is combined.</p>
+</dd>
+<dt><strong>start, end, step, max_sample</strong><span class="classifier">int, optional</span></dt><dd><p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_temperature">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temperature.png'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a plot of the temperature as a function of time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
+The units for making the plot are taken from the screen logger. 
+This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.basic.plot_volume_dist">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.basic.</span></span><span class="sig-name descname"><span class="pre">plot_volume_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'volume_dist.png'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.basic.plot_volume_dist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the distribution of the volume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file containing the trajectory data.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to</p>
+</dd>
+<dt><strong>temp</strong><span class="classifier">float, optional</span></dt><dd><p>The (expected) average temperature.</p>
+</dd>
+<dt><strong>press</strong><span class="classifier">float, optional</span></dt><dd><p>The (expected) average pressure.</p>
+</dd>
+<dt><strong>start, end, step, max_sample</strong><span class="classifier">int, optional</span></dt><dd><p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This type of plot is essential for checking the sanity of a simulation.</p>
+</dd></dl>
+
+</section>
+<section id="module-micmec.analysis.tensor">
+<span id="micmec-analysis-tensor-auxiliary-routines-for-tensors"></span><h2><span class="section-number">5.3. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis.tensor</span></code> – Auxiliary routines for tensors.<a class="headerlink" href="#module-micmec.analysis.tensor" title="Permalink to this heading">¶</a></h2>
+<p>Auxiliary routines for tensors.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.tensor.plot_directional_young_modulus">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.tensor.</span></span><span class="sig-name descname"><span class="pre">plot_directional_young_modulus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compliance_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_png</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'directional_young_modulus.png'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.tensor.plot_directional_young_modulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the three-dimensional directional Young modulus, based on the compliance tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>compliance_tensor</strong><span class="classifier">numpy.ndarray, shape=(3, 3, 3, 3)</span></dt><dd><p>A (3 x 3 x 3 x 3) compliance tensor, expressed in atomic units.</p>
+</dd>
+<dt><strong>fn_png</strong><span class="classifier">str, optional</span></dt><dd><p>The PNG filename to write the figure to.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.tensor.pretty_3x3x3x3_tensor">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.tensor.</span></span><span class="sig-name descname"><span class="pre">pretty_3x3x3x3_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.tensor.pretty_3x3x3x3_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Improve the formatting of a (3 x 3 x 3 x 3) tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>C</strong><span class="classifier">numpy.ndarray, shape=(3, 3, 3, 3)</span></dt><dd><p>A (3 x 3 x 3 x 3) tensor.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>C_print_new</strong><span class="classifier">str</span></dt><dd><p>A nicely formatted string version of the (3 x 3 x 3 x 3) tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.tensor.pretty_6x6_matrix">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.tensor.</span></span><span class="sig-name descname"><span class="pre">pretty_6x6_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.tensor.pretty_6x6_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Improve the formatting of a (6 x 6) matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>C</strong><span class="classifier">numpy.ndarray, shape=(6, 6)</span></dt><dd><p>A (6 x 6) matrix.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>C_print_new</strong><span class="classifier">str</span></dt><dd><p>A nicely formatted string version of the (6 x 6) tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.tensor.voigt">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.tensor.</span></span><span class="sig-name descname"><span class="pre">voigt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.tensor.voigt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map a (3 x 3 x 3 x 3) tensor to a (6 x 6) Voigt notation matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">numpy.ndarray, shape=(3, 3, 3, 3)</span></dt><dd><p>The tensor to be mapped to a Voigt notation matrix.</p>
+</dd>
+<dt><strong>mode</strong><span class="classifier">{“compliance”, “elasticity”}, optional</span></dt><dd><p>Declare whether the input tensor is a compliance tensor or an elasticity tensor.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>matrix</strong><span class="classifier">numpy.ndarray, shape=(6, 6)</span></dt><dd><p>The resulting Voigt notation matrix.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
+hence the (optional) keyword <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.tensor.voigt_inv">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.tensor.</span></span><span class="sig-name descname"><span class="pre">voigt_inv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.tensor.voigt_inv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map a (6 x 6) Voigt notation matrix to a (3 x 3 x 3 x 3) tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>matrix</strong><span class="classifier">numpy.ndarray, shape=(6, 6)</span></dt><dd><p>The Voigt notation matrix to be mapped to a tensor.</p>
+</dd>
+<dt><strong>mode</strong><span class="classifier">{“compliance”, “elasticity”}, optional</span></dt><dd><p>Declare whether the input matrix is a compliance matrix or an elasticity matrix.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">numpy.ndarray, shape=(3, 3, 3, 3)</span></dt><dd><p>The resulting tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
+hence the (optional) keyword <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+</dd></dl>
+
+</section>
+<section id="module-micmec.analysis.utils">
+<span id="micmec-analysis-utils-auxiliary-analysis-routines"></span><h2><span class="section-number">5.4. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis.utils</span></code> – Auxiliary analysis routines.<a class="headerlink" href="#module-micmec.analysis.utils" title="Permalink to this heading">¶</a></h2>
+<p>Auxiliary analysis routines.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.utils.get_slice">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.utils.</span></span><span class="sig-name descname"><span class="pre">get_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.utils.get_slice" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File object (open)</span></dt><dd><p>A .h5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available. 
+If it contains a trajectory group, this group will be used to determine the number of time steps in 
+the trajectory.</p>
+</dd>
+<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis. 
+This may be negative to indicate that the analysis should start from the <code class="docutils literal notranslate"><span class="pre">-start</span></code> last samples.</p>
+</dd>
+<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis. 
+This may be negative to indicate that the last <code class="docutils literal notranslate"><span class="pre">-end</span></code> samples should not be considered.</p>
+</dd>
+<dt><strong>max_sample</strong><span class="classifier">int, optional</span></dt><dd><p>When given, <code class="docutils literal notranslate"><span class="pre">step</span></code> is set such that the number of samples does not exceed <code class="docutils literal notranslate"><span class="pre">max_sample</span></code>.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int, optional</span></dt><dd><p>The spacing between the samples used for the analysis.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>start, end, step</strong><span class="classifier">int</span></dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">f</span></code> is given, <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are always positive.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The optional arguments can be given to all of the analysis routines. 
+Just make sure you never specify <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> at the same time. 
+The <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> argument assures that the step is set such that the number of samples does not exceed <code class="docutils literal notranslate"><span class="pre">max_sample</span></code>. 
+The <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> option only works when <code class="docutils literal notranslate"><span class="pre">f</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, or when <code class="docutils literal notranslate"><span class="pre">end</span></code> is positive.
+If <code class="docutils literal notranslate"><span class="pre">f</span></code> is present or <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are positive, and <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> or not given, <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> defaults to 1000.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.analysis.utils.get_time">
+<span class="sig-prename descclassname"><span class="pre">micmec.analysis.utils.</span></span><span class="sig-name descname"><span class="pre">get_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.analysis.utils.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the time axis of a trajectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available.</p>
+</dd>
+<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis. 
+This may be negative to indicate that the analysis should start from the <code class="docutils literal notranslate"><span class="pre">-start</span></code> last samples.</p>
+</dd>
+<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis. 
+This may be negative to indicate that the last <code class="docutils literal notranslate"><span class="pre">-end</span></code> samples should not be considered.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int, optional</span></dt><dd><p>The spacing between the samples used for the analysis.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>time, label</strong><span class="classifier">numpy.ndarray, str</span></dt><dd><p>The sliced time axis, with appropriate units, and the label of the time axis.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">5. <code class="docutils literal notranslate"><span class="pre">micmec.analysis</span></code> – Trajectory analysis.</a><ul>
+<li><a class="reference internal" href="#module-micmec.analysis.advanced">5.1. <code class="docutils literal notranslate"><span class="pre">micmec.analysis.advanced</span></code> – Advanced trajectory analysis routines.</a></li>
+<li><a class="reference internal" href="#module-micmec.analysis.basic">5.2. <code class="docutils literal notranslate"><span class="pre">micmec.analysis.basic</span></code> – Basic trajectory analysis routines.</a></li>
+<li><a class="reference internal" href="#module-micmec.analysis.tensor">5.3. <code class="docutils literal notranslate"><span class="pre">micmec.analysis.tensor</span></code> – Auxiliary routines for tensors.</a></li>
+<li><a class="reference internal" href="#module-micmec.analysis.utils">5.4. <code class="docutils literal notranslate"><span class="pre">micmec.analysis.utils</span></code> – Auxiliary analysis routines.</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="rg_micmec_sampling.html"
+                          title="previous chapter"><span class="section-number">4. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rg_micmec_analysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_sampling.html" title="4. micmec.sampling – Phase-space sampling."
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">5. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis</span></code> – Trajectory analysis.</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>
