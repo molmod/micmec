@@ -33,8 +33,7 @@ release = "1.0"
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
-    "sphinx.ext.inheritance_diagram",
-    "sphinx.ext.autosummary",
+    "sphinx.ext.autosummary", # "sphinx.ext.inheritance_diagram",
     "sphinx.ext.githubpages",
     "numpydoc",
 ]
