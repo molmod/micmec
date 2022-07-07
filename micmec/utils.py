@@ -1,8 +1,22 @@
 #!/usr/bin/env python
-# File name: utils.py
-# Description: Auxiliary construction routines.
-# Author: Joachim Vandewalle
-# Date: 25-03-2022
+
+#   MicMec 1.0, the first implementation of the micromechanical model, ever.
+#               Copyright (C) 2022  Joachim Vandewalle
+#                    joachim.vandewalle@hotmail.be
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#      the Free Software Foundation, either version 3 of the License, or
+#                  (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#              GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see https://www.gnu.org/licenses/.
+
 
 """Auxiliary routines for system construction."""
 
@@ -14,7 +28,7 @@ __all__ = [
 ]
 
 
-def build_system(data, grid, pbc):
+def build_system(data, grid, pbc=[True, True, True]):
     """Prepare a micromechanical system and store it in a dictionary.
     
     Parameters
@@ -26,7 +40,7 @@ def build_system(data, grid, pbc):
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
         An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
-    pbc : list of bool
+    pbc : list of bool, default=[True, True, True], optional
         The domain vectors for which periodic boundary conditions should be enabled.
 
     Returns
