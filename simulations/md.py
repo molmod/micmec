@@ -12,7 +12,6 @@ import argparse
 from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
 from micmec.sampling.verlet import VerletIntegrator, VerletScreenLog
-
 from micmec.sampling.trajectory import HDF5Writer, XYZWriter
 from micmec.sampling.nvt import NHCThermostat, LangevinThermostat
 from micmec.sampling.npt import MTKBarostat, TBCombination, LangevinBarostat
@@ -72,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("-file_step", type=int, default=1,
                         help="step of the trajectory recorded in the .h5 file")
     parser.add_argument("-log_step", type=int, default=10,
-                        help="step of the screenlogger")
+                        help="step of the screen logger")
 
     args = parser.parse_args()
     main(args.input_fn,
