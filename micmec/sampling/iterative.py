@@ -8,13 +8,14 @@
 
 import numpy as np
 
-from ..log import log, timer
+from micmec.log import log, timer
 
 from molmod.units import *
 
 
 __all__ = ["Iterative", "StateItem", "AttributeStateItem", "PosStateItem", "EPotContribStateItem", "ConsErrStateItem",
             "TemperatureStateItem", "VolumeStateItem", "DomainStateItem", "Hook"]
+
 
 class Iterative(object):
     
@@ -87,6 +88,7 @@ class Iterative(object):
         raise NotImplementedError
 
 
+
 class StateItem(object):
     
     def __init__(self, key):
@@ -114,12 +116,14 @@ class StateItem(object):
         return self.__class__()
 
 
+
 class AttributeStateItem(StateItem):
     def get_value(self, iterative):
         return getattr(iterative, self.key, None)
 
     def copy(self):
         return self.__class__(self.key)
+
 
 
 class PosStateItem(StateItem):  
@@ -129,6 +133,7 @@ class PosStateItem(StateItem):
 
     def get_value(self, iterative):
         return iterative.mmf.system.pos
+
 
 
 class TemperatureStateItem(StateItem):
@@ -143,12 +148,14 @@ class TemperatureStateItem(StateItem):
         yield "ndof", iterative.ndof
 
 
+
 class VolumeStateItem(StateItem):
     def __init__(self):
         StateItem.__init__(self, "volume")
 
     def get_value(self, iterative):
         return iterative.mmf.system.domain.volume
+
 
 
 class DomainStateItem(StateItem):
@@ -159,12 +166,14 @@ class DomainStateItem(StateItem):
         return iterative.mmf.system.domain.rvecs
 
 
+
 class ConsErrStateItem(StateItem):
     def get_value(self, iterative):
         return getattr(iterative._cons_err_tracker, self.key, None)
 
     def copy(self):
         return self.__class__(self.key)
+
 
 
 class EPotContribStateItem(StateItem):
@@ -179,20 +188,21 @@ class EPotContribStateItem(StateItem):
         yield "epot_contrib_names", np.array([part.name for part in iterative.mmf.parts], dtype="S")
 
 
+
 class Hook(object):
     name = None
     kind = None
     method = None
+    """Base class for any routine called during a simulation.
+    
+    Parameters
+    ----------
+    start : int
+        The first iteration at which this hook should be called.
+    step : int
+        The hook will be called every ``step`` iterations.
+    """
     def __init__(self, start=0, step=1):
-        """
-        Parameters
-        ----------
-        start : int
-            The first iteration at which this hook should be called.
-        step : int
-            The hook will be called every `step` iterations.
-        
-        """
         self.start = start
         self.step = step
 
