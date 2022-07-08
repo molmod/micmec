@@ -27,6 +27,7 @@ from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
 from micmec.sampling.opt import CGOptimizer, OptScreenLog, QNOptimizer
 from micmec.sampling.dof import CartesianDOF
+
 from micmec.sampling.trajectory import HDF5Writer, XYZWriter
 
 from molmod.units import kelvin, pascal, femtosecond
