@@ -1,3 +1,5 @@
+![THE MICROMECHANICAL PROCEDURE](https://github.com/Jlvdwall/micmec/blob/main/docs/figs/micmec_proc_wide.png)
+
 The micromechanical model is a coarse-grained force field model to simulate the mechanical behaviour of crystalline materials on a large length scale. MicMec is the first implementation of the micromechanical model, ever.  The theoretical groundwork of the model was originally established in:
 
 > S. M. J. Rogge, “The micromechanical model to computationally investigate cooperative and correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225, pp. 271–285, 2020.

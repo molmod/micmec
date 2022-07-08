@@ -1,8 +1,22 @@
 #!/usr/bin/env python
-# File name: advanced.py
-# Description: Advanced analysis.
-# Author: Joachim Vandewalle
-# Date: 24-05-2022
+
+#   MicMec 1.0, the first implementation of the micromechanical model, ever.
+#               Copyright (C) 2022  Joachim Vandewalle
+#                    joachim.vandewalle@hotmail.be
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#      the Free Software Foundation, either version 3 of the License, or
+#                  (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#              GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see https://www.gnu.org/licenses/.
+
 
 """Advanced trajectory analysis routines."""
 
@@ -10,7 +24,7 @@ import h5py as h5
 
 import numpy as np
 
-from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter
+from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter, kelvin
 
 from micmec.log import log
 from micmec.analysis.tensor import voigt, voigt_inv
@@ -25,7 +39,7 @@ __all__ = [
 
 
 # The numbers refer to equations in the master's thesis of Joachim Vandewalle.
-def _compute_volume(self, cell):
+def _compute_volume(cell):
     """Compute the (instantaneous) volume of a simulation domain.
 
     Parameters
@@ -42,7 +56,7 @@ def _compute_volume(self, cell):
     return volume
 
 
-def _compute_strain(self, cell, cell0_inv):
+def _compute_strain(cell, cell0_inv):
     """Compute the strain tensor of a simulation domain.
     
     Parameters
@@ -65,7 +79,7 @@ def _compute_strain(self, cell, cell0_inv):
     return strain 
 
 
-def _compute_compliance(self, strain, strain0, volume0, temp0):
+def _compute_compliance(strain, strain0, volume0, temp0):
     """Compute the (instantaneous) compliance tensor of a simulation domain.
     
     Parameters

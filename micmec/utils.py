@@ -1,12 +1,28 @@
 #!/usr/bin/env python
-# File name: utils.py
-# Description: Auxiliary construction routines.
-# Author: Joachim Vandewalle
-# Date: 25-03-2022
+
+#   MicMec 1.0, the first implementation of the micromechanical model, ever.
+#               Copyright (C) 2022  Joachim Vandewalle
+#                    joachim.vandewalle@hotmail.be
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#      the Free Software Foundation, either version 3 of the License, or
+#                  (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#              GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see https://www.gnu.org/licenses/.
+
 
 """Auxiliary routines for system construction."""
 
 import numpy as np
+
+from molmod.units import kelvin, pascal, angstrom
 
 __all__ = [
     "build_system", 
@@ -14,7 +30,7 @@ __all__ = [
 ]
 
 
-def build_system(data, grid, pbc):
+def build_system(data, grid, pbc=[True, True, True]):
     """Prepare a micromechanical system and store it in a dictionary.
     
     Parameters
@@ -26,7 +42,7 @@ def build_system(data, grid, pbc):
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
         An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
-    pbc : list of bool
+    pbc : list of bool, default=[True, True, True], optional
         The domain vectors for which periodic boundary conditions should be enabled.
 
     Returns
@@ -186,8 +202,61 @@ def build_system(data, grid, pbc):
     return output
 
 
-def build_type():
-    pass
+def build_type(material, mass, cell0, elasticity0, free_energy=None, effective_temp=None, topology=None, ):
+    """Prepare a micromechanical cell type and store it in a dictionary.
+
+    Parameters
+    ----------
+    material : str
+        The name of the cell type's material.
+    mass : float
+        The total mass of the cell type.
+    cell0 : (list of) numpy.ndarray, shape=(3, 3)
+        The equilibrium cell matrix for each metastable state of the cell type.
+    elasticity0 : (list of) numpy.ndarray, shape=(3,3,3,3)
+        The elasticity tensor for each metastable state of the cell type.
+    free_energy : (list of) float, optional
+        The free energy for each metastable state of the cell type.
+    effective_temp : float, optional
+        The effective temperature for a multistable cell type.
+    topology : str, optional
+        The topology of the cell type's atomic structure.
+
+    Raises
+    ------
+    ValueError
+        If the number of metastable states is not consistent for the equilibrium cell matrix, elasticity tensor or free energy.
+
+    Returns
+    -------
+    output : dict
+        A dictionary which is ready to be stored as a PICKLE file, containing a complete description of the micromechanical cell type.
+    """ 
+    if type(cell0) is not list:
+        cell0 = [cell0]
+    if type(elasticity0) is not list:
+        elasticity0 = [elasticity0]
+    if topology is None:
+        topology = "UNKNOWN"
+    if effective_temp is None:
+        effective_temp = 300*kelvin
+    if free_energy is None:
+        free_energy = [0.0]*len(cell0)
+    if type(free_energy) is not list:
+        free_energy = [free_energy]
+    output = {}
+    output["material"] = material
+    output["topology"] = topology
+    output["mass"] = mass
+    output["cell"] = cell0
+    output["elasticity"] = elasticity0
+    output["free_energy"] = free_energy
+    output["effective_temp"] = effective_temp
+    check1 = (len(cell0) == len(elasticity0))
+    check2 = (len(cell0) == len(free_energy))
+    if check1 and check2:
+        return output
+    raise ValueError
 
 
 

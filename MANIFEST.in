@@ -1,0 +1,10 @@
+include README.srt
+recursive-include docs *.rst *.png *.pdf
+include docs/conf.py
+include docs/common.py
+include docs/updatelibdoc.py
+include docs/make.bat
+include docs/objects.inv
+include docs/Makefile
+recursive-include data *
+recursive-include simulations *

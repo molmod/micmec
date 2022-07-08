@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>1. Installation &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Creating micromechanical cell types" href="creating_types.html" />
+    <link rel="prev" title="MicMec 1.0" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="creating_types.html" title="2. Creating micromechanical cell types"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MicMec 1.0"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Installation</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="installation">
+<h1><span class="section-number">1. </span>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<section id="dependencies">
+<h2><span class="section-number">1.1. </span>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading">¶</a></h2>
+<p>MicMec 1.0 has been developed with Python 3.7 and 3.8 in mind.
+It has been confirmed to work with the following combination of packages:</p>
+<ul class="simple">
+<li><p>python      3.8.10</p></li>
+<li><p>numpy       1.22.4</p></li>
+<li><p>yaff        1.4.2</p></li>
+<li><p>molmod      1.4.8</p></li>
+<li><p>scipy       1.8.1</p></li>
+<li><p>cython      0.29.30</p></li>
+<li><p>matplotlib  3.5.2</p></li>
+<li><p>h5py        3.7.0</p></li>
+<li><p>jax         0.3.13 (optional)</p></li>
+<li><p>jaxlib      0.3.10 (optional)</p></li>
+<li><p>sphinx      5.0.2 (optional)</p></li>
+<li><p>setuptools  63.0.1 (optional)</p></li>
+</ul>
+<p>Sphinx is used for documentation, while JAX (with CUDA[CPU]) is used for automatic differentiation and just-in-time compilation.
+Sphinx and JAX are entirely optional and do not affect the core routines of MicMec. SetupTools is also optional.</p>
+<p>Yaff is an important dependency, even though it only supplies one module to MicMec: <code class="docutils literal notranslate"><span class="pre">yaff.pes.ext.Cell</span></code>. That is, however, a crucial module.
+For now, we have not been able to decouple <code class="docutils literal notranslate"><span class="pre">yaff.pes.ext.Cell</span></code> from Yaff.</p>
+</section>
+<section id="pip-installation">
+<h2><span class="section-number">1.2. </span><code class="docutils literal notranslate"><span class="pre">pip</span></code> installation<a class="headerlink" href="#pip-installation" title="Permalink to this heading">¶</a></h2>
+<p>MicMec is part of the Python Package Index. Therefore, you can simply install it with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install micmec
+</pre></div>
+</div>
+<p>Test that it has been correctly installed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">micmec</span>
+</pre></div>
+</div>
+<p>Example data, simulation scripts and documentation can be found <a class="reference external" href="https://github.com/Jlvdwall/micmec">here</a>.</p>
+</section>
+<section id="manual-installation">
+<h2><span class="section-number">1.3. </span>Manual installation<a class="headerlink" href="#manual-installation" title="Permalink to this heading">¶</a></h2>
+<p>MicMec can be installed manually by cloning the entire GitHub repository into a pre-existing directory on your Python path, for instance, <code class="docutils literal notranslate"><span class="pre">micmec_repo</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/Jlvdwall/micmec.git micmec_repo
+python
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">repo</span> <span class="o">=</span> <span class="s2">&quot;micmec_repo&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">any</span><span class="p">((</span><span class="n">repo</span> <span class="o">==</span> <span class="n">directory</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">repo</span><span class="p">):])</span> <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The Python code checks whether the repository directory (<code class="docutils literal notranslate"><span class="pre">micmec_repo</span></code> in this case) is on your Python path. If it is not, you must add it to the path by editing your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> or <code class="docutils literal notranslate"><span class="pre">.profile</span></code> script. With that, you can use MicMec to its fullest extent. As a bonus, you can install MicMec locally, by performing the following commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> micmec_repo
+python setup.py sdist
+pip list
+</pre></div>
+</div>
+<p>That will create a source distribution and add MicMec to the list of installed packages.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">1. Installation</a><ul>
+<li><a class="reference internal" href="#dependencies">1.1. Dependencies</a></li>
+<li><a class="reference internal" href="#pip-installation">1.2. <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation</a></li>
+<li><a class="reference internal" href="#manual-installation">1.3. Manual installation</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">MicMec 1.0</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="creating_types.html"
+                          title="next chapter"><span class="section-number">2. </span>Creating micromechanical cell types</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/installation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="creating_types.html" title="2. Creating micromechanical cell types"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="MicMec 1.0"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span>Installation</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>

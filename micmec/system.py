@@ -1,8 +1,21 @@
 #!/usr/bin/env python
-# File name: system.py
-# Description: Load, save, construct or edit a micromechanical system.
-# Author: Joachim Vandewalle
-# Date: 17-10-2021
+
+#   MicMec 1.0, the first implementation of the micromechanical model, ever.
+#               Copyright (C) 2022  Joachim Vandewalle
+#                    joachim.vandewalle@hotmail.be
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#      the Free Software Foundation, either version 3 of the License, or
+#                  (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#              GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 """Representation of a micromechanical system."""
 
@@ -113,11 +126,11 @@ class System(object):
                 eff = self.params[f"type{int(type_)}/effective_temp"]
                 nstates = len(h0)
                 if nstates == 1:
-                    log(f"TYPE {type_} has {nstates} metastable state.")
+                    log(f"TYPE {int(type_)} has {nstates} metastable state.")
                 else:
-                    log(f"TYPE {type_} has {nstates} metastable states.")
+                    log(f"TYPE {int(type_)} has {nstates} metastable states.")
                 for i in range(nstates):   
-                    log(f"TYPE {type_}, STATE {i} : ") 
+                    log(f"TYPE {int(type_)}, STATE {i} : ") 
                     log(f"free energy [kj/mol] : ")
                     log(f"      {efree[i]/kjmol}")
                     log(f"equilibrium cell matrix [Å] :")

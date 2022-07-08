@@ -1,0 +1,1393 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>4. micmec.sampling – Phase-space sampling. &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. micmec.analysis – Trajectory analysis." href="rg_micmec_analysis.html" />
+    <link rel="prev" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)." href="rg_micmec_pes.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_analysis.html" title="5. micmec.analysis – Trajectory analysis."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_pes.html" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)."
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="micmec-sampling-phase-space-sampling">
+<h1><span class="section-number">4. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.<a class="headerlink" href="#micmec-sampling-phase-space-sampling" title="Permalink to this heading">¶</a></h1>
+<section id="module-micmec.sampling.dof">
+<span id="micmec-sampling-dof-abstraction-layer-for-degrees-of-freedom"></span><h2><span class="section-number">4.1. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.dof</span></code> – Abstraction layer for degrees of freedom.<a class="headerlink" href="#module-micmec.sampling.dof" title="Permalink to this heading">¶</a></h2>
+<p>Abstraction layer for degrees of freedom.</p>
+<p>All these classes are called DOF classes, because they specify a set of degrees of freedom. 
+These DOF classes are used for geometry/domain optimization and harmonic approximations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.dof.CartesianDOF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.dof.</span></span><span class="sig-name descname"><span class="pre">CartesianDOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.CartesianDOF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cartesian degrees of freedom.</p>
+<p>This DOF is also applicable to periodic systems. 
+Domain parameters are not modified when this DOF is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ndof</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_delta</span></code>([x, eps, zero])</p></td>
+<td><p>Test the analytical derivatives.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#micmec.sampling.dof.CartesianDOF.fun" title="micmec.sampling.dof.CartesianDOF.fun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fun</span></code></a>(x[, do_gradient])</p></td>
+<td><p>Computes the energy and optionally the gradient.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>check_convergence</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>log</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>reset</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.sampling.dof.CartesianDOF.fun">
+<span class="sig-name descname"><span class="pre">fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.CartesianDOF.fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the energy and optionally the gradient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>All degrees of freedom.</p>
+</dd>
+<dt><strong>do_gradient</strong><span class="classifier">bool, optional</span></dt><dd><p>When True, the gradient is also returned.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.iterative">
+<span id="micmec-sampling-iterative-base-class-for-iterative-algorithms"></span><h2><span class="section-number">4.2. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.iterative</span></code> – Base class for iterative algorithms.<a class="headerlink" href="#module-micmec.sampling.iterative" title="Permalink to this heading">¶</a></h2>
+<p>Base class for iterative algorithms.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.iterative.EPotContribStateItem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.iterative.</span></span><span class="sig-name descname"><span class="pre">EPotContribStateItem</span></span><a class="headerlink" href="#micmec.sampling.iterative.EPotContribStateItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keeps track of all the contributions to the potential energy.</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>copy</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_value</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>iter_attrs</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.npt">
+<span id="micmec-sampling-npt-barostats"></span><h2><span class="section-number">4.3. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.npt</span></code> – Barostats.<a class="headerlink" href="#module-micmec.sampling.npt" title="Permalink to this heading">¶</a></h2>
+<p>Barostats.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.npt.BerendsenBarostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.npt.</span></span><span class="sig-name descname"><span class="pre">BerendsenBarostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">41341.37333664682</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">13445.401558486123</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anisotropic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol_constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.npt.BerendsenBarostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.npt.BerendsenBarostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'barostat'</span></em><a class="headerlink" href="#micmec.sampling.npt.BerendsenBarostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.npt.LangevinBarostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.npt.</span></span><span class="sig-name descname"><span class="pre">LangevinBarostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">41341.37333664682</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anisotropic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol_constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.npt.LangevinBarostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>baro</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>getR</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.npt.LangevinBarostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'barostat'</span></em><a class="headerlink" href="#micmec.sampling.npt.LangevinBarostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.npt.MTKBarostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.npt.</span></span><span class="sig-name descname"><span class="pre">MTKBarostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">press</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">41341.37333664682</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anisotropic</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol_constraint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baro_thermo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vel_press0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.npt.MTKBarostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 64%" />
+<col style="width: 36%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>add_press_cont</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>baro</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.npt.MTKBarostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'barostat'</span></em><a class="headerlink" href="#micmec.sampling.npt.MTKBarostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.npt.TBCombination">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.npt.</span></span><span class="sig-name descname"><span class="pre">TBCombination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thermostat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barostat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.npt.TBCombination" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kind</strong></dt><dd></dd>
+<dt><strong>method</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>expectscall</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>verify</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.nvt">
+<span id="micmec-sampling-nvt-thermostats"></span><h2><span class="section-number">4.4. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.nvt</span></code> – Thermostats.<a class="headerlink" href="#module-micmec.sampling.nvt" title="Permalink to this heading">¶</a></h2>
+<p>Thermostats.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.AndersenThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">AndersenThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annealing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.AndersenThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.AndersenThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.AndersenThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.BerendsenThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">BerendsenThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4134.137333664683</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.BerendsenThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.BerendsenThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.BerendsenThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.CSVRThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">CSVRThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4134.137333664683</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.CSVRThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.CSVRThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.CSVRThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.GLEThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">GLEThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.GLEThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>thermo</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.GLEThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.GLEThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.LangevinThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">LangevinThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4134.137333664683</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.LangevinThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>thermo</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.LangevinThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.LangevinThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.NHCThermostat">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.nvt.</span></span><span class="sig-name descname"><span class="pre">NHCThermostat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timecon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4134.137333664683</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chainlength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_pos0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chain_vel0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.nvt.NHCThermostat" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="micmec.sampling.nvt.NHCThermostat.method">
+<span class="sig-name descname"><span class="pre">method</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'thermostat'</span></em><a class="headerlink" href="#micmec.sampling.nvt.NHCThermostat.method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for any routine called during a simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start</strong><span class="classifier">int</span></dt><dd><p>The first iteration at which this hook should be called.</p>
+</dd>
+<dt><strong>step</strong><span class="classifier">int</span></dt><dd><p>The hook will be called every <code class="docutils literal notranslate"><span class="pre">step</span></code> iterations.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.opt">
+<span id="micmec-sampling-opt-geometry-optimization"></span><h2><span class="section-number">4.5. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.opt</span></code> – Geometry optimization.<a class="headerlink" href="#module-micmec.sampling.opt" title="Permalink to this heading">¶</a></h2>
+<p>Geometry optimization.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.opt.CGOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.opt.</span></span><span class="sig-name descname"><span class="pre">CGOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counter0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.opt.CGOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A conjugate gradient optimizer.</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>call_hooks</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>finalize</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>fun</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>initialize</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>propagate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>run</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.opt.QNOptimizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.opt.</span></span><span class="sig-name descname"><span class="pre">QNOptimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dof</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hooks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counter0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trust_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">small_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">too_small_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.opt.QNOptimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Quasi-Newtonian optimizer.</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 58%" />
+<col style="width: 42%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>call_hooks</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>finalize</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>fun</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>initialize</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>make_step</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>propagate</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>run</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.opt.solve_trust_radius">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.opt.</span></span><span class="sig-name descname"><span class="pre">solve_trust_radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">evals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.opt.solve_trust_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a step in eigenspace with the given radius.</p>
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.trajectory">
+<span id="micmec-sampling-trajectory-trajectory-writers"></span><h2><span class="section-number">4.6. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.trajectory</span></code> – Trajectory writers.<a class="headerlink" href="#module-micmec.sampling.trajectory" title="Permalink to this heading">¶</a></h2>
+<p>Trajectory writers.</p>
+</section>
+<section id="module-micmec.sampling.utils">
+<span id="micmec-sampling-utils-auxiliary-routines-for-initial-velocities"></span><h2><span class="section-number">4.7. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.utils</span></code> – Auxiliary routines for initial velocities.<a class="headerlink" href="#module-micmec.sampling.utils" title="Permalink to this heading">¶</a></h2>
+<p>Auxiliary routines for initial velocities.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.angular_moment">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">angular_moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.angular_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the angular moment of a set of point particles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates).</p>
+</dd>
+<dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal velocities.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>ang_mom</strong><span class="classifier"></span></dt><dd><p>SHAPE: (3,)
+TYPE: numpy.ndarray
+DTYPE: float
+The angular momentum vector.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.angular_velocity">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">angular_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.angular_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derive the angular velocity from the angular moment and the inertia tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>amom</strong></dt><dd><p>SHAPE: (3,)
+TYPE: numpy.ndarray
+DTYPE: float
+The angular momentum vector.</p>
+</dd>
+<dt><strong>itens</strong></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The inertia tensor.</p>
+</dd>
+<dt><strong>epsilon</strong><span class="classifier">float</span></dt><dd><p>A threshold for the low eigenvalues of the inertia tensor. 
+When an eigenvalue is below this threshold, it is assumed to be zero plus some (irrelevant) numerical noise.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>avel</strong><span class="classifier"></span></dt><dd><p>SHAPE: (3,)
+TYPE: numpy.ndarray
+DTYPE: float
+The angular velocity vector.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>In principle, this routine should merely return: <cite>np.linalg.solve(itens, amom)</cite>.
+However, when the inertia tensor has zero eigenvalues, this routine will use a proper pseudo-inverse of 
+the inertia tensor.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.clean_momenta">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">clean_momenta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.clean_momenta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove any relevant external momenta.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates). 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal velocities. 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+<dt><strong>domain</strong><span class="classifier">yaff.pes.ext.Cell object</span></dt><dd><p>An instance of the simulation domain describing the periodic boundary conditions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.domain_lower">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">domain_lower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rvecs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.domain_lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform the simulation domain matrix to its lower diagonal form. 
+The transformation is described here:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://lammps.sandia.gov/doc/Howto_triclinic.html">https://lammps.sandia.gov/doc/Howto_triclinic.html</a>,</p>
+</div></blockquote>
+<p>bearing in mind that domain vectors are stored as rows, not columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>rvecs</strong></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The cell matrix of the simulation domain.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>new_rvecs</strong><span class="classifier"></span></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The lower-diagonal form of <cite>rvecs</cite>.</p>
+</dd>
+<dt><strong>rot</strong><span class="classifier"></span></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The rotation matrix to go from <cite>rvecs</cite> to <cite>new_rvecs</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>The transformation is described here:</dt><dd><p><a class="reference external" href="https://lammps.sandia.gov/doc/Howto_triclinic.html">https://lammps.sandia.gov/doc/Howto_triclinic.html</a>,</p>
+</dd>
+</dl>
+<p>bearing in mind that domain vectors are stored as rows, not columns.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.domain_symmetrize">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">domain_symmetrize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_lst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_lst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.domain_symmetrize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symmetrize the simulation domain tensor, and update the position vectors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mmf</strong><span class="classifier">micmec.pes.mmff.MicMecForceField object</span></dt><dd><p>A micromechanical force field.</p>
+</dd>
+<dt><strong>vector_lst</strong><span class="classifier">list of numpy.ndarray</span></dt><dd><p>A list of vectors which should be transformed under the symmetrization. 
+Note that the positions are already transformed automatically.</p>
+</dd>
+<dt><strong>tensor_lst</strong><span class="classifier">list of numpy.ndarray</span></dt><dd><p>A list of tensors which should be transformed under the symmetrization.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.get_ndof_baro">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">get_ndof_baro</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anisotropic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vol_constraint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.get_ndof_baro" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the number of degrees of freedom associated with the simulation domain fluctuation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dim</strong><span class="classifier">int</span></dt><dd><p>The dimensionality of the system.</p>
+</dd>
+<dt><strong>anisotropic</strong><span class="classifier">bool</span></dt><dd><p>Whether anisotropic domain fluctuations are allowed.</p>
+</dd>
+<dt><strong>vol_constraint</strong><span class="classifier">bool</span></dt><dd><p>Whether the domain volume can change.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.get_ndof_internal_md">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">get_ndof_internal_md</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nnodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nper</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.get_ndof_internal_md" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the effective number of internal degrees of freedom for MD simulations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>nnodes</strong><span class="classifier">int</span></dt><dd><p>The number of nodes.</p>
+</dd>
+<dt><strong>nper</strong><span class="classifier">int</span></dt><dd><p>The number of periodic boundary conditions (0 for isolated systems).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.get_random_vel">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">get_random_vel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scalevel0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.get_random_vel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate random nodal velocities using a Maxwell-Boltzmann distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>temp0</strong><span class="classifier">float</span></dt><dd><p>The temperature for the Maxwell-Boltzmann distribution.</p>
+</dd>
+<dt><strong>scalevel0</strong><span class="classifier">bool</span></dt><dd><p>When set to True, the velocities are rescaled such that the instantaneous temperature coincides with temp0.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+<dt><strong>select</strong><span class="classifier">list of int</span></dt><dd><p>When given, this must be an array of integer indexes. 
+Only for these nodes (masses) initial velocities will be generated.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>vel0</strong><span class="classifier"></span></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The random nodal velocities.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.get_random_vel_press">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">get_random_vel_press</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.get_random_vel_press" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate symmetric tensor of barostat velocities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mass</strong><span class="classifier">float</span></dt><dd><p>The mass of the barostat.</p>
+</dd>
+<dt><strong>temp</strong><span class="classifier">float</span></dt><dd><p>The temperature at which the velocities are selected.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.inertia_tensor">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">inertia_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.inertia_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the inertia tensor for a given set of point particles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates). 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>itens</strong><span class="classifier"></span></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The inertia tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.remove_angular_moment">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">remove_angular_moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.remove_angular_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero the global angular momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates). 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal velocities. 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The zero angular momentum is achieved by subtracting angular rigid body motion from the nodal velocities. 
+The angular momentum is measured with respect to the center of mass to avoid that this routine reintroduces a 
+linear center-of-mass velocity. 
+This is also beneficial for the numerical stability.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.remove_com_moment">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">remove_com_moment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.remove_com_moment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Zero the global linear momentum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal velocities. 
+This array is modified in-place.</p>
+</dd>
+<dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal masses.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The zero linear center-of-mass momentum is achieved by subtracting translational rigid body motion from 
+the nodal velocities.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.rigid_body_angular_velocities">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">rigid_body_angular_velocities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.rigid_body_angular_velocities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the velocities of a set of nodes that move as a rigid body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates).</p>
+</dd>
+<dt><strong>avel</strong></dt><dd><p>SHAPE: (3,)
+TYPE: numpy.ndarray
+DTYPE: float
+The angular velocity vector of the rigid body.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>vel</strong><span class="classifier"></span></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal velocities in the rigid body.
+The linear momentum of the rigid body is zero.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.stabilized_cholesky_decomp">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">stabilized_cholesky_decomp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.stabilized_cholesky_decomp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do (LDL)^T and transform to (MM)^T with negative diagonal entries of D put equal to zero.
+Assume <cite>mat</cite> is square and symmetric (but not necessarily positive definite).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.sampling.utils.transform_lower_triangular">
+<span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">transform_lower_triangular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvecs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.transform_lower_triangular" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform coordinate axes such that the cell matrix is lower diagonal.</p>
+<p>The transformation is derived from the QR decomposition and performed in-place. 
+Because the lower triangular form puts restrictions on the size of off-diagonal elements, lattice vectors are by 
+default reordered from largest to smallest; this feature can be disabled using the reorder keyword.
+The domain vector lengths and angles remain exactly the same.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The nodal positions (Cartesian coordinates).</p>
+</dd>
+<dt><strong>rvecs</strong></dt><dd><p>SHAPE: (3,3)
+TYPE: numpy.ndarray
+DTYPE: float
+The cell matrix of the simulation domain.
+The domain vectors appear as rows in this matrix.</p>
+</dd>
+<dt><strong>reorder</strong><span class="classifier">bool</span></dt><dd><p>Whether domain vectors are reordered from largest to smallest.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-micmec.sampling.verlet">
+<span id="micmec-sampling-verlet-the-velocity-verlet-algorithm"></span><h2><span class="section-number">4.8. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.verlet</span></code> – The velocity Verlet algorithm.<a class="headerlink" href="#module-micmec.sampling.verlet" title="Permalink to this heading">¶</a></h2>
+<p>The velocity Verlet algorithm.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.verlet.ConsErrTracker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.verlet.</span></span><span class="sig-name descname"><span class="pre">ConsErrTracker</span></span><a class="headerlink" href="#micmec.sampling.verlet.ConsErrTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that tracks the errors on the conserved quantity.</p>
+<p>Given its superior numerical accuracy, the algorithm below is used to calculate the running average. 
+Its properties are discussed in Donald Knuth”s Art of Computer Programming, vol. 2, p. 232, 3rd edition.</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>get</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>update</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.verlet.VerletHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.verlet.</span></span><span class="sig-name descname"><span class="pre">VerletHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.verlet.VerletHook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specialized Verlet hook.</p>
+<p>This is mainly used for the implementation of thermostats and barostats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kind</strong></dt><dd></dd>
+<dt><strong>method</strong></dt><dd></dd>
+<dt><strong>name</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>init</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>post</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>pre</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.verlet.VerletScreenLog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.verlet.</span></span><span class="sig-name descname"><span class="pre">VerletScreenLog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.verlet.VerletScreenLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>A screen logger for the Verlet algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>kind</strong></dt><dd></dd>
+<dt><strong>method</strong></dt><dd></dd>
+<dt><strong>name</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>(iterative)</p></td>
+<td><p>Call self as a function.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 62%" />
+<col style="width: 38%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>expects_call</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">4. <code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.</a><ul>
+<li><a class="reference internal" href="#module-micmec.sampling.dof">4.1. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.dof</span></code> – Abstraction layer for degrees of freedom.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.iterative">4.2. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.iterative</span></code> – Base class for iterative algorithms.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.npt">4.3. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.npt</span></code> – Barostats.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.nvt">4.4. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.nvt</span></code> – Thermostats.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.opt">4.5. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.opt</span></code> – Geometry optimization.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.trajectory">4.6. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.trajectory</span></code> – Trajectory writers.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.utils">4.7. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.utils</span></code> – Auxiliary routines for initial velocities.</a></li>
+<li><a class="reference internal" href="#module-micmec.sampling.verlet">4.8. <code class="docutils literal notranslate"><span class="pre">micmec.sampling.verlet</span></code> – The velocity Verlet algorithm.</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="rg_micmec_pes.html"
+                          title="previous chapter"><span class="section-number">3. </span><code class="docutils literal notranslate"><span class="pre">micmec.pes</span></code> – Micromechanical potential energy surfaces (PESs).</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="rg_micmec_analysis.html"
+                          title="next chapter"><span class="section-number">5. </span><code class="docutils literal notranslate"><span class="pre">micmec.analysis</span></code> – Trajectory analysis.</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rg_micmec_sampling.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_analysis.html" title="5. micmec.analysis – Trajectory analysis."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_pes.html" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)."
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>
