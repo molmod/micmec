@@ -126,11 +126,11 @@ class System(object):
                 eff = self.params[f"type{int(type_)}/effective_temp"]
                 nstates = len(h0)
                 if nstates == 1:
-                    log(f"TYPE {type_} has {nstates} metastable state.")
+                    log(f"TYPE {int(type_)} has {nstates} metastable state.")
                 else:
-                    log(f"TYPE {type_} has {nstates} metastable states.")
+                    log(f"TYPE {int(type_)} has {nstates} metastable states.")
                 for i in range(nstates):   
-                    log(f"TYPE {type_}, STATE {i} : ") 
+                    log(f"TYPE {int(type_)}, STATE {i} : ") 
                     log(f"free energy [kj/mol] : ")
                     log(f"      {efree[i]/kjmol}")
                     log(f"equilibrium cell matrix [Å] :")

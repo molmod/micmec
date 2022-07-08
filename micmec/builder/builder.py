@@ -652,10 +652,11 @@ class BuilderWidgetCanvas(tk.Canvas):
                 self.widget.grid[k0,l0,m0] = self.widget.selected_key
                 self.itemconfigure(self.find_withtag(index_tag)[l0], fill=color)
 
-
-
-if __name__ == "__main__":
+def main():
     app = Application()
     app.mainloop()
+
+if __name__ == "__main__":
+    main()
 
 

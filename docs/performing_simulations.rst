@@ -1,14 +1,16 @@
 Performing simulations
 ######################
 
-With a newly constructed micromechanical system, simulations can be performed. In the ``simulations`` directory, we have included four fully functional simulation scripts, which are accessed through console:
+With a newly constructed micromechanical system, simulations can be performed. In the ``simulations`` directory, we have included four fully functional simulation scripts, which are accessed via terminal:
 
->>>  python simulations/md.py "data/uio66/struct/3x3x3_0.chk" "md_trajectory.h5"
->>>  python simulations/optimisation.py "data/uio66/struct/3x3x3_4.chk" "opt_trajectory.h5"
->>>  python simulations/static_scan.py "data/uio66/struct/3x3x3_5.chk"
->>>  python simulations/relaxed_scan.py "data/uio66/struct/3x3x3_6.chk"
+.. code:: bash
 
-Please note that these console scripts have a wide range of optional arguments. The ``md.py`` script, for instance, can be used to perform a simulation:
+   python simulations/md.py data/uio66/struct/3x3x3_0.chk md_trajectory.h5
+   python simulations/optimisation.py data/test/struct/3x3x3_test_shrunk_fbc.chk opt_trajectory.h5
+   python simulations/static_scan.py data/test/struct/3x3x3_test_shrunk_pbc.chk
+   python simulations/relaxed_scan.py data/uio66/struct/3x3x3_6.chk
+
+Please note that these terminal scripts have a wide range of optional arguments. The ``md.py`` script, for instance, can be used to perform a simulation:
 
 -   in the (N, V, E) ensemble, if no pressure or temperature are defined;
 -   in the (N, V, T) ensemble, if only a temperature (``-temp``) is defined;
@@ -17,7 +19,7 @@ Please note that these console scripts have a wide range of optional arguments. 
 By studying these scripts carefully, it should become clear how most other simulations can be performed. The underlying mechanisms of the core routines of MicMec have been summarized in the following figure.
 
 .. image:: figs/core_routines.png
-  :width: 400
+  :width: 700
   :alt: CORE ROUTINES MICMEC
 
 The black arrows indicate the order in which methods or instances are called. However, one important feature of MicMec has been omitted from this figure, namely, the following four scripts:

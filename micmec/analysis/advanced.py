@@ -24,7 +24,7 @@ import h5py as h5
 
 import numpy as np
 
-from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter
+from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter, kelvin
 
 from micmec.log import log
 from micmec.analysis.tensor import voigt, voigt_inv
@@ -39,7 +39,7 @@ __all__ = [
 
 
 # The numbers refer to equations in the master's thesis of Joachim Vandewalle.
-def _compute_volume(self, cell):
+def _compute_volume(cell):
     """Compute the (instantaneous) volume of a simulation domain.
 
     Parameters
@@ -56,7 +56,7 @@ def _compute_volume(self, cell):
     return volume
 
 
-def _compute_strain(self, cell, cell0_inv):
+def _compute_strain(cell, cell0_inv):
     """Compute the strain tensor of a simulation domain.
     
     Parameters
@@ -79,7 +79,7 @@ def _compute_strain(self, cell, cell0_inv):
     return strain 
 
 
-def _compute_compliance(self, strain, strain0, volume0, temp0):
+def _compute_compliance(strain, strain0, volume0, temp0):
     """Compute the (instantaneous) compliance tensor of a simulation domain.
     
     Parameters

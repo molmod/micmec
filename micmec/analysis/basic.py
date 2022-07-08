@@ -32,8 +32,7 @@ from micmec.analysis.utils import get_slice, get_time
 
 __all__ = [
     "plot_energies", "plot_temperature", "plot_pressure", "plot_temp_dist",
-    "plot_press_dist", "plot_volume_dist", "plot_domain_pars",
-    "plot_epot_contribs"
+    "plot_press_dist", "plot_volume_dist", "plot_domain_pars"
 ]
 
 

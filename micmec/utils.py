@@ -22,6 +22,8 @@
 
 import numpy as np
 
+from molmod.units import kelvin, pascal, angstrom
+
 __all__ = [
     "build_system", 
     "build_type"
@@ -200,8 +202,61 @@ def build_system(data, grid, pbc=[True, True, True]):
     return output
 
 
-def build_type():
-    pass
+def build_type(material, mass, cell0, elasticity0, free_energy=None, effective_temp=None, topology=None, ):
+    """Prepare a micromechanical cell type and store it in a dictionary.
+
+    Parameters
+    ----------
+    material : str
+        The name of the cell type's material.
+    mass : float
+        The total mass of the cell type.
+    cell0 : (list of) numpy.ndarray, shape=(3, 3)
+        The equilibrium cell matrix for each metastable state of the cell type.
+    elasticity0 : (list of) numpy.ndarray, shape=(3,3,3,3)
+        The elasticity tensor for each metastable state of the cell type.
+    free_energy : (list of) float, optional
+        The free energy for each metastable state of the cell type.
+    effective_temp : float, optional
+        The effective temperature for a multistable cell type.
+    topology : str, optional
+        The topology of the cell type's atomic structure.
+
+    Raises
+    ------
+    ValueError
+        If the number of metastable states is not consistent for the equilibrium cell matrix, elasticity tensor or free energy.
+
+    Returns
+    -------
+    output : dict
+        A dictionary which is ready to be stored as a PICKLE file, containing a complete description of the micromechanical cell type.
+    """ 
+    if type(cell0) is not list:
+        cell0 = [cell0]
+    if type(elasticity0) is not list:
+        elasticity0 = [elasticity0]
+    if topology is None:
+        topology = "UNKNOWN"
+    if effective_temp is None:
+        effective_temp = 300*kelvin
+    if free_energy is None:
+        free_energy = [0.0]*len(cell0)
+    if type(free_energy) is not list:
+        free_energy = [free_energy]
+    output = {}
+    output["material"] = material
+    output["topology"] = topology
+    output["mass"] = mass
+    output["cell"] = cell0
+    output["elasticity"] = elasticity0
+    output["free_energy"] = free_energy
+    output["effective_temp"] = effective_temp
+    check1 = (len(cell0) == len(elasticity0))
+    check2 = (len(cell0) == len(free_energy))
+    if check1 and check2:
+        return output
+    raise ValueError
 
 
 

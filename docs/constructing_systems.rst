@@ -25,7 +25,7 @@ The only information we need to prepare micromechanical system, is given by the 
 -   ``pbc`` : list of bool, default=[True, True, True]
      The domain vectors for which periodic boundary conditions should be enabled.
 
-This method returns an ``output`` dictionary. The ``output`` dictionary can be dumped in a CHK file (``"output.chk"``) as follows.
+This method returns an ``output`` dictionary. The ``output`` dictionary can be dumped in a CHK file (``"output.chk"``), as follows, in a Python script.
 
 >>> molmod.io.chk.dump_chk("output.chk", output)
 
@@ -48,7 +48,15 @@ GUI-based construction: the Micromechanical Model Builder
 
 To start the Micromechanical Model Builder, simply run the ``builder.py`` script.
 
->>> python micmec/builder/builder.py
+.. code:: bash
+
+   python micmec/builder/builder.py
+
+Alternatively, if you have actually *installed* MicMec, you should be able to call the application with a command.
+
+.. code:: bash
+
+   micmec_builder
 
 This application uses ``tkinter``, a built-in GUI package for Python. In fact, it only relies on built-in Python packages. In the top menubar of the application, please navigate to:
 
