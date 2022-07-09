@@ -142,7 +142,7 @@ class TBCombination(VerletHook):
         thermo_correct = False
         baro_correct = False
         thermo_list = [AndersenThermostat, NHCThermostat, LangevinThermostat, BerendsenThermostat, CSVRThermostat, GLEThermostat]
-        baro_list = [McDonaldBarostat, BerendsenBarostat, LangevinBarostat, MTKBarostat, PRBarostat, TadmorBarostat]
+        baro_list = [BerendsenBarostat, LangevinBarostat, MTKBarostat]
         if any(isinstance(self.thermostat, thermo) for thermo in thermo_list):
             thermo_correct = True
         if any(isinstance(self.barostat, baro) for baro in baro_list):
