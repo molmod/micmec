@@ -36,7 +36,6 @@ from molmod.units import kelvin, pascal, femtosecond
 def main(input_fn, output_fn, file_step, log_step):
     # Define the system and the micromechanical force field.
     sys = System.from_file(input_fn)
-    sys.domain.update_rvecs(sys.domain.rvecs.copy())
     fpm = ForcePartMechanical(sys)
     mmf = MicMecForceField(sys, [fpm])
     # Perform only an optimisation of the nodal positions, not of the domain parameters.

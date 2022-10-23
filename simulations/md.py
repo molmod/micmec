@@ -54,7 +54,7 @@ def main(input_fn, output_fn, timestep, steps, temp, press, file_step, log_step)
             temp *= kelvin
             # Define the thermostat.
             lt = LangevinThermostat(temp=temp, timecon=100*timestep)
-            verlet = VerletIntegrator(mmf, timestep=timestep, hooks=[h5, vsl, lt])
+            verlet = VerletIntegrator(mmf, timestep=timestep, temp0=temp, hooks=[h5, vsl, lt])
         elif (temp is not None) and (press is not None):
             # (N, P, T) ensemble.
             temp *= kelvin
@@ -63,7 +63,7 @@ def main(input_fn, output_fn, timestep, steps, temp, press, file_step, log_step)
             lt = LangevinThermostat(temp=temp, timecon=100*timestep)
             lb = LangevinBarostat(mmf, temp=temp, press=press, timecon=1000*timestep)
             tbc = TBCombination(lt, lb)
-            verlet = VerletIntegrator(mmf, timestep=timestep, hooks=[h5, vsl, tbc])
+            verlet = VerletIntegrator(mmf, timestep=timestep, temp0=temp, hooks=[h5, vsl, tbc])
         
         verlet.run(steps)
 
