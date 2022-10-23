@@ -4,3 +4,4 @@ tkinter_style/
 micmec.egg-info/
 build/
 dist/
+.idea/
