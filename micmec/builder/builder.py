@@ -552,6 +552,9 @@ class BuilderWidgetButtons(ttk.Frame):
         else:
             pass
         self.widget.nz = new_nz
+        if self.widget.canvas.layer >= self.widget.nz:
+            self.widget.canvas.layer = 0
+            self.widget.selector.spinbox_layers.set(1)
         self.widget.canvas.update_grid()
         self.widget.selector.spinbox_layers.configure(to=self.widget.nz)
      
