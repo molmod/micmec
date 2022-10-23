@@ -18,7 +18,12 @@
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-"""MicMecForceField, the micromechanical force field."""
+"""MicMecForceField, the micromechanical force field.
+
+This is the JAX-enabled version of the default micromechanical force field. It uses automatic differentiation
+and Just-In-Time compilation. Despite these benefits, there is no guarantee this code is efficient or fast.
+"""
+
 import jax
 
 import numpy as np
@@ -27,9 +32,8 @@ import jax.numpy as jnp
 from functools import partial
 
 from molmod import boltzmann
-from molmod.units import kjmol
 from micmec.log import log, timer
-from time import time
+from micmec.utils import Grid
 
 __all__ = [
     "MicMecForceField", 
@@ -60,14 +64,12 @@ class ForcePart(object):
         self.vtens = np.zeros((3, 3), float)
         self.clear()
 
-    
     def clear(self):
         """Fill in ``nan`` values in the cached results to indicate that they have become invalid."""
         self.energy = np.nan
         self.gpos[:] = np.nan
         self.vtens[:] = np.nan
 
-    
     def update_rvecs(self, rvecs):
         """Let the ``ForcePart`` object know that the domain vectors have changed.
 
@@ -78,7 +80,6 @@ class ForcePart(object):
         """
         self.clear()
 
-
     def update_pos(self, pos):
         """Let the ``ForcePart`` object know that the nodal positions have changed.
 
@@ -88,7 +89,6 @@ class ForcePart(object):
             The new nodal coordinates.
         """
         self.clear()
-
 
     def compute(self, gpos=None, vtens=None):
         """Compute the energy of this part of the MMFF.
@@ -155,7 +155,6 @@ class ForcePart(object):
         raise NotImplementedError
 
 
-
 class MicMecForceField(ForcePart):
     """A complete micromechanical force field (MMFF) model.
 
@@ -200,7 +199,6 @@ class MicMecForceField(ForcePart):
         return result
 
 
-
 class ForcePartMechanical(ForcePart):
     """The micromechanical part of the MMFF."""
     def __init__(self, system):
@@ -210,84 +208,96 @@ class ForcePartMechanical(ForcePart):
             with log.section("FPINIT"):
                 log("Force part: %s" % self.name)
                 log.hline()
-        nx, ny, nz = np.shape(self.system.grid)
-        boundary = self.system.boundary_nodes
-        nnodes = self.system.nnodes
-        pbc = (self.system.domain.rvecs.shape[0] > 0) # This does not allow for 2D or 1D periodic crystals.
-        nx_nodes = nx + 1 - pbc
-        ny_nodes = ny + 1 - pbc
-        nz_nodes = nz + 1 - pbc
-        
-        neighbor_cells = [
-            ( 0, 0, 0),
-            (-1, 0, 0),
-            ( 0,-1, 0),
-            ( 0, 0,-1),
-            (-1,-1, 0),
-            (-1, 0,-1),
-            ( 0,-1,-1),
-            (-1,-1,-1)
-        ]
-        node_idx = 0
-        nodes = np.zeros((nnodes, 3))
-        for k in range(nx_nodes):
-            for l in range(ny_nodes):
-                for m in range(nz_nodes):
-                    for neighbor_idxs in neighbor_cells:
-                        kappa = k + neighbor_idxs[0]
-                        lambda_ = l + neighbor_idxs[1]
-                        mu = m + neighbor_idxs[2]
-                        if (not pbc) and (kappa < 0 or kappa >= nx):
-                            continue
-                        if (not pbc) and (lambda_ < 0 or lambda_ >= ny):
-                            continue
-                        if (not pbc) and (mu < 0 or mu >= nz):
-                            continue
-                        # If any surrounding nanocell is non-empty, then the node is valid.
-                        if self.system.grid[(kappa, lambda_, mu)] != 0:
-                            nodes[node_idx, 0] = k
-                            nodes[node_idx, 1] = l
-                            nodes[node_idx, 2] = m
-                            node_idx += 1
-                            break
 
-        self.mic = np.zeros((nnodes, nnodes, 3))
-        for j in range(nnodes): 
-            for i in range(j):
-                if (i in boundary) and (j in boundary):
-                    self.mic[i, j, 0] = (abs(nodes[i, 0] - nodes[j, 0]) == nx_nodes - 1)*(1.0 - 2.0*(nodes[i, 0] < nodes[j, 0]))
-                    self.mic[i, j, 1] = (abs(nodes[i, 1] - nodes[j, 1]) == ny_nodes - 1)*(1.0 - 2.0*(nodes[i, 1] < nodes[j, 1]))
-                    self.mic[i, j, 2] = (abs(nodes[i, 2] - nodes[j, 2]) == nz_nodes - 1)*(1.0 - 2.0*(nodes[i, 2] < nodes[j, 2]))
-                    self.mic[j, i, 0] = -self.mic[i, j, 0]
-                    self.mic[j, i, 1] = -self.mic[i, j, 1]
-                    self.mic[j, i, 2] = -self.mic[i, j, 2]
+        self.pbc = self.get_pbc(self.system.domain.rvecs)
+        self.mic = self.get_mic(self.system.grid)
+
         # Filter such that only scalar parameters remain (JAX requirement).
         self.params1 = {}
         self.params2 = {}
         self.params3 = {}
         self.params4 = {}
         for key, item in self.system.params.items():
-            if ("effective_temp" in key):
+            if "effective_temp" in key:
                 self.params1[int(key.split("/")[0][4:])] = item
-            if ("free_energy" in key):
+            if "free_energy" in key:
                 self.params2[int(key.split("/")[0][4:])] = item
-            if ("cell" in key):
+            if "cell" in key:
                 self.params3[int(key.split("/")[0][4:])] = item
-            if ("elasticity" in key):
+            if "elasticity" in key:
                 self.params4[int(key.split("/")[0][4:])] = item
-        
-        self.fn_epot = jax.jit(partial(elastic_energy, 
-                                        mic=self.mic, 
-                                        types=self.system.types, 
-                                        surrounding_nodes=self.system.surrounding_nodes, 
-                                        params1=self.params1, 
-                                        params2=self.params2, 
-                                        params3=self.params3, 
-                                        params4=self.params4))
+
+        # Construct potential energy function.
+        self.fn_epot = jax.jit(
+            partial(
+                elastic_energy,
+                mic=self.mic,
+                types=self.system.types,
+                surrounding_nodes=self.system.surrounding_nodes,
+                params1=self.params1,
+                params2=self.params2,
+                params3=self.params3,
+                params4=self.params4
+            )
+        )
+        # Perform automatic differentiation.
         self.fn_gpos = jax.jit(jax.grad(self.fn_epot, argnums=(0,)))
         self.fn_vtens = jax.jit(jax.grad(self.fn_epot, argnums=(2,)))
 
-    
+    @staticmethod
+    def get_pbc(rvecs):
+        nper = rvecs.shape[0]
+        pbc = (nper > 0)
+        if pbc and nper != 3:
+            raise ValueError("Attribute `rvecs` only supports finite systems or 3D periodic systems, "
+                             f"not {nper}D periodic systems.")
+        return pbc
+
+    @staticmethod
+    def get_mic(grid, pbc=True):
+        grid_structure = Grid(grid, pbc=pbc)
+        mic = np.zeros((grid_structure.nnodes, grid_structure.nnodes, 3))
+        if not pbc:
+            return mic
+
+        def sign(x):
+            return 2 * (x > 0) - 1
+
+        boundary = grid_structure.boundary_nodes
+        nodes = np.array(grid_structure.nodes)
+        kij_max = grid_structure.nx_nodes - 1
+        lij_max = grid_structure.ny_nodes - 1
+        mij_max = grid_structure.nz_nodes - 1
+        for j in range(grid_structure.nnodes):
+            for i in range(j):
+                if (i in boundary) and (j in boundary):
+                    kij = nodes[j, 0] - nodes[i, 0]
+                    lij = nodes[j, 1] - nodes[i, 1]
+                    mij = nodes[j, 2] - nodes[i, 2]
+                    if abs(kij) == kij_max:
+                        if kij_max == 1:
+                            mic[i, j, 0] = (kij == -1)  # broken symmetry
+                            mic[j, i, 0] = (kij == 1)
+                        else:
+                            mic[i, j, 0] = -sign(kij)
+                            mic[j, i, 0] = -mic[i, j, 0]  # regular symmetry
+                    if abs(lij) == lij_max:
+                        if lij_max == 1:
+                            mic[i, j, 1] = (lij == -1)  # broken symmetry
+                            mic[j, i, 1] = (lij == 1)
+                        else:
+                            mic[i, j, 1] = -sign(lij)
+                            mic[j, i, 1] = -mic[i, j, 1]  # regular symmetry
+                    if abs(mij) == mij_max:
+                        if mij_max == 1:
+                            mic[i, j, 2] = (mij == -1)  # broken symmetry
+                            mic[j, i, 2] = (mij == 1)
+                        else:
+                            mic[i, j, 2] = -sign(mij)
+                            mic[j, i, 2] = -mic[i, j, 2]  # regular symmetry
+
+        return mic
+
     def _internal_compute(self, gpos, vtens):
         with timer.section("MMFF"):
             epot = np.array(self.fn_epot(self.system.pos, self.system.domain.rvecs, np.identity(3)))

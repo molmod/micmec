@@ -25,7 +25,7 @@ import numpy as np
 from functools import partial
 
 from micmec.pes.nanocell import elastic_energy_nanocell, grad_elastic_energy_nanocell
-from micmec.utils import neighbor_cells, Grid
+from micmec.utils import Grid
 
 from molmod import boltzmann
 from micmec.log import log, timer
@@ -210,7 +210,7 @@ class ForcePartMechanical(ForcePart):
         self.pbc = self.get_pbc(self.system.domain.rvecs)
         self.mic = self.get_mic(self.system.grid)
         
-        # Filter such that only scalar parameters remain (JAX requirement).
+        # Filter such that only scalar parameters remain.
         params1 = {}
         params2 = {}
         params3 = {}

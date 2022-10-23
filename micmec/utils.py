@@ -34,13 +34,13 @@ __all__ = [
 
 # Each node has at most eight neighboring cells.
 neighbor_cells = [
-    (0, 0, 0),
-    (-1, 0, 0),
-    (0, -1, 0),
-    (0, 0, -1),
-    (-1, -1, 0),
-    (-1, 0, -1),
-    (0, -1, -1),
+    ( 0,  0,  0),
+    (-1,  0,  0),
+    ( 0, -1,  0),
+    ( 0,  0, -1),
+    (-1, -1,  0),
+    (-1,  0, -1),
+    ( 0, -1, -1),
     (-1, -1, -1)
 ]
 # Each cell always has eight neighboring nodes.

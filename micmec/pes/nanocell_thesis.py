@@ -29,69 +29,12 @@ Use the default script (``nanocell.py``) instead.
 
 import numpy as np
 
-__all__ = ["elastic_energy", "grad_elastic_energy"]
+from micmec.pes.nanocell_utils import multiplicator, cell_xderivs, cell_yderivs, cell_zderivs
 
-# Construct a multiplicator array.
-# This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
-multiplicator = np.array([
-    [[-1, 1, 0, 0, 0, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
-    [[-1, 1, 0, 0, 0, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 0, 1, 0, 0]],
-    [[ 0, 0,-1, 0, 1, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
-    [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0,-1, 0, 0, 1, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
-    [[ 0, 0,-1, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0, 0, 0, 0,-1, 0, 0, 1]],
-    [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0,-1, 0, 0, 0, 1, 0, 0]],
-    [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0,-1, 0, 0, 1, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
-    [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0, 0, 0, 0,-1, 0, 0, 1]]
-])
-
-# Assign a fixed order (0-7) to the neighboring cells of a node.
-neighbor_cells = np.array([
-    ( 0, 0, 0),
-    (-1, 0, 0),
-    ( 0,-1, 0),
-    ( 0, 0,-1),
-    (-1,-1, 0),
-    (-1, 0,-1),
-    ( 0,-1,-1),
-    (-1,-1,-1)
-])
-
-# Initialize the derivatives of the neighboring cell matrices to x, y and z.
-cell_xderivs = []
-cell_yderivs = []
-cell_zderivs = []
-for neighbor_cell in neighbor_cells:
-    xderivs = []
-    yderivs = []
-    zderivs = []
-    for cell_representation in neighbor_cells:
-        # (3.20) and (3.32)
-        xderiv = np.zeros((3, 3))
-        yderiv = np.zeros((3, 3))
-        zderiv = np.zeros((3, 3))
-        deriv = np.where(neighbor_cell == -1.0, 1.0, -1.0) 
-        deriv = np.array([1.0 if n == -1 else -1.0 for n in neighbor_cell])
-        dist_vec = np.abs(neighbor_cell - cell_representation)
-        dist = np.sum(dist_vec)           
-        if dist == 0.0:
-            xderiv[:, 0] = deriv
-            yderiv[:, 1] = deriv
-            zderiv[:, 2] = deriv
-        elif dist == 1.0:
-            xderiv[dist_vec == 1.0, 0] = deriv[dist_vec == 1.0]
-            yderiv[dist_vec == 1.0, 1] = deriv[dist_vec == 1.0]
-            zderiv[dist_vec == 1.0, 2] = deriv[dist_vec == 1.0]
-        else:
-            pass
-        xderivs.append(xderiv.T)
-        yderivs.append(yderiv.T)
-        zderivs.append(zderiv.T)
-    cell_xderivs.append(xderivs)
-    cell_yderivs.append(yderivs)
-    cell_zderivs.append(zderivs)
+__all__ = ["elastic_energy_nanocell", "grad_elastic_energy_nanocell"]
 
 
-def elastic_energy(vertices, h0, C0):
+def elastic_energy_nanocell(vertices, h0, C0):
     """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
         
     Parameters
@@ -130,7 +73,7 @@ def elastic_energy(vertices, h0, C0):
     return energy
 
 
-def grad_elastic_energy(vertices, h0, C0):
+def grad_elastic_energy_nanocell(vertices, h0, C0):
     """The gradient of the elastic deformation energy of a nanocell (with respect to one of its metastable states with parameters 
     h0 and C0), towards the Cartesian coordinates of its surrounding nodes.
         
@@ -170,8 +113,6 @@ def grad_elastic_energy(vertices, h0, C0):
     
     # (4.13)
     stresses = np.einsum("ijkl,...kl->...ij", C0, strains) # [8x3x3]
-    #stresses_ = np.einsum("...ji,ijkl->...kl", strains, C0)
-    #print(np.einsum("...aji,...aij", eps_xderiv, stresses) - np.einsum("...aij,...aij", stresses_, eps_xderiv))
 
     # (3.30)
     gpos_state = np.zeros((8, 3))
@@ -189,6 +130,3 @@ def grad_elastic_energy(vertices, h0, C0):
     gpos_state[:, 2] += np.einsum("...aji,...aij", eps_zderiv, stresses)
     
     return 0.125*np.einsum("i,i...->i...", h_det, gpos_state)
-    
-
-
