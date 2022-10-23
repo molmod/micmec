@@ -22,17 +22,25 @@
 
 import numpy as np
 
+# CHOOSE ONE OF THE FOLLOWING:
+#   nanocell (default, recommended, fast)
+#   nanocell_jax (recommended, slow)
+#   nanocell_thesis (not recommended)
+#   nanocell_original (not recommended)
+from micmec.pes.nanocell import *
+# Set JAX to True if you are using nanocell_jax
+JAX = False
+
 from functools import partial
 
-from micmec.pes.nanocell import elastic_energy_nanocell, grad_elastic_energy_nanocell
-from micmec.utils import neighbor_cells, Grid
-
 from molmod import boltzmann
+from molmod.units import kjmol
 from micmec.log import log, timer
+from time import time
 
 __all__ = [
-    "MicMecForceField",
-    "ForcePart",
+    "MicMecForceField", 
+    "ForcePart", 
     "ForcePartMechanical"
 ]
 
@@ -50,9 +58,8 @@ class ForcePart(object):
     system : micmec.system.System
         The system to which this part of the MMFF applies.
     """
-
     def __init__(self, name, system):
-
+        
         self.name = name
         # backup copies of last call to compute:
         self.energy = 0.0
@@ -60,12 +67,14 @@ class ForcePart(object):
         self.vtens = np.zeros((3, 3), float)
         self.clear()
 
+    
     def clear(self):
         """Fill in ``nan`` values in the cached results to indicate that they have become invalid."""
         self.energy = np.nan
         self.gpos[:] = np.nan
         self.vtens[:] = np.nan
 
+    
     def update_rvecs(self, rvecs):
         """Let the ``ForcePart`` object know that the domain vectors have changed.
 
@@ -76,6 +85,7 @@ class ForcePart(object):
         """
         self.clear()
 
+
     def update_pos(self, pos):
         """Let the ``ForcePart`` object know that the nodal positions have changed.
 
@@ -85,6 +95,7 @@ class ForcePart(object):
             The new nodal coordinates.
         """
         self.clear()
+
 
     def compute(self, gpos=None, vtens=None):
         """Compute the energy of this part of the MMFF.
@@ -125,15 +136,15 @@ class ForcePart(object):
         else:
             mmf_gpos = self.gpos
             mmf_gpos[:] = 0.0
-
+        
         if vtens is None:
             mmf_vtens = None
         else:
             mmf_vtens = self.vtens
             mmf_vtens[:] = 0.0
-
+        
         self.energy = self._internal_compute(mmf_gpos, mmf_vtens)
-
+        
         if np.isnan(self.energy):
             raise ValueError("The energy is not-a-number (``nan``).")
         if gpos is not None:
@@ -151,6 +162,7 @@ class ForcePart(object):
         raise NotImplementedError
 
 
+
 class MicMecForceField(ForcePart):
     """A complete micromechanical force field (MMFF) model.
 
@@ -161,7 +173,6 @@ class MicMecForceField(ForcePart):
     parts : list of micmec.pes.mmff.ForcePart
         The different types of contributions to the MMFF.
     """
-
     def __init__(self, system, parts):
         ForcePart.__init__(self, "all", system)
         self.system = system
@@ -196,9 +207,9 @@ class MicMecForceField(ForcePart):
         return result
 
 
+
 class ForcePartMechanical(ForcePart):
     """The micromechanical part of the MMFF."""
-
     def __init__(self, system):
         ForcePart.__init__(self, "micmec", system)
         self.system = system
@@ -206,108 +217,100 @@ class ForcePartMechanical(ForcePart):
             with log.section("FPINIT"):
                 log("Force part: %s" % self.name)
                 log.hline()
+        # Initialize dictionaries for the effective temperature, the free energy, the elastic energy function and
+        # the gradient of the elastic energy function, for each type.
+        self.temp_eff = {}
+        self.efree = {}
+        self.efun = {}
+        self.grad_efun = {}
+        for type_ in set(self.system.types):
+            if int(type_) == 0:
+                # This should never happen, so maybe raise an exception?
+                continue
+            efun_states = []
+            grad_efun_states = []
+            h0 = self.system.params[f"type{int(type_)}/cell"]
+            C0 = self.system.params[f"type{int(type_)}/elasticity"]
+            for h0_state, C0_state in zip(h0, C0):
+                if JAX:
+                    import jax
+                    # Just-In-Time compilation for speed.
+                    efun_state = jax.jit(partial(elastic_energy, h0=h0_state, C0=C0_state))
+                    # Automatic differentiation.
+                    grad_efun_state = jax.jit(jax.grad(partial(elastic_energy, h0=h0_state, C0=C0_state)))
+                else:
+                    # `partial` allows us to define new functions with a certain number of pre-determined parameters.
+                    # `lambda` allows something similar, but does NOT work in this situation.
+                    efun_state = partial(elastic_energy, h0=h0_state, C0=C0_state)
+                    grad_efun_state = partial(grad_elastic_energy, h0=h0_state, C0=C0_state)
+                efun_states.append(efun_state)
+                grad_efun_states.append(grad_efun_state)
+            # The energy function of a type (and its other parameters) can be accessed with an integer key.
+            self.efun[int(type_)] = efun_states
+            self.grad_efun[int(type_)] = grad_efun_states
+            self.efree[int(type_)] = self.system.params[f"type{int(type_)}/free_energy"]
+            self.temp_eff[int(type_)] = self.system.params[f"type{int(type_)}/effective_temp"]
 
-        self.pbc = self.get_pbc(self.system.domain.rvecs)
-        self.mic = self.get_mic(self.system.grid)
-        
-        # Filter such that only scalar parameters remain (JAX requirement).
-        params1 = {}
-        params2 = {}
-        params3 = {}
-        params4 = {}
-        for key, item in self.system.params.items():
-            if "effective_temp" in key:
-                params1[int(key.split("/")[0][4:])] = item
-            if "free_energy" in key:
-                params2[int(key.split("/")[0][4:])] = item
-            if "cell" in key:
-                params3[int(key.split("/")[0][4:])] = item
-            if "elasticity" in key:
-                params4[int(key.split("/")[0][4:])] = item
-
-        self.efun = partial(
-            deformation,
-            mic=self.mic,
-            types=self.system.types,
-            surrounding_nodes=self.system.surrounding_nodes,
-            params1=params1,
-            params2=params2,
-            params3=params3,
-            params4=params4
-        )
-        self.epot_cells = None
-        self.gpos_cells = None
-        self.verts_cells = None
-        
-    @staticmethod
-    def get_pbc(rvecs):
-        nper = rvecs.shape[0]
-        pbc = (nper > 0)
-        if pbc and nper != 3:
-            raise ValueError("Attribute `rvecs` only supports finite systems or 3D periodic systems, "
-                             f"not {nper}D periodic systems.")
-        return pbc
     
-    @staticmethod
-    def get_mic(grid, pbc=True):
-        grid_structure = Grid(grid, pbc=pbc)
-        mic = np.zeros((grid_structure.nnodes, grid_structure.nnodes, 3))
-        if not pbc:
-            return mic
-
-        def sign(x):
-            return 2 * (x > 0) - 1
-
-        boundary = grid_structure.boundary_nodes
-        nodes = np.array(grid_structure.nodes)
-        kij_max = grid_structure.nx_nodes - 1
-        lij_max = grid_structure.ny_nodes - 1
-        mij_max = grid_structure.nz_nodes - 1
-        for j in range(grid_structure.nnodes):
-            for i in range(j):
-                if (i in boundary) and (j in boundary):
-                    kij = nodes[j, 0] - nodes[i, 0]
-                    lij = nodes[j, 1] - nodes[i, 1]
-                    mij = nodes[j, 2] - nodes[i, 2]
-                    if abs(kij) == kij_max:
-                        if kij_max == 1:
-                            mic[i, j, 0] = (kij == -1)  # broken symmetry
-                            mic[j, i, 0] = (kij == 1)
-                        else:
-                            mic[i, j, 0] = -sign(kij)
-                            mic[j, i, 0] = -mic[i, j, 0]  # regular symmetry
-                    if abs(lij) == lij_max:
-                        if lij_max == 1:
-                            mic[i, j, 1] = (lij == -1)  # broken symmetry
-                            mic[j, i, 1] = (lij == 1)
-                        else:
-                            mic[i, j, 1] = -sign(lij)
-                            mic[j, i, 1] = -mic[i, j, 1]  # regular symmetry
-                    if abs(mij) == mij_max:
-                        if mij_max == 1:
-                            mic[i, j, 2] = (mij == -1)  # broken symmetry
-                            mic[j, i, 2] = (mij == 1)
-                        else:
-                            mic[i, j, 2] = -sign(mij)
-                            mic[j, i, 2] = -mic[i, j, 2]  # regular symmetry
-                    
-        return mic
-
     def _internal_compute(self, gpos, vtens):
         with timer.section("MMFF"):
-            self.epot_cells, self.gpos_cells, self.verts_cells = self.efun(self.system.pos, self.system.domain.rvecs)
-            if gpos is not None:
-                self._compute_gpos(gpos)
-            if vtens is not None:
-                self._compute_vtens(vtens)
-            return self._compute_epot()  # (3.27) and (3.36)
-
-    def _compute_epot(self):
-        """Compute the potential energy (of the MMFF)."""
-        return np.sum(self.epot_cells)
-
+            self._compute_cell_properties()
+            self._compute_gpos(gpos)
+            self._compute_vtens(gpos, vtens)       
+            return np.sum(self.epot_cells) # (3.27) and (3.36)
+        
+    
+    def _compute_cell_properties(self):
+        """Compute the instantaneous micromechanical cell properties."""
+        # The cell properties include: the potential energy of the cell, the thermodynamic weights of its states,
+        # its contribution to the forces acting on its surrounding nodes and the coordinates of its surrounding nodes.
+        self.epot_cells = []
+        self.weights_cells = []
+        self.gpos_cells = []
+        self.verts_cells = []
+        for cell_idx in range(self.system.ncells):
+            type_ = int(self.system.types[cell_idx])
+            # Store the nodal index of each vertex of the current cell in an array.
+            verts_idxs = self.system.surrounding_nodes[cell_idx]
+            # Calculate the position of each vertex.
+            r0 = self.system.pos[verts_idxs[0]]
+            r1 = r0 + self.delta(verts_idxs[0], verts_idxs[1])
+            r2 = r0 + self.delta(verts_idxs[0], verts_idxs[2])
+            r3 = r0 + self.delta(verts_idxs[0], verts_idxs[3])
+            r4 = r0 + self.delta(verts_idxs[0], verts_idxs[4])
+            r5 = r0 + self.delta(verts_idxs[0], verts_idxs[5])
+            r6 = r0 + self.delta(verts_idxs[0], verts_idxs[6])
+            r7 = r0 + self.delta(verts_idxs[0], verts_idxs[7])
+            verts = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
+            temp_eff_ = self.temp_eff[type_]
+            gpos_states = []
+            epot_states = []
+            # Iterate over each metastable state.
+            for efree_state, efun_state, grad_efun_state in zip(self.efree[type_], 
+                                                                self.efun[type_], 
+                                                                self.grad_efun[type_]):
+                epot_states.append(efun_state(verts) + efree_state)
+                gpos_states.append(grad_efun_state(verts).reshape((8, 3)))
+            epot_states = np.array(epot_states)
+            epot_min = np.min(epot_states)
+            weights_states = np.exp(-(epot_states - epot_min)/(boltzmann*temp_eff_)) # (3.41)
+            weights_states_norm = np.array(weights_states)/np.sum(weights_states)
+            epot_cell = epot_min - temp_eff_*boltzmann*np.log(np.sum(weights_states)) # (3.37)
+            gpos_cell = np.zeros((8, 3))
+            for weight_state, gpos_state in zip(weights_states_norm, gpos_states):
+                gpos_cell += weight_state*gpos_state # (3.40)
+            # Store everything.
+            self.epot_cells.append(epot_cell)
+            self.weights_cells.append(weights_states)
+            self.gpos_cells.append(gpos_cell)
+            self.verts_cells.append(verts)
+        return None
+    
+    
     def _compute_gpos(self, gpos):
-        """Compute the gradient of the potential energy (of the MMFF)."""
+        """Compute the gradient of the (potential) energy (of the MMFF)."""
+        if gpos is None:
+            return None
         # Iterate over each node
         for node_idx in range(self.system.nnodes):
             # Initialize the total force acting on the node.
@@ -321,19 +324,17 @@ class ForcePartMechanical(ForcePart):
             gpos[node_idx, :] = gpos_node
         return None
 
-    def _compute_vtens(self, vtens):
+    
+    def _compute_vtens(self, gpos, vtens):
         """Compute the virial tensor of the simulation domain."""
-        vtens[:] = np.einsum("ijk,ijl->kl", self.gpos_cells, self.verts_cells)  # (4.1)
+        if (vtens is None):
+            return None
+        vtens[:] = np.einsum("ijk,ijl->kl", self.gpos_cells, self.verts_cells) # (4.1)
+        # In the future, it would be best to implement this as an energy derivative.
         return None
 
-
-def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, params3, params4):
-    """Compute the deformation properties: the instantaneous potential energy, the gradient and vertices of 
-    each cell, taking into account the minimum image convention.
-    """
-    ncells = len(types)
-
-    def delta(i, j):
+    
+    def delta(self, i, j):
         """Compute the difference vector between node i and node j, taking into account the minimum image convention.
 
         Parameters
@@ -346,53 +347,14 @@ def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, par
         dvec : numpy.ndarray, shape=(3,)
             The difference vector between node i and node j.
         """
-        dvec = pos[j] - pos[i]
-        dvec += rvecs[0] * mic[i, j, 0] + rvecs[1] * mic[i, j, 1] + rvecs[2] * mic[i, j, 2]
+        boundary = self.system.boundary_nodes
+        dvec = self.system.pos[j] - self.system.pos[i]
+        if boundary is None:
+            self.system.domain.mic(dvec)
+            return dvec
+        if (i in boundary) and (j in boundary):
+            self.system.domain.mic(dvec)
         return dvec
 
-    epot_cells = []
-    gpos_cells = []
-    verts_cells = []
-    for cell_idx in range(ncells):
 
-        type_ = types[cell_idx]
 
-        # Store the nodal index of each vertex of the current cell in an array.
-        verts_idxs = surrounding_nodes[cell_idx]
-
-        # Calculate the position of each vertex.
-        r0 = pos[verts_idxs[0]]
-        r1 = r0 + delta(verts_idxs[0], verts_idxs[1])
-        r2 = r0 + delta(verts_idxs[0], verts_idxs[2])
-        r3 = r0 + delta(verts_idxs[0], verts_idxs[3])
-        r4 = r0 + delta(verts_idxs[0], verts_idxs[4])
-        r5 = r0 + delta(verts_idxs[0], verts_idxs[5])
-        r6 = r0 + delta(verts_idxs[0], verts_idxs[6])
-        r7 = r0 + delta(verts_idxs[0], verts_idxs[7])
-        verts_cell = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
-
-        epot_states = []
-        gpos_states = []
-        # Iterate over each metastable state.
-        temp_eff = params1[int(type_)]
-        for efree_state, h0_state, C0_state in zip(
-                params2[int(type_)],
-                params3[int(type_)],
-                params4[int(type_)]
-        ):
-            epot_states.append(elastic_energy_nanocell(verts_cell, h0_state, C0_state) + efree_state)
-            gpos_states.append(grad_elastic_energy_nanocell(verts_cell, h0_state, C0_state))
-        epot_states = np.array(epot_states)
-        gpos_states = np.array(gpos_states)
-        epot_min = np.min(epot_states)
-        weights_states = np.exp(-(epot_states - epot_min) / (boltzmann * temp_eff))  # (3.41)
-        weights_states_norm = np.array(weights_states) / np.sum(weights_states)
-        epot_cell = epot_min - temp_eff * boltzmann * np.log(np.sum(weights_states))  # (3.37)
-        gpos_cell = np.zeros((8, 3))
-        for weight_state, gpos_state in zip(weights_states_norm, gpos_states):
-            gpos_cell += weight_state * gpos_state  # (3.40)
-        epot_cells.append(epot_cell)
-        gpos_cells.append(gpos_cell)
-        verts_cells.append(verts_cell)
-
-    return np.array(epot_cells), np.array(gpos_cells), np.array(verts_cells)

@@ -18,19 +18,17 @@
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-"""Micromechanical description of a single nanocell state.
+"""Micromechanical description of a single nanocell state (original).
 
-A single state of a nanocell, on the micromechanical level, is described by means of its elastic deformation energy and the gradient 
-of that energy, which represents the forces acting on the micromechanical nodes.
+This script contains the original equations of the micromechanical model, as proposed by S. M. J. Rogge.
+It is, however, NOT recommended to use these equations, as they are based on wrong assumptions.
+Use the default script (``nanocell.py``) instead.
 """
-# In the comments, we refer to equations in the master's thesis of Joachim Vandewalle.
 
 import numpy as np
 
-__all__ = ["elastic_energy_nanocell", "grad_elastic_energy_nanocell"]
+__all__ = ["elastic_energy", "grad_elastic_energy"]
 
-# Construct a multiplicator array.
-# This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
 multiplicator = np.array([
     [[-1, 1, 0, 0, 0, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
     [[-1, 1, 0, 0, 0, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 0, 1, 0, 0]],
@@ -88,8 +86,14 @@ for neighbor_cell in neighbor_cells:
     cell_yderivs.append(yderivs)
     cell_zderivs.append(zderivs)
 
+# In the original model, the concept of `representations` does not exist.
+# Therefore, we only need a few of these derivatives.
+cell_xderiv = [0.25*xderiv[i] for i, xderiv in enumerate(cell_xderivs)]
+cell_yderiv = [0.25*yderiv[i] for i, yderiv in enumerate(cell_yderivs)]
+cell_zderiv = [0.25*zderiv[i] for i, zderiv in enumerate(cell_zderivs)]
 
-def elastic_energy_nanocell(vertices, h0, C0):
+
+def elastic_energy(vertices, h0, C0):
     """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
         
     Parameters
@@ -112,22 +116,23 @@ def elastic_energy_nanocell(vertices, h0, C0):
     They are absent here, but they have been implemented in the ``mmff.py`` script.
     This elastic deformation energy is only the energy of a single metastable state of a nanocell.
     """
-    # (3.20)
-    matrices = np.einsum("...i,ij->...j", multiplicator, vertices) # [8x3x8].[8x3] = [8x3x3]
-
-    # (3.23)
-    matrices_ = np.einsum("...ji,kj->...ik", matrices, np.linalg.inv(h0))
-    identity_ = np.array([np.identity(3) for _ in range(8)])
-    strains = 0.5*(np.einsum("...ji,...jk->...ik", matrices_, matrices_) - identity_)
+    h0_inv = np.linalg.inv(h0) # [3x3]
+    h0_det = np.linalg.det(h0)
     
-    # (4.11)
-    energy_density = 0.5*np.einsum("...ij,ijkl,...kl", strains, C0, strains)
-    energy = 0.125*np.einsum("i->", energy_density)*np.linalg.det(h0)
+    matrices = np.einsum("...i,ij->...j", multiplicator, vertices) # [8x3x8].[8x3] = [8x3x3]
+    matrix = 0.125*np.einsum("i...->...", matrices) # [3x3]
+    matrix_ = np.einsum("ji,kj->ik", matrix, h0_inv) # [3x3]
+
+    identity_ = np.identity(3) # [3x3]
+    strain = 0.5*(np.einsum("ji,jk->ik", matrix_, matrix_) - identity_) # [3x3]
+    
+    energy_density = 0.5*np.einsum("ij,ijkl,kl", strain, C0, strain)
+    energy = energy_density*np.linalg.det(h0)
     
     return energy
 
 
-def grad_elastic_energy_nanocell(vertices, h0, C0):
+def grad_elastic_energy(vertices, h0, C0):
     """The gradient of the elastic deformation energy of a nanocell (with respect to one of its metastable states with parameters 
     h0 and C0), towards the Cartesian coordinates of its surrounding nodes.
         
@@ -148,28 +153,25 @@ def grad_elastic_energy_nanocell(vertices, h0, C0):
     h0_inv = np.linalg.inv(h0) # [3x3]
     h0_det = np.linalg.det(h0)
     
-    # (3.20)
     matrices = np.einsum("...i,ij->...j", multiplicator, vertices) # [8x3x8].[8x3] = [8x3x3]
-    matrices_ = np.einsum("...ji,kj->...ik", matrices, h0_inv) # [8x3x3]
+    matrix = 0.125*np.einsum("i...->...", matrices) # [3x3]
+    matrix_ = np.einsum("ji,kj->ik", matrix, h0_inv) # [3x3]
     
-    # (3.31)
-    xmat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_xderivs, h0_inv) # [8x3x3].[[8x8x3x3].[3x3]] = [8x8x3x3]
-    ymat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_yderivs, h0_inv) 
-    zmat = np.einsum("...ki,...km,jm->...ij", matrices_, cell_zderivs, h0_inv)
-    eps_xderiv = 0.5*(np.einsum("...ji", xmat) + xmat) # [8x8x3x3]
+    xmat = np.einsum("ki,...km,jm->...ij", matrix_, cell_xderiv, h0_inv) # [3x3].[[8x3x3].[3x3]] = [8x3x3]
+    ymat = np.einsum("ki,...km,jm->...ij", matrix_, cell_yderiv, h0_inv) 
+    zmat = np.einsum("ki,...km,jm->...ij", matrix_, cell_zderiv, h0_inv)
+    eps_xderiv = 0.5*(np.einsum("...ji", xmat) + xmat) # [8x3x3]
     eps_yderiv = 0.5*(np.einsum("...ji", ymat) + ymat) 
     eps_zderiv = 0.5*(np.einsum("...ji", zmat) + zmat)
     
-    # (3.23)
-    identity_ = np.array([np.identity(3) for _ in range(8)]) # [8x3x3]
-    strains = 0.5*(np.einsum("...ji,...jk->...ik", matrices_, matrices_) - identity_) # [8x3x3]
+    identity_ = np.identity(3) # [3x3]
+    strain = 0.5*(np.einsum("ji,jk->ik", matrix_, matrix_) - identity_) # [3x3]
     
-    # (4.13)
-    stresses = np.einsum("ijkl,...kl->...ij", C0, strains) # [8x3x3]
+    stress = np.einsum("ijkl,kl->ij", C0, strain) # [3x3]
     gpos_state = np.zeros((8, 3))
-    gpos_state[:, 0] += 0.125*np.einsum("...aji,...aij", eps_xderiv, stresses) # [8x8x3x3].[8x3x3] = [8]
-    gpos_state[:, 1] += 0.125*np.einsum("...aji,...aij", eps_yderiv, stresses)
-    gpos_state[:, 2] += 0.125*np.einsum("...aji,...aij", eps_zderiv, stresses)
+    gpos_state[:, 0] += np.einsum("...ji,ij", eps_xderiv, stress) # [8x3x3].[3x3] = [8]
+    gpos_state[:, 1] += np.einsum("...ji,ij", eps_yderiv, stress)
+    gpos_state[:, 2] += np.einsum("...ji,ij", eps_zderiv, stress)
     
     return h0_det*gpos_state
     

@@ -20,8 +20,8 @@
 
 """Trajectory writers."""
 
-from .iterative import Hook
-from ..log import log, timer
+from micmec.sampling.iterative import Hook
+from micmec.log import log, timer
 
 __all__ = [
     "HDF5Writer", 
@@ -41,7 +41,6 @@ class BaseHDF5Writer(Hook):
             The first iteration at which this hook should be called.
         step : int, optional
             The hook will be called every `step` iterations.
-        
         """
         self.f = f
         Hook.__init__(self, start, step)
@@ -119,7 +118,6 @@ class XYZWriter(Hook):
         from molmod.io import XYZWriter
         
         if self.xyz_writer is None:
-            
             pos = iterative.mmf.system.pos
             if self.select is None:
                 symbols = [periodic[55].symbol for _ in pos] # represent nodes with cesium atoms

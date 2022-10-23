@@ -451,7 +451,6 @@ class MTKBarostat(VerletHook):
             The initial barostat velocity tensor.
         restart : bool, optional
             If true, the domain is not symmetrized initially.
-        
         """
         self.temp = temp
         self.press = press

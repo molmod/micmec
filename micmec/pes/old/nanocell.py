@@ -27,7 +27,7 @@ of that energy, which represents the forces acting on the micromechanical nodes.
 
 import numpy as np
 
-__all__ = ["elastic_energy_nanocell", "grad_elastic_energy_nanocell"]
+__all__ = ["elastic_energy", "grad_elastic_energy"]
 
 # Construct a multiplicator array.
 # This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
@@ -89,7 +89,7 @@ for neighbor_cell in neighbor_cells:
     cell_zderivs.append(zderivs)
 
 
-def elastic_energy_nanocell(vertices, h0, C0):
+def elastic_energy(vertices, h0, C0):
     """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
         
     Parameters
@@ -127,7 +127,7 @@ def elastic_energy_nanocell(vertices, h0, C0):
     return energy
 
 
-def grad_elastic_energy_nanocell(vertices, h0, C0):
+def grad_elastic_energy(vertices, h0, C0):
     """The gradient of the elastic deformation energy of a nanocell (with respect to one of its metastable states with parameters 
     h0 and C0), towards the Cartesian coordinates of its surrounding nodes.
         

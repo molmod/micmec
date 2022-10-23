@@ -19,20 +19,21 @@
 
 
 """MicMecForceField, the micromechanical force field."""
+import jax
 
 import numpy as np
+import jax.numpy as jnp
 
 from functools import partial
 
-from micmec.pes.nanocell import elastic_energy_nanocell, grad_elastic_energy_nanocell
-from micmec.utils import neighbor_cells, Grid
-
 from molmod import boltzmann
+from molmod.units import kjmol
 from micmec.log import log, timer
+from time import time
 
 __all__ = [
-    "MicMecForceField",
-    "ForcePart",
+    "MicMecForceField", 
+    "ForcePart", 
     "ForcePartMechanical"
 ]
 
@@ -50,9 +51,8 @@ class ForcePart(object):
     system : micmec.system.System
         The system to which this part of the MMFF applies.
     """
-
     def __init__(self, name, system):
-
+        
         self.name = name
         # backup copies of last call to compute:
         self.energy = 0.0
@@ -60,12 +60,14 @@ class ForcePart(object):
         self.vtens = np.zeros((3, 3), float)
         self.clear()
 
+    
     def clear(self):
         """Fill in ``nan`` values in the cached results to indicate that they have become invalid."""
         self.energy = np.nan
         self.gpos[:] = np.nan
         self.vtens[:] = np.nan
 
+    
     def update_rvecs(self, rvecs):
         """Let the ``ForcePart`` object know that the domain vectors have changed.
 
@@ -76,6 +78,7 @@ class ForcePart(object):
         """
         self.clear()
 
+
     def update_pos(self, pos):
         """Let the ``ForcePart`` object know that the nodal positions have changed.
 
@@ -85,6 +88,7 @@ class ForcePart(object):
             The new nodal coordinates.
         """
         self.clear()
+
 
     def compute(self, gpos=None, vtens=None):
         """Compute the energy of this part of the MMFF.
@@ -125,15 +129,15 @@ class ForcePart(object):
         else:
             mmf_gpos = self.gpos
             mmf_gpos[:] = 0.0
-
+        
         if vtens is None:
             mmf_vtens = None
         else:
             mmf_vtens = self.vtens
             mmf_vtens[:] = 0.0
-
+        
         self.energy = self._internal_compute(mmf_gpos, mmf_vtens)
-
+        
         if np.isnan(self.energy):
             raise ValueError("The energy is not-a-number (``nan``).")
         if gpos is not None:
@@ -151,6 +155,7 @@ class ForcePart(object):
         raise NotImplementedError
 
 
+
 class MicMecForceField(ForcePart):
     """A complete micromechanical force field (MMFF) model.
 
@@ -161,7 +166,6 @@ class MicMecForceField(ForcePart):
     parts : list of micmec.pes.mmff.ForcePart
         The different types of contributions to the MMFF.
     """
-
     def __init__(self, system, parts):
         ForcePart.__init__(self, "all", system)
         self.system = system
@@ -196,9 +200,9 @@ class MicMecForceField(ForcePart):
         return result
 
 
+
 class ForcePartMechanical(ForcePart):
     """The micromechanical part of the MMFF."""
-
     def __init__(self, system):
         ForcePart.__init__(self, "micmec", system)
         self.system = system
@@ -206,132 +210,115 @@ class ForcePartMechanical(ForcePart):
             with log.section("FPINIT"):
                 log("Force part: %s" % self.name)
                 log.hline()
-
-        self.pbc = self.get_pbc(self.system.domain.rvecs)
-        self.mic = self.get_mic(self.system.grid)
+        nx, ny, nz = np.shape(self.system.grid)
+        boundary = self.system.boundary_nodes
+        nnodes = self.system.nnodes
+        pbc = (self.system.domain.rvecs.shape[0] > 0) # This does not allow for 2D or 1D periodic crystals.
+        nx_nodes = nx + 1 - pbc
+        ny_nodes = ny + 1 - pbc
+        nz_nodes = nz + 1 - pbc
         
-        # Filter such that only scalar parameters remain (JAX requirement).
-        params1 = {}
-        params2 = {}
-        params3 = {}
-        params4 = {}
-        for key, item in self.system.params.items():
-            if "effective_temp" in key:
-                params1[int(key.split("/")[0][4:])] = item
-            if "free_energy" in key:
-                params2[int(key.split("/")[0][4:])] = item
-            if "cell" in key:
-                params3[int(key.split("/")[0][4:])] = item
-            if "elasticity" in key:
-                params4[int(key.split("/")[0][4:])] = item
+        neighbor_cells = [
+            ( 0, 0, 0),
+            (-1, 0, 0),
+            ( 0,-1, 0),
+            ( 0, 0,-1),
+            (-1,-1, 0),
+            (-1, 0,-1),
+            ( 0,-1,-1),
+            (-1,-1,-1)
+        ]
+        node_idx = 0
+        nodes = np.zeros((nnodes, 3))
+        for k in range(nx_nodes):
+            for l in range(ny_nodes):
+                for m in range(nz_nodes):
+                    for neighbor_idxs in neighbor_cells:
+                        kappa = k + neighbor_idxs[0]
+                        lambda_ = l + neighbor_idxs[1]
+                        mu = m + neighbor_idxs[2]
+                        if (not pbc) and (kappa < 0 or kappa >= nx):
+                            continue
+                        if (not pbc) and (lambda_ < 0 or lambda_ >= ny):
+                            continue
+                        if (not pbc) and (mu < 0 or mu >= nz):
+                            continue
+                        # If any surrounding nanocell is non-empty, then the node is valid.
+                        if self.system.grid[(kappa, lambda_, mu)] != 0:
+                            nodes[node_idx, 0] = k
+                            nodes[node_idx, 1] = l
+                            nodes[node_idx, 2] = m
+                            node_idx += 1
+                            break
 
-        self.efun = partial(
-            deformation,
-            mic=self.mic,
-            types=self.system.types,
-            surrounding_nodes=self.system.surrounding_nodes,
-            params1=params1,
-            params2=params2,
-            params3=params3,
-            params4=params4
-        )
-        self.epot_cells = None
-        self.gpos_cells = None
-        self.verts_cells = None
-        
-    @staticmethod
-    def get_pbc(rvecs):
-        nper = rvecs.shape[0]
-        pbc = (nper > 0)
-        if pbc and nper != 3:
-            raise ValueError("Attribute `rvecs` only supports finite systems or 3D periodic systems, "
-                             f"not {nper}D periodic systems.")
-        return pbc
-    
-    @staticmethod
-    def get_mic(grid, pbc=True):
-        grid_structure = Grid(grid, pbc=pbc)
-        mic = np.zeros((grid_structure.nnodes, grid_structure.nnodes, 3))
-        if not pbc:
-            return mic
-
-        def sign(x):
-            return 2 * (x > 0) - 1
-
-        boundary = grid_structure.boundary_nodes
-        nodes = np.array(grid_structure.nodes)
-        kij_max = grid_structure.nx_nodes - 1
-        lij_max = grid_structure.ny_nodes - 1
-        mij_max = grid_structure.nz_nodes - 1
-        for j in range(grid_structure.nnodes):
+        self.mic = np.zeros((nnodes, nnodes, 3))
+        for j in range(nnodes): 
             for i in range(j):
                 if (i in boundary) and (j in boundary):
-                    kij = nodes[j, 0] - nodes[i, 0]
-                    lij = nodes[j, 1] - nodes[i, 1]
-                    mij = nodes[j, 2] - nodes[i, 2]
-                    if abs(kij) == kij_max:
-                        if kij_max == 1:
-                            mic[i, j, 0] = (kij == -1)  # broken symmetry
-                            mic[j, i, 0] = (kij == 1)
-                        else:
-                            mic[i, j, 0] = -sign(kij)
-                            mic[j, i, 0] = -mic[i, j, 0]  # regular symmetry
-                    if abs(lij) == lij_max:
-                        if lij_max == 1:
-                            mic[i, j, 1] = (lij == -1)  # broken symmetry
-                            mic[j, i, 1] = (lij == 1)
-                        else:
-                            mic[i, j, 1] = -sign(lij)
-                            mic[j, i, 1] = -mic[i, j, 1]  # regular symmetry
-                    if abs(mij) == mij_max:
-                        if mij_max == 1:
-                            mic[i, j, 2] = (mij == -1)  # broken symmetry
-                            mic[j, i, 2] = (mij == 1)
-                        else:
-                            mic[i, j, 2] = -sign(mij)
-                            mic[j, i, 2] = -mic[i, j, 2]  # regular symmetry
-                    
-        return mic
+                    self.mic[i, j, 0] = (abs(nodes[i, 0] - nodes[j, 0]) == nx_nodes - 1)*(1.0 - 2.0*(nodes[i, 0] < nodes[j, 0]))
+                    self.mic[i, j, 1] = (abs(nodes[i, 1] - nodes[j, 1]) == ny_nodes - 1)*(1.0 - 2.0*(nodes[i, 1] < nodes[j, 1]))
+                    self.mic[i, j, 2] = (abs(nodes[i, 2] - nodes[j, 2]) == nz_nodes - 1)*(1.0 - 2.0*(nodes[i, 2] < nodes[j, 2]))
+                    self.mic[j, i, 0] = -self.mic[i, j, 0]
+                    self.mic[j, i, 1] = -self.mic[i, j, 1]
+                    self.mic[j, i, 2] = -self.mic[i, j, 2]
+        # Filter such that only scalar parameters remain (JAX requirement).
+        self.params1 = {}
+        self.params2 = {}
+        self.params3 = {}
+        self.params4 = {}
+        for key, item in self.system.params.items():
+            if ("effective_temp" in key):
+                self.params1[int(key.split("/")[0][4:])] = item
+            if ("free_energy" in key):
+                self.params2[int(key.split("/")[0][4:])] = item
+            if ("cell" in key):
+                self.params3[int(key.split("/")[0][4:])] = item
+            if ("elasticity" in key):
+                self.params4[int(key.split("/")[0][4:])] = item
+        
+        self.fn_epot = jax.jit(partial(elastic_energy, 
+                                        mic=self.mic, 
+                                        types=self.system.types, 
+                                        surrounding_nodes=self.system.surrounding_nodes, 
+                                        params1=self.params1, 
+                                        params2=self.params2, 
+                                        params3=self.params3, 
+                                        params4=self.params4))
+        self.fn_gpos = jax.jit(jax.grad(self.fn_epot, argnums=(0,)))
+        self.fn_vtens = jax.jit(jax.grad(self.fn_epot, argnums=(2,)))
 
+    
     def _internal_compute(self, gpos, vtens):
         with timer.section("MMFF"):
-            self.epot_cells, self.gpos_cells, self.verts_cells = self.efun(self.system.pos, self.system.domain.rvecs)
+            epot = np.array(self.fn_epot(self.system.pos, self.system.domain.rvecs, np.identity(3)))
             if gpos is not None:
-                self._compute_gpos(gpos)
+                gpos[:] = np.array(self.fn_gpos(self.system.pos, self.system.domain.rvecs, np.identity(3))[0])
             if vtens is not None:
-                self._compute_vtens(vtens)
-            return self._compute_epot()  # (3.27) and (3.36)
-
-    def _compute_epot(self):
-        """Compute the potential energy (of the MMFF)."""
-        return np.sum(self.epot_cells)
-
-    def _compute_gpos(self, gpos):
-        """Compute the gradient of the potential energy (of the MMFF)."""
-        # Iterate over each node
-        for node_idx in range(self.system.nnodes):
-            # Initialize the total force acting on the node.
-            gpos_node = np.zeros(3)
-            # Iterate over each surrounding cell of the node.
-            for neighbor_idx, cell_idx in enumerate(self.system.surrounding_cells[node_idx]):
-                if cell_idx < 0:
-                    # Skip the iteration if the current cell is empty or non-existent.
-                    continue
-                gpos_node += self.gpos_cells[cell_idx][neighbor_idx]
-            gpos[node_idx, :] = gpos_node
-        return None
-
-    def _compute_vtens(self, vtens):
-        """Compute the virial tensor of the simulation domain."""
-        vtens[:] = np.einsum("ijk,ijl->kl", self.gpos_cells, self.verts_cells)  # (4.1)
-        return None
+                #vtens[:] = np.array(self.system.domain.rvecs.T @ self.fn_vtens(self.system.pos, self.system.domain.rvecs)[0])
+                vtens[:] = np.array(self.fn_vtens(self.system.pos, self.system.domain.rvecs, np.identity(3))[0])
+            return epot # (3.27) and (3.36)
 
 
-def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, params3, params4):
-    """Compute the deformation properties: the instantaneous potential energy, the gradient and vertices of 
-    each cell, taking into account the minimum image convention.
-    """
+def elastic_energy(pos, rvecs, deformation, mic, types, surrounding_nodes, params1, params2, params3, params4):
+    """Compute the instantaneous potential energy."""
+    pos = jnp.dot(pos, deformation)
+    rvecs = jnp.dot(rvecs, deformation)
+    epot = 0.0
+    nnodes = len(pos)
     ncells = len(types)
+
+    # Construct a multiplicator array.
+    # This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
+    multiplicator = jnp.array([
+        [[-1, 1, 0, 0, 0, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
+        [[-1, 1, 0, 0, 0, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 0, 1, 0, 0]],
+        [[ 0, 0,-1, 0, 1, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
+        [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0,-1, 0, 0, 1, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
+        [[ 0, 0,-1, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0, 0, 0, 0,-1, 0, 0, 1]],
+        [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0,-1, 0, 0, 0, 1, 0, 0]],
+        [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0,-1, 0, 0, 1, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
+        [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0, 0, 0, 0,-1, 0, 0, 1]]
+    ])
 
     def delta(i, j):
         """Compute the difference vector between node i and node j, taking into account the minimum image convention.
@@ -347,19 +334,54 @@ def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, par
             The difference vector between node i and node j.
         """
         dvec = pos[j] - pos[i]
-        dvec += rvecs[0] * mic[i, j, 0] + rvecs[1] * mic[i, j, 1] + rvecs[2] * mic[i, j, 2]
+        dvec += rvecs[0]*mic[i, j, 0] + rvecs[1]*mic[i, j, 1] + rvecs[2]*mic[i, j, 2]
         return dvec
 
-    epot_cells = []
-    gpos_cells = []
-    verts_cells = []
+    def elastic_energy_nanocell(vertices, h0, C0):
+        """The elastic deformation energy of a nanocell, with respect to one of its metastable states with parameters h0 and C0.
+            
+        Parameters
+        ----------
+        vertices : numpy.ndarray, shape=(8, 3)
+            The coordinates of the surrounding nodes (i.e. the vertices).
+        h0 : numpy.ndarray, shape=(3, 3)   
+            The equilibrium cell matrix.
+        C0 : numpy.ndarray, shape=(3, 3, 3, 3)
+            The elasticity tensor.
+
+        Returns
+        -------
+        energy : float
+            The elastic deformation energy.
+        
+        Notes
+        -----
+        At first sight, the equations for bistable nanocells might seem absent from this derivation.
+        They are absent here, but they have been implemented in the ``mmff.py`` script.
+        This elastic deformation energy is only the energy of a single metastable state of a nanocell.
+        """
+        # The equations below are the same as in the default (`nanocell.py`).
+        # (3.20)
+        matrices = jnp.einsum("...i,ij->...j", multiplicator, vertices)
+        
+        # (3.23)
+        matrices_ = jnp.einsum("...ji,kj->...ik", matrices, jnp.linalg.inv(h0))
+        identity_ = jnp.array([jnp.identity(3) for _ in range(8)])
+        strains = 0.5*(jnp.einsum("...ji,...jk->...ik", matrices_, matrices_) - identity_)
+
+        # (4.11)
+        energy_density = 0.5*jnp.einsum("...ij,ijkl,...kl", strains, C0, strains)
+        energy = 0.125*jnp.einsum("i->", energy_density)*jnp.linalg.det(h0)
+    
+        return energy
+    
     for cell_idx in range(ncells):
-
+        
         type_ = types[cell_idx]
-
+                
         # Store the nodal index of each vertex of the current cell in an array.
         verts_idxs = surrounding_nodes[cell_idx]
-
+        
         # Calculate the position of each vertex.
         r0 = pos[verts_idxs[0]]
         r1 = r0 + delta(verts_idxs[0], verts_idxs[1])
@@ -369,30 +391,22 @@ def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, par
         r5 = r0 + delta(verts_idxs[0], verts_idxs[5])
         r6 = r0 + delta(verts_idxs[0], verts_idxs[6])
         r7 = r0 + delta(verts_idxs[0], verts_idxs[7])
-        verts_cell = np.array([r0, r1, r2, r3, r4, r5, r6, r7])
-
+        verts = jnp.array([r0, r1, r2, r3, r4, r5, r6, r7])
+        
         epot_states = []
-        gpos_states = []
         # Iterate over each metastable state.
         temp_eff = params1[int(type_)]
-        for efree_state, h0_state, C0_state in zip(
-                params2[int(type_)],
-                params3[int(type_)],
-                params4[int(type_)]
-        ):
-            epot_states.append(elastic_energy_nanocell(verts_cell, h0_state, C0_state) + efree_state)
-            gpos_states.append(grad_elastic_energy_nanocell(verts_cell, h0_state, C0_state))
-        epot_states = np.array(epot_states)
-        gpos_states = np.array(gpos_states)
-        epot_min = np.min(epot_states)
-        weights_states = np.exp(-(epot_states - epot_min) / (boltzmann * temp_eff))  # (3.41)
-        weights_states_norm = np.array(weights_states) / np.sum(weights_states)
-        epot_cell = epot_min - temp_eff * boltzmann * np.log(np.sum(weights_states))  # (3.37)
-        gpos_cell = np.zeros((8, 3))
-        for weight_state, gpos_state in zip(weights_states_norm, gpos_states):
-            gpos_cell += weight_state * gpos_state  # (3.40)
-        epot_cells.append(epot_cell)
-        gpos_cells.append(gpos_cell)
-        verts_cells.append(verts_cell)
+        for efree_state, h0_state, C0_state in zip(params2[int(type_)], 
+                                                    params3[int(type_)], 
+                                                    params4[int(type_)]):
+            epot_states.append(elastic_energy_nanocell(verts, h0_state, C0_state) + efree_state)
+        epot_states = jnp.array(epot_states)
+        epot_min = jnp.min(epot_states)
+        weights_states = jnp.exp(-(epot_states - epot_min)/(boltzmann*temp_eff)) # (3.41)
+        epot_cell = epot_min - temp_eff*boltzmann*jnp.log(jnp.sum(weights_states)) # (3.37)
 
-    return np.array(epot_cells), np.array(gpos_cells), np.array(verts_cells)
+        epot += epot_cell
+    
+    return epot
+
+

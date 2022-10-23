@@ -67,7 +67,7 @@ class System(object):
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
         An integer value of 0 in the grid signifies an empty cell, a vacancy.
         An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
-    types : numpy.ndarray, dtype=int, shape=(``ncells``, 3), optional
+    types : numpy.ndarray, dtype=int, shape=(``ncells``,), optional
         The cell types present in the micromechanical system.
     params : dict, optional
         The coarse-grained parameters of the micromechanical system. 
@@ -102,6 +102,7 @@ class System(object):
     def _init_log(self):
         if log.do_medium:
             # Log some interesting system information.
+            log("Properties:")
             log.hline()
             pbc = (self.domain.rvecs.shape[0] > 0)
             gigapascal = 1e9*pascal
@@ -125,19 +126,23 @@ class System(object):
                 efree = self.params[f"type{int(type_)}/free_energy"]
                 eff = self.params[f"type{int(type_)}/effective_temp"]
                 nstates = len(h0)
+                log(f"TYPE {int(type_)}:")
+                log("=======")
                 if nstates == 1:
-                    log(f"TYPE {int(type_)} has {nstates} metastable state.")
+                    log(f"Type {int(type_)} has {nstates} metastable state.")
                 else:
-                    log(f"TYPE {int(type_)} has {nstates} metastable states.")
-                for i in range(nstates):   
-                    log(f"TYPE {int(type_)}, STATE {i} : ") 
-                    log(f"free energy [kj/mol] : ")
+                    log(f"Type {int(type_)} has {nstates} metastable states.")
+                log(" ")
+                for i in range(nstates): 
+                    log(f"TYPE {int(type_)}, STATE {i}: ")
+                    log("----------------")
+                    log(f"- Free energy [kj/mol]: ")
                     log(f"      {efree[i]/kjmol}")
-                    log(f"equilibrium cell matrix [Å] :")
+                    log(f"- Equilibrium cell matrix [Å]:")
                     log("    [[{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][0]/angstrom)))
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][1]/angstrom)))
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(h0[i][2]/angstrom)))
-                    log(f"elasticity tensor [GPa] :")
+                    log(f"- Elasticity tensor [GPa]:")
                     log("    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[0]/gigapascal)))
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[1]/gigapascal)))
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[2]/gigapascal)))

@@ -19,12 +19,3 @@
 
 
 """Phase-space sampling."""
-
-from micmec.sampling.dof import *
-from micmec.sampling.iterative import *
-from micmec.sampling.npt import *
-from micmec.sampling.opt import *
-from micmec.sampling.utils import *
-from micmec.sampling.verlet import *
-from micmec.sampling.nvt import *
-from micmec.sampling.trajectory import *

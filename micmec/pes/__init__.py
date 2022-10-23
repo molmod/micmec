@@ -19,6 +19,3 @@
 
 
 """Micromechanical potential energy surfaces (PESs)."""
-
-from micmec.pes.mmff import *
-from micmec.pes.nanocell import *

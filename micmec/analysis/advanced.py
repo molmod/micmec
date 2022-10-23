@@ -194,17 +194,22 @@ def get_elasticity0(f, **kwargs):
             cells = np.array(f["trajectory/cell"][start:end:step])
         else:
             raise IOError("File \"%s\" does not contain a domain trajectory." % input_fn)
-    temps = np.array(f["trajectory/temp"][start:end:step])
-    temp0 = temps.mean()
+    nsamples = len(cells)
+    temp0 = np.mean(f["trajectory/temp"][start:end:step])
     # Be mindful of potential rotations of the simulation domain when computing the mean.
     cell0 = np.mean(cells, axis=0)
     cell0_inv = np.linalg.inv(cell0)
     volume0 = _compute_volume(cell0)
-    strains = np.array([_compute_strain(cell, cell0_inv) for cell in cells])
-    strain0 = np.mean(strains, axis=0)
+    strain0 = np.zeros((3, 3))
+    for cell in cells:
+        strain0 += _compute_strain(cell, cell0_inv)
+    strain0 /= nsamples
     # Calculating the equilibrium compliance tensor.
-    compliances = np.array([_compute_compliance(strain, strain0, volume0, temp0) for strain in strains])
-    compliance0 = np.mean(compliances, axis=0)       
+    compliance0 = np.zeros((3, 3, 3, 3))
+    for cell in cells:
+        strain = _compute_strain(cell, cell0_inv)
+        compliance0 += _compute_compliance(strain, strain0, volume0, temp0)
+    compliance0 /= nsamples
     # Construct the compliance matrix (Voigt notation).
     compliance0_matrix = voigt(compliance0, mode="compliance")
     # Obtain the elasticity matrix by inversion.
@@ -212,5 +217,4 @@ def get_elasticity0(f, **kwargs):
     # Construct the elasticity tensor from the elasticity matrix.
     elasticity0 = voigt_inv(elasticity0_matrix, mode="elasticity")
     return elasticity0
-
 

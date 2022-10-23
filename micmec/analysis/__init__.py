@@ -19,8 +19,3 @@
 
 
 """Trajectory analysis."""
-
-from micmec.analysis.basic import *
-from micmec.analysis.advanced import *
-from micmec.analysis.tensor import *
-from micmec.analysis.utils import *

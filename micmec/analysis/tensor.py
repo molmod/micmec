@@ -117,20 +117,36 @@ def voigt(tensor, mode=None):
     Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
     hence the (optional) keyword ``mode``.
     """
-    matrix = np.zeros((6,6))
-    if (mode is None) or (mode == "compliance"):
-        for index, _ in np.ndenumerate(matrix):
-            matrix[index] = tensor[V[index[0]] + V[index[1]]]
-            if index[0] >= 3:
-                matrix[index] *= 2.0
-            if index[1] >= 3:
-                matrix[index] *= 2.0
-    elif (mode == "elasticity"):
-        for index, _ in np.ndenumerate(matrix):
-            matrix[index] = tensor[V[index[0]] + V[index[1]]]
+    if tensor.shape == (3, 3, 3, 3):
+        matrix = np.zeros((6,6))
+        if (mode is None) or (mode == "compliance"):
+            for index, _ in np.ndenumerate(matrix):
+                matrix[index] = tensor[V[index[0]] + V[index[1]]]
+                if index[0] >= 3:
+                    matrix[index] *= 2.0
+                if index[1] >= 3:
+                    matrix[index] *= 2.0
+        elif (mode == "elasticity"):
+            for index, _ in np.ndenumerate(matrix):
+                matrix[index] = tensor[V[index[0]] + V[index[1]]]
+        else:
+            raise ValueError("Method `voigt` did not receive valid input for keyword `mode`.") 
+        return matrix
+    elif tensor.shape == (3, 3):
+        column = np.zeros(6)
+        if (mode is None) or (mode == "strain"):
+            for idx in V.keys():
+                column[idx] = tensor[V[idx]]
+                if idx >= 3:
+                    column[idx] *= 2.0
+        elif (mode == "stress"):
+            for idx in V.keys():
+                column[idx] = tensor[V[idx]]
+        else:
+            raise ValueError("Method `voigt` did not receive valid input for keyword `mode`.")
+        return column
     else:
-        raise IOError("Method `voigt_inv` did not receive valid input for keyword `mode`.") 
-    return matrix
+        raise ValueError("Method `voigt` did not receive valid input for `tensor`.")
 
 
 def voigt_inv(matrix, mode=None):
@@ -153,34 +169,58 @@ def voigt_inv(matrix, mode=None):
     Voigt notation differs depending on whether the tensor is a compliance tensor or an elasticity tensor,
     hence the (optional) keyword ``mode``.   
     """
-    tensor = np.zeros((3,3,3,3))
-    if (mode is None) or (mode == "compliance"):
-        for index, _ in np.ndenumerate(tensor):
-            ij = tuple(sorted(index[0:2]))
-            kl = tuple(sorted(index[2:4]))
-            for key in V.keys():
-                if V[key] == ij:
-                    V_ij = key
-                if V[key] == kl:
-                    V_kl = key
-            tensor[index] = matrix[(V_ij, V_kl)]
-            if V_ij >= 3:
-                tensor[index] *= 0.5
-            if V_kl >= 3:
-                tensor[index] *= 0.5
-    elif (mode == "elasticity"):
-        for index, _ in np.ndenumerate(tensor):
-            ij = tuple(sorted(index[0:2]))
-            kl = tuple(sorted(index[2:4]))
-            for key in V.keys():
-                if V[key] == ij:
-                    V_ij = key
-                if V[key] == kl:
-                    V_kl = key          
-            tensor[index] = matrix[(V_ij, V_kl)]
+    if matrix.shape == (6, 6):
+        tensor = np.zeros((3,3,3,3))
+        if (mode is None) or (mode == "compliance"):
+            for index, _ in np.ndenumerate(tensor):
+                ij = tuple(sorted(index[0:2]))
+                kl = tuple(sorted(index[2:4]))
+                for key in V.keys():
+                    if V[key] == ij:
+                        V_ij = key
+                    if V[key] == kl:
+                        V_kl = key
+                tensor[index] = matrix[(V_ij, V_kl)]
+                if V_ij >= 3:
+                    tensor[index] *= 0.5
+                if V_kl >= 3:
+                    tensor[index] *= 0.5
+        elif (mode == "elasticity"):
+            for index, _ in np.ndenumerate(tensor):
+                ij = tuple(sorted(index[0:2]))
+                kl = tuple(sorted(index[2:4]))
+                for key in V.keys():
+                    if V[key] == ij:
+                        V_ij = key
+                    if V[key] == kl:
+                        V_kl = key          
+                tensor[index] = matrix[(V_ij, V_kl)]
+        else:
+            raise ValueError("Method `voigt_inv` did not receive valid input for keyword `mode`.")
+        return tensor
+    elif matrix.shape == (6,):
+        tensor = np.zeros((3,3))
+        if (mode is None) or (mode == "strain"):
+            for idx, _ in np.ndenumerate(tensor):
+                ij = tuple(sorted(idx))
+                for key in V.keys():
+                    if V[key] == ij:
+                        V_ij = key
+                tensor[idx] = matrix[V_ij]
+                if V_ij >= 3:
+                    tensor[idx] *= 0.5
+        elif (mode == "stress"):
+            for idx, _ in np.ndenumerate(tensor):
+                ij = tuple(sorted(idx))
+                for key in V.keys():
+                    if V[key] == ij:
+                        V_ij = key
+                tensor[idx] = matrix[V_ij]
+        else:
+            raise ValueError("Method `voigt_inv` did not receive valid input for keyword `mode`.")
+        return tensor
     else:
-        raise ValueError("Method `voigt_inv` did not receive valid input for keyword `mode`.")
-    return tensor
+        raise ValueError("Method `voigt_inv` did not receive valid input for `matrix`.")
 
 
 def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_modulus.png"):
