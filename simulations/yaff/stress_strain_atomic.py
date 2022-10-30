@@ -26,7 +26,7 @@ import argparse
 
 import scipy.linalg as la
 
-from yaff import *
+from yaff import System, log
 
 import ff_lammps
 
@@ -124,7 +124,7 @@ def main(args):
     # Store the output as a new, micromechanical cell type.
     # Note that the convention for a nanocell matrix is different than the convention for a domain matrix, hence the transpose.
     output = build_type(
-        material="UiO-66(Zr)", 
+        material="UNKNOWN", 
         mass=mass, 
         cell0=cell_eq,
         elasticity0=elasticity_tensor,

@@ -39,12 +39,13 @@ from micmec.log import log
 
 gigapascal = 1e9*pascal
 
+
 def main(args):
     # Define the system and the force field.
     sys = System.from_file(args.chk_file)
     mmf = MicMecForceField(sys, [ForcePartMechanical(sys)])
 
-    mass = np.sum(sys.masses)
+    mass = sys.masses.sum()
 
     # Add some noise to the initial Cartesian coordinates.
     max_noise = 0.10
@@ -126,8 +127,8 @@ def main(args):
     # Store the output as a new, micromechanical domain type.
     # Note that the convention for a nanodomain matrix is different than the convention for a domain matrix, hence the transpose.
     output = build_type(
-        material="UiO-66(Zr)", 
-        mass=mass, 
+        material="UiO-66(Zr)",
+        mass=mass,
         cell0=domain_eq,
         elasticity0=elasticity_tensor,
         topology="configuration"

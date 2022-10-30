@@ -21,6 +21,7 @@
 import numpy as np
 
 import h5py
+import json
 import argparse
 
 import matplotlib.pyplot as plt
@@ -37,45 +38,55 @@ from molmod.units import kelvin, pascal, femtosecond, kjmol, angstrom
 
 gigapascal = 1e9*pascal
 
-def main(input_fn, fn_png, lower_limit, upper_limit):
-    scalings = np.linspace(lower_limit, upper_limit, 20)
-    epots = []
-    volumes = []
-    for scaling in scalings:
-        sys = System.from_file(input_fn)
-        orig_rvecs = sys.domain.rvecs.copy()
-        sys.domain.update_rvecs(orig_rvecs*scaling)
-        fpm = ForcePartMechanical(sys)
-        mmf = MicMecForceField(sys, [fpm])
-        cdof = CartesianDOF(mmf)
-        
-        osl = OptScreenLog(step=1)
-        
-        qnopt = QNOptimizer(cdof, hooks=[osl])
-        qnopt.run()
-        
-        epots.append(qnopt.epot)
-        volumes.append(np.linalg.det(sys.domain.rvecs)) 
-        
-    V = np.array(volumes)
-    E = np.array(epots)
-    dV = np.diff(volumes)
-    dV2 = (0.5*(dV[1:] + dV[:-1]))**2
-    d2E = E[:-2] - 2.0*E[1:-1] + E[2:]
-    # Assume that the original rvecs are the equilibrium rvecs of the simulation domain.
-    bulk_modulus = np.mean(np.linalg.det(orig_rvecs)*d2E/dV2)
+def main(input_fns, fn_png, lower_limit, upper_limit):
+    all_scalings = []
+    all_energy_densities = []
     
-    if log.do_medium:
-        with log.section("SCAN"):
-            log.hline()
-            s1 = "A relaxed potential energy scan has been performed by varying the volume of the simulation domain, isotropically, "
-            s2 = f"from {(100*lower_limit):.0f} % to {(100*upper_limit):.0f} % of its original volume. "
-            s3 = f"The result has been saved as `{fn_png}`. "
-            s4 = f"Additionally, a static bulk modulus of {(bulk_modulus/gigapascal):.2f} GPa has been calculated for this simulation domain."
-            log(s1+s2+s3+s4)
-            log.hline()
-
-    plt.plot(scalings, np.array(epots)/np.array(volumes)/(kjmol/angstrom**3))
+    for idx, input_fn in enumerate(input_fns):
+        scalings = np.linspace(lower_limit, upper_limit, 20)
+        epots = []
+        volumes = []
+        for scaling in scalings:
+            sys = System.from_file(input_fn)
+            orig_rvecs = sys.domain.rvecs.copy()
+            sys.domain.update_rvecs(orig_rvecs*scaling)
+            fpm = ForcePartMechanical(sys)
+            mmf = MicMecForceField(sys, [fpm])
+            cdof = CartesianDOF(mmf)
+            
+            osl = OptScreenLog(step=1)
+            
+            qnopt = QNOptimizer(cdof, hooks=[osl])
+            qnopt.run()
+            
+            epots.append(qnopt.epot)
+            volumes.append(np.linalg.det(sys.domain.rvecs)) 
+            
+        V = np.array(volumes)
+        E = np.array(epots)
+        dV = np.diff(volumes)
+        dV2 = (0.5*(dV[1:] + dV[:-1]))**2
+        d2E = E[:-2] - 2.0*E[1:-1] + E[2:]
+        # Assume that the original rvecs are the equilibrium rvecs of the simulation domain.
+        bulk_modulus = np.mean(np.linalg.det(orig_rvecs)*d2E/dV2)
+        
+        if log.do_medium:
+            with log.section("SCAN"):
+                log.hline()
+                s1 = "A relaxed potential energy scan has been performed by varying the volume of the simulation domain, isotropically, "
+                s2 = f"from {(100*lower_limit):.0f} % to {(100*upper_limit):.0f} % of its original volume. "
+                s3 = f"The result has been saved as `{fn_png}`. "
+                s4 = f"Additionally, a static bulk modulus of {(bulk_modulus/gigapascal):.2f} GPa has been calculated for this simulation domain."
+                log(s1+s2+s3+s4)
+                log.hline()
+        
+        if idx > 0:
+            plt.plot(scalings, np.array(epots)/np.array(volumes)/(kjmol/angstrom**3), "--")
+        else:
+            plt.plot(scalings, np.array(epots)/np.array(volumes)/(kjmol/angstrom**3))
+        all_scalings.append(scalings.tolist())
+        all_energy_densities.append((np.array(epots)/np.array(volumes)/(kjmol/angstrom**3)).tolist())
+            
     #plt.plot(scalings, 0.5**(13*gigapascal/np.linalg.det(orig_rvecs))*(scalings - 1.0)**2)
     plt.xlabel(r"$V/V_0$ [-]")
     plt.ylabel("POTENTIAL ENERGY DENSITY [kJ/mol/Å³]")
@@ -88,8 +99,8 @@ def main(input_fn, fn_png, lower_limit, upper_limit):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Perform a relaxed potential energy scan.")
-    parser.add_argument("input_fn", type=str,
-                        help=".chk filename of the input structure")
+    parser.add_argument("input_fn", nargs="+",
+                        help=".chk filenames of the input structures")
     parser.add_argument("-fn_png", type=str, default="relaxed_scan.png",
                         help=".png filename of the output figure")
     parser.add_argument("-lower_limit", type=float, default=0.98,

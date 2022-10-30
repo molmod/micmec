@@ -17,9 +17,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
-
 import numpy as np
 
+import json
 import argparse
 
 import matplotlib.pyplot as plt
@@ -34,6 +34,7 @@ from micmec.sampling.verlet import VerletIntegrator, VerletScreenLog
 from micmec.analysis.tensor import voigt_inv
 
 gigapascal = (1e9)*pascal
+
 
 def main(input_fn, fn_png, node_idx, num):
     
@@ -53,7 +54,7 @@ def main(input_fn, fn_png, node_idx, num):
     # Define a maximum deviation of the node in each dimension, in atomic units.
     # This should not exceed the dimensions of the cell.
     unit_cell_length = np.sqrt(np.sum((sys.pos[1] - sys.pos[0])**2))
-    max_dev = 0.10*unit_cell_length
+    max_dev = 0.01*unit_cell_length
 
     # Scanning ranges.
     x_range = max_dev*np.linspace(-1, 1, num)
@@ -109,6 +110,7 @@ def main(input_fn, fn_png, node_idx, num):
     ax1.grid()
 
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
+    
     ax2.plot_surface(X[:, :, mid]/angstrom, Y[:, :, mid]/angstrom, ENERGY_POT[:, :, mid]/kjmol, cmap="viridis")
     ax2.set_xlabel("$x - x_0$ [Å]")
     ax2.set_ylabel("$y - y_0$ [Å]")
