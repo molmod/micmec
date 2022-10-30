@@ -30,7 +30,9 @@ __all__ = [
     "pretty_6x6_matrix", 
     "voigt",
     "voigt_inv", 
-    "plot_directional_young_modulus"
+    "plot_directional_young_modulus",
+    "min_max_young_modulus",
+    "bulk_modulus"
 ]
 
 # The following routines improve the layout of tensors or matrices printed in a console.
@@ -223,6 +225,34 @@ def voigt_inv(matrix, mode=None):
         raise ValueError("Method `voigt_inv` did not receive valid input for `matrix`.")
 
 
+def min_max_young_modulus(elasticity_matrix):
+    compliance_matrix = np.linalg.inv(elasticity_matrix)
+    compliance_tensor = voigt_inv(compliance_matrix, mode="compliance")
+    
+    dir_young_modulus = _young_modulus_from_compliance_tensor(compliance_tensor)[2]
+    return np.min(dir_young_modulus), np.max(dir_young_modulus)
+    
+    
+def bulk_modulus(elasticity_matrix):
+    return elasticity_matrix[:3, :3].mean()
+    
+    
+def _young_modulus_from_compliance_tensor(compliance_tensor):
+    # Create the mesh in spherical coordinates and compute corresponding E.
+    theta = np.linspace(0, np.pi, 100)
+    phi = np.linspace(0, 2*np.pi, 100)
+    PHI, THETA = np.meshgrid(phi, theta)
+    U = [np.cos(PHI)*np.sin(THETA), np.sin(PHI)*np.sin(THETA), np.cos(THETA)]
+
+    E = np.zeros(THETA.shape)
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                for l in range(3):
+                    E += U[i]*U[j]*U[k]*U[l]*compliance_tensor[i,j,k,l]
+    return PHI, THETA, np.absolute(1/E)
+
+
 def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_modulus.png"):
     """Plot the three-dimensional directional Young modulus, based on the compliance tensor.
 
@@ -236,19 +266,7 @@ def plot_directional_young_modulus(compliance_tensor, fn_png="directional_young_
     import matplotlib.pyplot as plt
     gigapascal = 1e9*pascal
     
-    # Create the mesh in spherical coordinates and compute corresponding E.
-    theta = np.linspace(0, np.pi, 100)
-    phi = np.linspace(0, 2*np.pi, 100)
-    PHI, THETA = np.meshgrid(phi, theta)
-    U = [np.cos(PHI)*np.sin(THETA), np.sin(PHI)*np.sin(THETA), np.cos(THETA)]
-
-    E = np.zeros(THETA.shape)
-    for i in range(3):
-        for j in range(3):
-            for k in range(3):
-                for l in range(3):
-                    E += U[i]*U[j]*U[k]*U[l]*compliance_tensor[i,j,k,l]
-    E = np.absolute(1/E)/gigapascal
+    PHI, THETA, E = _young_modulus_from_compliance_tensor(compliance_tensor)/gigapascal
 
     # Express the mesh in the cartesian system.
     X, Y, Z = E*np.cos(PHI)*np.sin(THETA), E*np.sin(PHI)*np.sin(THETA), E*np.cos(THETA)

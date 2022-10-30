@@ -208,7 +208,7 @@ class ForcePartMechanical(ForcePart):
                 log.hline()
 
         self.pbc = self.get_pbc(self.system.domain.rvecs)
-        self.mic = self.get_mic(self.system.grid)
+        self.mic = self.get_mic(self.system.grid, self.pbc)
         
         # Filter such that only scalar parameters remain.
         params1 = {}
@@ -347,6 +347,8 @@ def deformation(pos, rvecs, mic, types, surrounding_nodes, params1, params2, par
             The difference vector between node i and node j.
         """
         dvec = pos[j] - pos[i]
+        if len(rvecs) == 0:
+            return dvec
         dvec += rvecs[0] * mic[i, j, 0] + rvecs[1] * mic[i, j, 1] + rvecs[2] * mic[i, j, 2]
         return dvec
 

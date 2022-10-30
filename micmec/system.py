@@ -80,7 +80,7 @@ class System(object):
     The optional arguments of the ``System`` class are technically not required to initialize a system, but all of
     them are required to perform a simulation.
     """
-    
+
     def __init__(self, pos, masses, rvecs, surrounding_cells, surrounding_nodes,
                         boundary_nodes=None, grid=None, types=None, params=None):
         self.masses = masses
@@ -97,7 +97,11 @@ class System(object):
                 
         with log.section("SYS"):
             self._init_log()
-
+            
+    def update_params(self, new_params, type_=1):
+        for key, val in new_params.items():
+            type_key = f"type{int(type_)}/{key}"
+            self.params.update({type_key: val})
     
     def _init_log(self):
         if log.do_medium:
@@ -133,6 +137,7 @@ class System(object):
                 else:
                     log(f"Type {int(type_)} has {nstates} metastable states.")
                 log(" ")
+                get_row = lambda etens, row: list(voigt(etens, mode="elasticity")[row]/gigapascal)
                 for i in range(nstates): 
                     log(f"TYPE {int(type_)}, STATE {i}: ")
                     log("----------------")
@@ -143,16 +148,15 @@ class System(object):
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][1]/angstrom)))
                     log("     [{:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(h0[i][2]/angstrom)))
                     log(f"- Elasticity tensor [GPa]:")
-                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[0]/gigapascal)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[1]/gigapascal)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[2]/gigapascal)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[3]/gigapascal)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*list(voigt(C0[i])[4]/gigapascal)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(voigt(C0[i])[5]/gigapascal)))
+                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 0)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 1)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 2)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 3)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 4)))
+                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}]]".format(*get_row(C0[i], 5)))
                     log(" ")
             log.hline()
             log.blank()
-    
 
     @classmethod
     def from_file(cls, fn, **user_kwargs):
@@ -200,7 +204,6 @@ class System(object):
             kwargs.update(user_kwargs)
         return cls(**kwargs)
 
-    
     @classmethod
     def from_hdf5(cls, f):
         """Construct a micromechanical system from an HDF5 file with a system group.
@@ -238,7 +241,6 @@ class System(object):
             log("Read system parameters from %s." % f.filename)
         return cls(**kwargs)
 
-    
     def to_file(self, fn):
         """Write the micromechanical system to a CHK, HDF5 or XYZ file.
         
@@ -269,7 +271,7 @@ class System(object):
             output = {
                 "pos": self.pos, 
                 "masses": self.masses, 
-                "rvecs": self.rvecs, 
+                "rvecs": self.domain.rvecs,
                 "surrounding_cells": self.surrounding_cells, 
                 "surrounding_nodes": self.surrounding_nodes, 
                 "boundary_nodes": self.boundary_nodes, 
@@ -292,7 +294,6 @@ class System(object):
             with log.section("SYS"):
                 log("Wrote system to %s." % fn)
 
-    
     def to_hdf5(self, f):
         """Write the system to an HDF5 file.
         

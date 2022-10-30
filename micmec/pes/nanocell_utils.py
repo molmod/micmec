@@ -54,7 +54,7 @@ for neighbor_cell in neighbor_cells:
         yderiv = np.zeros((3, 3))
         zderiv = np.zeros((3, 3))
         deriv = np.array([1.0 if n == -1 else -1.0 for n in neighbor_cell])
-        dist_vec = np.abs(neighbor_cell - cell_representation)
+        dist_vec = np.abs([e1 - e2 for e1, e2 in zip(neighbor_cell, cell_representation)])
         dist = np.sum(dist_vec)
         if dist == 0.0:
             xderiv[:, 0] = deriv

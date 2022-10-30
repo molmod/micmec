@@ -63,19 +63,16 @@ class Application(tk.Tk):
         self.menubar = MenuBar(self)
         self.event_show(HomePage)
         self.config(menu=self.menubar)
-        
-    
+
     def event_show(self, name):
         """Show one of the pages in the application."""
         frame = self.frames[name]
         frame.tkraise()
-        
 
     def event_quit(self):
         """Ask for confirmation and close the application."""
         if messagebox.askokcancel("QUIT", "Are you sure you want to quit?"):
             self.destroy()
-    
 
     def event_load(self):
         """Load a previous .chk file to view or edit the build."""
@@ -127,8 +124,6 @@ class Application(tk.Tk):
         dump_chk(filename, output_all)
         
 
-
-
 class MenuBar(tk.Menu):
     """The main menubar of the application."""
 
@@ -143,8 +138,6 @@ class MenuBar(tk.Menu):
         self.add_cascade(label="Help", menu=menu_help)
         menu_help.add_command(label="Tutorial", command=lambda:manager.event_show(TutorialPage))
         menu_help.add_command(label="About", command=lambda:manager.event_show(AboutPage))
-        
-
 
 
 class Page(tk.Frame):
@@ -158,8 +151,6 @@ class Page(tk.Frame):
                                    height=Page._height, 
                                    width=Page._width)
         self.pack_propagate(0)
-        
- 
 
    
 class HomePage(Page):
@@ -171,7 +162,6 @@ class HomePage(Page):
         self.data_widget = DataWidget(self)
         self.builder_widget = BuilderWidget(self)
         
-
 
 _tut_text0 = "In order to facilitate designing, building and storing a micromechanical system, I have developed the Micromechanical Model Builder. This is a Python application that allows you to create a micromechanical system with only a few clicks. Let's attempt to build a system. This guide will walk you through the different elements of the GUI.\n\n"
 _tut_text1 = "\n\nOn the left-hand side of the Home page, the data widget is displayed. This is where you can insert data from a higher level of theory into the system, as I will explain shortly.\n\n"
@@ -211,12 +201,12 @@ class TutorialPage(Page):
         text.pack(side="top")
 
 
-
 _about_text0 = "---- Micromechanical Model Builder ----\n by Joachim Vandewalle (joachim.vandewalle@hotmail.be)"
 _about_text1 = "\n\nThe micromechanical model is a coarse-grained force field model to simulate the mechanical behaviour of crystalline materials on a large length scale. MicMec is the first implementation of the micromechanical model, ever. The theoretical groundwork of the model was originally established in:"
 _about_text2 = "\n\nS. M. J. Rogge, “The micromechanical model to computationally investigate cooperative and correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225, pp. 271–285, 2020."
 _about_text3 = "\n\nThe micromechanical model has been the main topic of my master's thesis at the Center for Molecular Modelling (CMM). MicMec is, essentially, a simulation package for coarse-grained, micromechanical systems. Its architecture is intentionally similar to Yaff, a simulation package for atomistic systems, also developed at the CMM. In the process of building MicMec, the original micromechanical model was modified slightly, to ensure user friendliness, accuracy and flexibility. All major changes with respect to the original model are listed in the text of my master's thesis. More recent changes and quality-of-life improvements are listed in the documentation."
 _about_text4 = "\n\nThis application serves as a major quality-of-life improvement for users of the micromechanical model. It allows users to load a number of type files (.pickle) into a session and assign these types to locations in a three-dimensional grid. The three-dimensional grid represents the partitioning of a crystalline material into micromechanical cells. Users can export their builds to a structure file (.chk), which contains all information of the micromechanical system. That information includes the initial positions of the micromechanical nodes, which are calculated automatically, and the coarse-grained parameters, which are extracted from the user-determined types. Details regarding this procedure can be found in `micmec/builder/builder_io.py` and `micmec/utils.py` or in the tutorial section of this application.\n\n"
+
 
 class AboutPage(Page):
         
@@ -236,13 +226,11 @@ class AboutPage(Page):
         text.pack(side="top")
 
 
-    
 class Widget(ttk.LabelFrame):
     """Generic class for any widget that is part of the main application."""
     
     def __init__(self, master, widget_label):
         super(Widget, self).__init__(master, text=widget_label)
-
 
 
 class DataWidget(Widget):
@@ -258,18 +246,15 @@ class DataWidget(Widget):
         self.treeview = DataWidgetTreeview(self)
         self.buttons = DataWidgetButtons(self)
         
-        
     def add_data(self, filename, dictionary):
         """Add data to the list of nanocell types."""
         self.data[filename] = dictionary
         self.update_data()
-        
 
     def remove_data(self, filename):
         """Remove data from the list of nanocell types."""
         self.data.pop(filename)
         self.update_data()
-        
 
     def update_data(self):
         """Update the list of nanocell types, refresh the view and push the changes to the builder widget."""
@@ -277,7 +262,6 @@ class DataWidget(Widget):
         self.master.builder_widget.update_colors_types()
         
 
-     
 class DataWidgetButtons(ttk.Frame):
     
     def __init__(self, widget):
@@ -316,7 +300,6 @@ class DataWidgetButtons(ttk.Frame):
             values = self.widget.treeview.view.item(selected)["values"]
             self.widget.remove_data(values[0])
 
-    
 
 class DataWidgetTreeview(ttk.Frame):
     
@@ -363,7 +346,6 @@ class DataWidgetTreeview(ttk.Frame):
     def reinsert_data(self):
         self.view.delete(*self.view.get_children())
         self.insert_data() 
-
 
 
 class BuilderWidget(Widget):
@@ -420,8 +402,7 @@ class BuilderWidget(Widget):
                         break
         self.selector.update_list()
         self.canvas.update_grid()
-        
-    
+
     
 class BuilderWidgetSelector(ttk.Frame):
     
@@ -465,7 +446,6 @@ class BuilderWidgetSelector(ttk.Frame):
     def select_layer(self):
         self.widget.canvas.layer = int(self.spinbox_layers.get()) - 1
         self.widget.canvas.update_grid()
-    
 
 
 class BuilderWidgetButtons(ttk.Frame):
@@ -482,13 +462,13 @@ class BuilderWidgetButtons(ttk.Frame):
         self.check_y = ttk.Checkbutton(self, variable=self.pbc_y)
         self.check_z = ttk.Checkbutton(self, variable=self.pbc_z)
         # Create spinboxes to select the maximum number of nanocells in each direction.
-        self.spinbox_nx = ttk.Spinbox(self, from_=2, to=20,
+        self.spinbox_nx = ttk.Spinbox(self, from_=1, to=20,
                                         state="readonly",
                                         command=self.update_nx, width=5)
-        self.spinbox_ny = ttk.Spinbox(self, from_=2, to=20,
+        self.spinbox_ny = ttk.Spinbox(self, from_=1, to=20,
                                         state="readonly",
                                         command=self.update_ny, width=5)
-        self.spinbox_nz = ttk.Spinbox(self, from_=2, to=20,
+        self.spinbox_nz = ttk.Spinbox(self, from_=1, to=20,
                                         state="readonly",
                                         command=self.update_nz, width=5)
         # Add the checkbuttons and spinboxes to the layout.
@@ -559,7 +539,6 @@ class BuilderWidgetButtons(ttk.Frame):
         self.widget.selector.spinbox_layers.configure(to=self.widget.nz)
      
 
-
 class BuilderWidgetCanvas(tk.Canvas):
     
     _rect_width = 20
@@ -572,8 +551,7 @@ class BuilderWidgetCanvas(tk.Canvas):
         self.itemconfigure("palette", width=3)
         self.update_grid()
         self.pack(side="top", fill="both", expand="yes", padx=20, pady=10)
-        
-    
+
     def update_grid(self):
         self.delete("all")
         rect_width = BuilderWidgetCanvas._rect_width
@@ -655,9 +633,11 @@ class BuilderWidgetCanvas(tk.Canvas):
                 self.widget.grid[k0,l0,m0] = self.widget.selected_key
                 self.itemconfigure(self.find_withtag(index_tag)[l0], fill=color)
 
+
 def main():
     app = Application()
     app.mainloop()
+
 
 if __name__ == "__main__":
     main()
