@@ -59,7 +59,7 @@ def main(input_fn, fn_png, node_idx, num):
     z_range = max_dev*np.linspace(-1, 1, num)
 
     # The scan will evaluate the ENERGY_POT and the forces at each scan location (x, y, z).
-    X, Y, Z = np.meshgrid(x_range, y_range, z_range, indexing="ij")
+    X_ana, Y_ana, Z_ana = np.meshgrid(x_range, y_range, z_range, indexing="ij")
 
     ENERGY_POT = np.zeros((num, num, num))
     ZERO = np.zeros((num, num, num))
@@ -71,16 +71,16 @@ def main(input_fn, fn_png, node_idx, num):
     for SCAN_INDEX, _ in np.ndenumerate(ZERO):
         gpos = np.zeros(pos.shape)
         # Manually move one node to the current scanning location.
-        pos[node_idx] = pos_ref[node_idx] + np.array([X[SCAN_INDEX], Y[SCAN_INDEX], Z[SCAN_INDEX]])
+        pos[node_idx] = pos_ref[node_idx] + np.array([X_ana[SCAN_INDEX], Y_ana[SCAN_INDEX], Z_ana[SCAN_INDEX]])
         mmf.update_pos(pos)
         ENERGY_POT[SCAN_INDEX] = mmf.compute(gpos)
         FX_ana[SCAN_INDEX] = -gpos[node_idx, 0]
         FY_ana[SCAN_INDEX] = -gpos[node_idx, 1]
 
-    FX_num = -np.diff(ENERGY_POT, axis=0)/np.diff(X, axis=0)
-    X_ = 0.5*(X[:-1, :, :] + X[1:, :, :])
-    
-    rico = np.polyfit(X_[:, mid, mid], FX_num[:, mid, mid], 1)[0]
+    FX_num = -np.diff(ENERGY_POT, axis=0)/np.diff(X_ana, axis=0)
+    X_num = 0.5*(X_ana[:-1, :, :] + X_ana[1:, :, :])
+
+    rico = np.polyfit(X_num[:, mid, mid], FX_num[:, mid, mid], 1)[0]
     force_con = -rico
     timestep = np.pi*np.sqrt(mass/force_con)
     if log.do_medium:
@@ -94,12 +94,12 @@ def main(input_fn, fn_png, node_idx, num):
                  f"timestep of {(timestep/femtosecond):.2f} fs is estimated for micromechanical MD simulations."
             log(s1+s2+s3+s4)
             log.hline()
-    
+
     fig = plt.figure(figsize=(13, 5))
     ax1 = fig.add_subplot(1, 2, 1)
-    ax1.plot(X[:, mid, mid]/angstrom, FX_ana[:, mid, mid]*angstrom/kjmol,
+    ax1.plot(X_ana[:, mid, mid]/angstrom, FX_ana[:, mid, mid]*angstrom/kjmol,
              "o:", mfc="none", ms=16, label="analytical expression", color="blue")
-    ax1.plot(X_[:, mid, mid]/angstrom, FX_num[:, mid, mid]*angstrom/kjmol,
+    ax1.plot(X_num[:, mid, mid]/angstrom, FX_num[:, mid, mid]*angstrom/kjmol,
              "x", ms=16, label="numerical derivative", color="red")
     ax1.set_xlabel("$x - x_0$ [Å]")
     ax1.set_ylabel("$f_x$ [kJ/mol/Å]")
@@ -107,16 +107,24 @@ def main(input_fn, fn_png, node_idx, num):
     ax1.grid()
 
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
-    
-    ax2.plot_surface(X[:, :, mid]/angstrom, Y[:, :, mid]/angstrom, ENERGY_POT[:, :, mid]/kjmol, cmap="viridis")
+
+    ax2.plot_surface(X_ana[:, :, mid]/angstrom, Y_ana[:, :, mid]/angstrom, ENERGY_POT[:, :, mid]/kjmol, cmap="viridis")
     ax2.set_xlabel("$x - x_0$ [Å]")
     ax2.set_ylabel("$y - y_0$ [Å]")
     ax2.set_zlabel("POTENTIAL ENERGY [kJ/mol]")
-    
-    with open("hooke_2x2x2_test.json", "w") as jfile:
+
+    with open("output_energy.json", "w") as jfile:
         jobj = {
-            "X": (X[:, mid, mid]/angstrom).tolist(),
-            "X_": (X_[:, mid, mid]/angstrom).tolist(),
+            "X_ana": (X_ana[:, :, mid]/angstrom).tolist(),
+            "Y_ana": (Y_ana[:, :, mid]/angstrom).tolist(),
+            "ENERGY_POT": (ENERGY_POT[:, :, mid]/kjmol).tolist(),
+        }
+        json.dump(jobj, jfile)
+
+    with open("output_forces.json", "w") as jfile:
+        jobj = {
+            "X_ana": (X_ana[:, mid, mid]/angstrom).tolist(),
+            "X_num": (X_num[:, mid, mid]/angstrom).tolist(),
             "FX_ana": (FX_ana[:, mid, mid]*angstrom/kjmol).tolist(),
             "FX_num": (FX_num[:, mid, mid]*angstrom/kjmol).tolist(),
         }
