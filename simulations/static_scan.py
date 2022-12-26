@@ -23,15 +23,12 @@ import json
 import argparse
 
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 from molmod.units import angstrom, pascal, femtosecond, kjmol
 
 from micmec.log import log
 from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
-from micmec.sampling.verlet import VerletIntegrator, VerletScreenLog
-from micmec.analysis.tensor import voigt_inv
 
 gigapascal = (1e9)*pascal
 
@@ -69,7 +66,6 @@ def main(input_fn, fn_png, node_idx, num):
     FX_ana = np.zeros((num, num, num))
     FY_ana = np.zeros((num, num, num))
 
-    node_idx = 0
     mass = sys.masses[node_idx]
 
     for SCAN_INDEX, _ in np.ndenumerate(ZERO):
@@ -82,28 +78,29 @@ def main(input_fn, fn_png, node_idx, num):
         FY_ana[SCAN_INDEX] = -gpos[node_idx, 1]
 
     FX_num = -np.diff(ENERGY_POT, axis=0)/np.diff(X, axis=0)
-    FY_num = -np.diff(ENERGY_POT, axis=1)/np.diff(Y, axis=1)
-
     X_ = 0.5*(X[:-1, :, :] + X[1:, :, :])
-    Y_ = 0.5*(Y[:, :-1, :] + Y[:, 1:, :])
     
-    rico, intercept = np.polyfit(X_[:, mid, mid], FX_num[:, mid, mid], deg=1)
+    rico = np.polyfit(X_[:, mid, mid], FX_num[:, mid, mid], 1)[0]
     force_con = -rico
     timestep = np.pi*np.sqrt(mass/force_con)
     if log.do_medium:
         with log.section("SCAN"):
             log.hline()
-            s1 = f"A static potential energy scan has been performed by varying the coordinates of a single node (node {node_idx}). "
+            s1 = "A static potential energy scan has been performed " \
+                 f"by varying the coordinates of a single node (node {node_idx}). "
             s2 = f"The result has been saved as `{fn_png}`. "
             s3 = "Additionally, Hooke's law has been verfied. "
-            s4 = f"From the force constant of Hooke's law, a maximal timestep of {(timestep/femtosecond):.2f} fs is estimated for micromechanical MD simulations."
+            s4 = "From the force constant of Hooke's law, a maximal " \
+                 f"timestep of {(timestep/femtosecond):.2f} fs is estimated for micromechanical MD simulations."
             log(s1+s2+s3+s4)
             log.hline()
     
     fig = plt.figure(figsize=(13, 5))
     ax1 = fig.add_subplot(1, 2, 1)
-    ax1.plot(X[:, mid, mid]/angstrom, FX_ana[:, mid, mid]*angstrom/kjmol, "o:", mfc="none", ms=16, label="analytical expression", color="blue")
-    ax1.plot(X_[:, mid, mid]/angstrom, FX_num[:, mid, mid]*angstrom/kjmol, "x", ms=16, label="numerical derivative", color="red")
+    ax1.plot(X[:, mid, mid]/angstrom, FX_ana[:, mid, mid]*angstrom/kjmol,
+             "o:", mfc="none", ms=16, label="analytical expression", color="blue")
+    ax1.plot(X_[:, mid, mid]/angstrom, FX_num[:, mid, mid]*angstrom/kjmol,
+             "x", ms=16, label="numerical derivative", color="red")
     ax1.set_xlabel("$x - x_0$ [Å]")
     ax1.set_ylabel("$f_x$ [kJ/mol/Å]")
     ax1.legend()
@@ -115,6 +112,15 @@ def main(input_fn, fn_png, node_idx, num):
     ax2.set_xlabel("$x - x_0$ [Å]")
     ax2.set_ylabel("$y - y_0$ [Å]")
     ax2.set_zlabel("POTENTIAL ENERGY [kJ/mol]")
+    
+    with open("hooke_2x2x2_test.json", "w") as jfile:
+        jobj = {
+            "X": (X[:, mid, mid]/angstrom).tolist(),
+            "X_": (X_[:, mid, mid]/angstrom).tolist(),
+            "FX_ana": (FX_ana[:, mid, mid]*angstrom/kjmol).tolist(),
+            "FX_num": (FX_num[:, mid, mid]*angstrom/kjmol).tolist(),
+        }
+        json.dump(jobj, jfile)
 
     plt.savefig(fn_png)
     plt.show()
@@ -133,9 +139,9 @@ if __name__ == "__main__":
                         help="number of scan locations in one dimension")
 
     args = parser.parse_args()
-    main(args.input_fn,
+    main(
+        args.input_fn,
         args.fn_png, 
         args.node_idx,
-        args.num)
-
-
+        args.num
+    )
