@@ -20,15 +20,16 @@
 """Representation of a micromechanical system."""
 
 import h5py
-import numpy as np
 
-from micmec.log import log, timer
+from micmec.log import log
 from micmec.analysis.tensor import voigt
 
-from yaff.pes.ext import Cell
+from micmec.pes.ext import Domain
 
-from molmod.units import *
-from molmod.io.chk import *
+from molmod.io import XYZWriter
+from molmod.io.chk import load_chk, dump_chk
+from molmod.units import pascal, kjmol, angstrom
+from molmod.periodic import periodic
 
 
 __all__ = ["System"]
@@ -36,7 +37,7 @@ __all__ = ["System"]
 
 class System(object):
     """Construct a micromechanical system.
-    
+
     Parameters
     ----------
     pos : numpy.ndarray, shape=(``nnodes``, 3)
@@ -48,7 +49,7 @@ class System(object):
 
         -   ``nper = 3`` corresponds to periodic boundary conditions in the ``a``, ``b`` and ``c`` directions, where ``a``, ``b`` and ``c`` are the domain vectors.
         -   ``nper = 0`` corresponds to an absence of periodicity, used to simulate finite (three-dimensional) crystals.
-        
+
     surrounding_cells : numpy.ndarray, dtype=int, shape=(``nnodes``, 8)
         The cells adjacent to each node.
         Each node has, at most, eight surrounding cells.
@@ -70,10 +71,10 @@ class System(object):
     types : numpy.ndarray, dtype=int, shape=(``ncells``,), optional
         The cell types present in the micromechanical system.
     params : dict, optional
-        The coarse-grained parameters of the micromechanical system. 
+        The coarse-grained parameters of the micromechanical system.
         A system may consist of several cell types, each with one or more metastable states.
         A single metastable state is represented by an equilibrium cell matrix, a free energy, and an elasticity tensor.
-            
+
     Notes
     -----
     All quantities are expressed in atomic units.
@@ -81,11 +82,21 @@ class System(object):
     them are required to perform a simulation.
     """
 
-    def __init__(self, pos, masses, rvecs, surrounding_cells, surrounding_nodes,
-                        boundary_nodes=None, grid=None, types=None, params=None):
+    def __init__(
+        self,
+        pos,
+        masses,
+        rvecs,
+        surrounding_cells,
+        surrounding_nodes,
+        boundary_nodes=None,
+        grid=None,
+        types=None,
+        params=None,
+    ):
         self.masses = masses
         self.pos = pos
-        self.domain = Cell(rvecs) # yaff.pes.ext.Cell
+        self.domain = Domain(rvecs)
         self.grid = grid
         self.types = types
         self.params = params
@@ -94,27 +105,31 @@ class System(object):
         self.boundary_nodes = boundary_nodes
         self.nnodes = len(self.surrounding_cells)
         self.ncells = len(self.surrounding_nodes)
-                
+
         with log.section("SYS"):
             self._init_log()
-            
+
     def update_params(self, new_params, type_=1):
         for key, val in new_params.items():
             type_key = f"type{int(type_)}/{key}"
             self.params.update({type_key: val})
-    
+
     def _init_log(self):
         if log.do_medium:
             # Log some interesting system information.
             log("Properties:")
             log.hline()
-            pbc = (self.domain.rvecs.shape[0] > 0)
-            gigapascal = 1e9*pascal
+            pbc = self.domain.rvecs.shape[0] > 0
+            gigapascal = 1e9 * pascal
             if pbc:
                 log("Periodic boundary conditions have been enabled.")
             else:
-                log("Periodic boundary conditions have not been enabled. The system is isolated.")
-            log(f"The system is composed of {self.nnodes} nodes and {self.ncells} cells.")
+                log(
+                    "Periodic boundary conditions have not been enabled. The system is isolated."
+                )
+            log(
+                f"The system is composed of {self.nnodes} nodes and {self.ncells} cells."
+            )
             ntypes = len(set(self.types))
             if ntypes == 1:
                 log(f"There is {ntypes} cell type present in the system.")
@@ -128,7 +143,6 @@ class System(object):
                 h0 = self.params[f"type{int(type_)}/cell"]
                 C0 = self.params[f"type{int(type_)}/elasticity"]
                 efree = self.params[f"type{int(type_)}/free_energy"]
-                eff = self.params[f"type{int(type_)}/effective_temp"]
                 nstates = len(h0)
                 log(f"TYPE {int(type_)}:")
                 log("=======")
@@ -137,23 +151,61 @@ class System(object):
                 else:
                     log(f"Type {int(type_)} has {nstates} metastable states.")
                 log(" ")
-                get_row = lambda etens, row: list(voigt(etens, mode="elasticity")[row]/gigapascal)
-                for i in range(nstates): 
+                get_row = lambda etens, row: list(
+                    voigt(etens, mode="elasticity")[row] / gigapascal
+                )
+                for i in range(nstates):
                     log(f"TYPE {int(type_)}, STATE {i}: ")
                     log("----------------")
-                    log(f"- Free energy [kj/mol]: ")
+                    log("- Free energy [kj/mol]: ")
                     log(f"      {efree[i]/kjmol}")
-                    log(f"- Equilibrium cell matrix [Å]:")
-                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][0]/angstrom)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}],".format(*list(h0[i][1]/angstrom)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}]]".format(*list(h0[i][2]/angstrom)))
-                    log(f"- Elasticity tensor [GPa]:")
-                    log("    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 0)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 1)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 2)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 3)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(*get_row(C0[i], 4)))
-                    log("     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}]]".format(*get_row(C0[i], 5)))
+                    log("- Equilibrium cell matrix [Å]:")
+                    log(
+                        "    [[{:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *list(h0[i][0] / angstrom)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *list(h0[i][1] / angstrom)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}]]".format(
+                            *list(h0[i][2] / angstrom)
+                        )
+                    )
+                    log("- Elasticity tensor [GPa]:")
+                    log(
+                        "    [[{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *get_row(C0[i], 0)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *get_row(C0[i], 1)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *get_row(C0[i], 2)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *get_row(C0[i], 3)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}],".format(
+                            *get_row(C0[i], 4)
+                        )
+                    )
+                    log(
+                        "     [{:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}, {:6.1f}]]".format(
+                            *get_row(C0[i], 5)
+                        )
+                    )
                     log(" ")
             log.hline()
             log.blank()
@@ -183,21 +235,23 @@ class System(object):
             kwargs = {}
             params = {}
             if fn.endswith(".chk"):
-                allowed_keys = ["pos", 
-                                "masses", 
-                                "rvecs", 
-                                "surrounding_cells", 
-                                "surrounding_nodes", 
-                                "boundary_nodes", 
-                                "grid", 
-                                "types"]
+                allowed_keys = [
+                    "pos",
+                    "masses",
+                    "rvecs",
+                    "surrounding_cells",
+                    "surrounding_nodes",
+                    "boundary_nodes",
+                    "grid",
+                    "types",
+                ]
                 for key, value in load_chk(fn).items():
                     if key in allowed_keys:
                         kwargs.update({key: value})
                     if "type" in key and key != "types":
                         params.update({key: value})
             else:
-                raise IOError("Cannot read from file \"%s\"." % fn)
+                raise IOError('Cannot read from file "%s".' % fn)
             if log.do_high:
                 log("Read system parameters from %s." % fn)
             kwargs.update({"params": params})
@@ -207,13 +261,13 @@ class System(object):
     @classmethod
     def from_hdf5(cls, f):
         """Construct a micromechanical system from an HDF5 file with a system group.
-        
+
         Parameters
         ----------
         f : h5py.File
-            An HDF5 file with a system group. 
+            An HDF5 file with a system group.
             The system group must at least contain a ``pos`` dataset.
-        
+
         Returns
         -------
         micmec.system.System
@@ -224,15 +278,15 @@ class System(object):
             "pos": sgrp["pos"][:],
         }
         allowed_keys = [
-            "pos", 
-            "masses", 
-            "rvecs", 
-            "surrounding_cells", 
-            "surrounding_nodes", 
-            "boundary_nodes", 
-            "grid", 
-            "types", 
-            "params"
+            "pos",
+            "masses",
+            "rvecs",
+            "surrounding_cells",
+            "surrounding_nodes",
+            "boundary_nodes",
+            "grid",
+            "types",
+            "params",
         ]
         for key in allowed_keys:
             if key in sgrp:
@@ -243,7 +297,7 @@ class System(object):
 
     def to_file(self, fn):
         """Write the micromechanical system to a CHK, HDF5 or XYZ file.
-        
+
         Parameters
         ----------
         fn : str
@@ -257,46 +311,47 @@ class System(object):
         Notes
         -----
         Supported file formats are:
-        
+
         -   CHK (``.chk``) : internal text-based checkpoint format.
-            This format includes all information about the ``System`` instance. 
-        -   HDF5 (``.h5``) : internal binary checkpoint format. 
-            This format includes all information about the ``System`` instance. 
+            This format includes all information about the ``System`` instance.
+        -   HDF5 (``.h5``) : internal binary checkpoint format.
+            This format includes all information about the ``System`` instance.
         -   XYZ (``.xyz``) : a simple file with node positions.
 
         All data are stored in atomic units.
         """
-        if fn.endswith('.chk'):
-            from molmod.io import dump_chk
+        if fn.endswith(".chk"):
             output = {
-                "pos": self.pos, 
-                "masses": self.masses, 
+                "pos": self.pos,
+                "masses": self.masses,
                 "rvecs": self.domain.rvecs,
-                "surrounding_cells": self.surrounding_cells, 
-                "surrounding_nodes": self.surrounding_nodes, 
-                "boundary_nodes": self.boundary_nodes, 
-                "grid": self.grid, 
-                "types": self.types
+                "surrounding_cells": self.surrounding_cells,
+                "surrounding_nodes": self.surrounding_nodes,
+                "boundary_nodes": self.boundary_nodes,
+                "grid": self.grid,
+                "types": self.types,
             }
             output.update(self.params)
             dump_chk(fn, output)
         elif fn.endswith(".xyz"):
-            from molmod.io import XYZWriter
-            from molmod.periodic import periodic
-            xyz_writer = XYZWriter(fn, [periodic[55].symbol for _ in self.pos]) # represent nodes with cesium atoms
+            xyz_writer = XYZWriter(
+                fn, [periodic[55].symbol for _ in self.pos]
+            )  # represent nodes with cesium atoms
             xyz_writer.dump(str(self), self.pos)
         elif fn.endswith(".h5"):
             with h5py.File(fn, "w") as f:
                 self.to_hdf5(f)
         else:
-            raise NotImplementedError("The extension of %s does not correspond to any known format." % fn)
+            raise NotImplementedError(
+                "The extension of %s does not correspond to any known format." % fn
+            )
         if log.do_high:
             with log.section("SYS"):
                 log("Wrote system to %s." % fn)
 
     def to_hdf5(self, f):
         """Write the system to an HDF5 file.
-        
+
         Parameters
         ----------
         f : h5py.File
@@ -313,5 +368,3 @@ class System(object):
         sgrp.create_dataset("pos", data=self.pos)
         if self.masses is not None:
             sgrp.create_dataset("masses", data=self.masses)
-
-

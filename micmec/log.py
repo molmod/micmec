@@ -18,7 +18,7 @@
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-"""Screen logger. 
+"""Screen logger.
 
 The ``log`` object is an instance of the ``molmod.log.ScreenLog`` class.
 The logger comes with a timer infrastructure, which is also implemented in the ``molmod.log`` module.
@@ -31,23 +31,22 @@ from molmod.log import ScreenLog, TimerGroup
 
 __all__ = ["log", "timer"]
 
-#================================================================================
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 head_banner = r"""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-                     _____    _____    _____      _______     
+                     _____    _____    _____      _______
                       |  \    /  |      | |      / /  /_/
                       | \ \  / / |      | |     / /
-                      | |\ \/ /| |      | |     | |    
+                      | |\ \/ /| |      | |     | |
                       | | \__/ | |      | |     | |   ___
                      _|_|_    _|_|_    _|_|_    |_|___|_|
 
                      _____    _____  _________    _______
                       |  \    /  |    | |  |_|   / /  /_/
                       | \ \  / / |    | | __    / /
-                      | |\ \/ /| |    | |/_/    | |    
+                      | |\ \/ /| |    | |/_/    | |
                       | | \__/ | |    | |  ___  | |   ___
                      _|_|_    _|_|_  _|_|__|_|  |_|___|_|
 
@@ -62,12 +61,12 @@ head_banner = r"""
                               |__|__|__|__|__|/
 
 
-                             Welcome to MicMec 1.0,
-                         written by Joachim Vandewalle
-                        (joachim.vandewalle@hotmail.be).  
+                             Welcome to MicMec 1.0
+                               Joachim Vandewalle
+                         (joachim.vandewalle@hotmail.be)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 
 
@@ -84,5 +83,3 @@ foot_banner = r"""
 timer = TimerGroup()
 log = ScreenLog("MICMEC", "1.0", head_banner, foot_banner, timer)
 atexit.register(log.print_footer)
-
-

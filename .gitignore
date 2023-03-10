@@ -1,5 +1,6 @@
 __pycache__/
 *.log
+*.so
 tkinter_style/
 micmec.egg-info/
 build/

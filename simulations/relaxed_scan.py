@@ -20,7 +20,6 @@
 
 import numpy as np
 
-import h5py
 import json
 import argparse
 
@@ -29,34 +28,34 @@ import matplotlib.pyplot as plt
 from micmec.log import log
 from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
-from micmec.sampling.opt import OptScreenLog, QNOptimizer
+from micmec.sampling.opt import OptScreenLog, QNOptimizer, CGOptimizer
 from micmec.sampling.dof import CartesianDOF
 
-from micmec.sampling.trajectory import HDF5Writer, XYZWriter
-
-from molmod.units import kelvin, pascal, femtosecond, kjmol, angstrom
+from molmod.units import pascal, kjmol, angstrom
 
 gigapascal = 1e9*pascal
+
 
 def main(input_fns, fn_png, lower_limit, upper_limit):
     all_scalings = []
     all_energy_densities = []
     
     for idx, input_fn in enumerate(input_fns):
-        scalings = np.linspace(lower_limit, upper_limit, 20)
+        scalings = np.linspace(lower_limit, upper_limit, 18)
         epots = []
         volumes = []
         for scaling in scalings:
             sys = System.from_file(input_fn)
             orig_rvecs = sys.domain.rvecs.copy()
             sys.domain.update_rvecs(orig_rvecs*scaling)
+            #sys.pos = sys.pos.copy() + 1e-3*np.random.random_sample(sys.pos.shape)
             fpm = ForcePartMechanical(sys)
             mmf = MicMecForceField(sys, [fpm])
             cdof = CartesianDOF(mmf)
             
             osl = OptScreenLog(step=1)
             
-            qnopt = QNOptimizer(cdof, hooks=[osl])
+            qnopt = CGOptimizer(cdof, hooks=[osl])
             qnopt.run()
             
             epots.append(qnopt.epot)
@@ -86,8 +85,14 @@ def main(input_fns, fn_png, lower_limit, upper_limit):
             plt.plot(scalings, np.array(epots)/np.array(volumes)/(kjmol/angstrom**3))
         all_scalings.append(scalings.tolist())
         all_energy_densities.append((np.array(epots)/np.array(volumes)/(kjmol/angstrom**3)).tolist())
-            
-    #plt.plot(scalings, 0.5**(13*gigapascal/np.linalg.det(orig_rvecs))*(scalings - 1.0)**2)
+
+    with open("output_relaxed_scan.json", "w") as jfile:
+        jobj = {
+            "all_scalings": all_scalings,
+            "all_energy_densities": all_energy_densities,
+        }
+        json.dump(jobj, jfile, indent=4)
+
     plt.xlabel(r"$V/V_0$ [-]")
     plt.ylabel("POTENTIAL ENERGY DENSITY [kJ/mol/Å³]")
     plt.xlim(scalings[0], scalings[-1])

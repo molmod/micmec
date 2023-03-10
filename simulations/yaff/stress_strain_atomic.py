@@ -18,31 +18,28 @@
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-import numpy as np
-import pickle as pkl
-
-import h5py
 import argparse
 
-import scipy.linalg as la
+import pickle as pkl
+import numpy as np
+import numpy.linalg as la
 
 from yaff import System, log
-
-import ff_lammps
-
 from micmec.analysis.tensor import voigt, voigt_inv
 from micmec.utils import build_type
 
-from molmod.units import kelvin, pascal, femtosecond, angstrom
+from molmod.units import pascal, angstrom
 
 gigapascal = 1e9*pascal
+
 
 def main(args):
     # Define the system and the force field.
     sys = System.from_file(args.chk_file)
-    ff = ff_lammps.load_ff(sys, args.pars_file, use_lammps=False)
+    #ff = ff_lammps.load_ff(sys, args.pars_file, use_lammps=False)
 
     mass = np.sum(sys.masses)
+    print(mass)
 
     # Add some noise to the initial Cartesian coordinates.
     max_noise = 0.05
@@ -55,10 +52,10 @@ def main(args):
     osl = OptScreenLog(step=10)
     cgopt = CGOptimizer(ddof, hooks=[osl])
     cgopt.run()
-    
+
     cell_eq = sys.cell.rvecs.copy()
     pos_eq = sys.pos.copy()
-    
+
     max_dev = 0.001
     ndevs = 2
     one = np.identity(3)
@@ -73,7 +70,7 @@ def main(args):
             strain = voigt_inv(strain_vec)
             cell = cell_eq @ la.sqrtm(2.0*strain + one)
             volume = la.det(cell)
-            
+
             # Optimize coordinates.
             ff.update_rvecs(cell)
             ff.update_pos(pos_eq @ la.sqrtm(2.0*strain + one))
@@ -81,7 +78,7 @@ def main(args):
             osl = OptScreenLog(step=50)
             cgopt = CGOptimizer(cdof)
             cgopt.run()
-            
+
             stress_ = np.zeros((3, 3))
             ff.compute(vtens=stress_)
             stress = stress_/volume
@@ -97,7 +94,7 @@ def main(args):
                 log("     [{:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}],".format(*list(stress_vec/gigapascal)))
                 log(" ")
                 log.hline()
-        
+
         elasticity_vec = np.polyfit(strain_devs, stress_devs, deg=1)[0, :]
         elasticity_matrix[:, idx] = elasticity_vec
 
@@ -124,8 +121,8 @@ def main(args):
     # Store the output as a new, micromechanical cell type.
     # Note that the convention for a nanocell matrix is different than the convention for a domain matrix, hence the transpose.
     output = build_type(
-        material="UNKNOWN", 
-        mass=mass, 
+        material="UNKNOWN",
+        mass=mass,
         cell0=cell_eq,
         elasticity0=elasticity_tensor,
         topology="mixed"
@@ -136,7 +133,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    
+
     parser = argparse.ArgumentParser(description="Determine the elastic properties of an atomic system from finite deformations.")
     parser.add_argument("chk_file", type=str,
                         help=".chk filename of the input structure")
@@ -145,7 +142,7 @@ if __name__ == "__main__":
     parser.add_argument("pkl_file", type=str,
                         help=".pickle filename of the output elastic properties")
     args = parser.parse_args()
-    
+
     main(args)
 
 

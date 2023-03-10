@@ -20,53 +20,57 @@
 
 """Basic trajectory analysis routines."""
 
-import h5py as h5
-
 import numpy as np
 
-from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter
+from molmod import boltzmann, pascal
 
 from micmec.log import log
 from micmec.analysis.utils import get_slice, get_time
 
 
 __all__ = [
-    "plot_energies", "plot_temperature", "plot_pressure", "plot_temp_dist",
-    "plot_press_dist", "plot_volume_dist", "plot_domain_pars"
+    "plot_energies",
+    "plot_temperature",
+    "plot_pressure",
+    "plot_temp_dist",
+    "plot_press_dist",
+    "plot_volume_dist",
+    "plot_domain_pars",
 ]
 
 
 def plot_energies(f, fn_png="energies.png", **kwargs):
     """Make a plot of the potential, kinetic, total and conserved energy as a function of time.
-    
+
     Parameters
     ----------
     f : h5py.File
         An HDF5 file containing the trajectory data.
     fn_png : str, optional
         The PNG filename to write the figure to.
-    
+
     Notes
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
-    The units for making the plot are taken from the screen logger. 
+    The units for making the plot are taken from the screen logger.
     This type of plot is essential for checking the sanity of a simulation.
     """
     import matplotlib.pyplot as pt
+
     start, end, step = get_slice(f, **kwargs)
 
-    epot = f["trajectory/epot"][start:end:step]/log.energy.conversion
-    ekin = f["trajectory/ekin"][start:end:step]/log.energy.conversion
+    epot = f["trajectory/epot"][start:end:step] / log.energy.conversion
+    ekin = f["trajectory/ekin"][start:end:step] / log.energy.conversion
     time, tlabel = get_time(f, start, end, step)
 
     pt.clf()
     pt.plot(time, epot, "k-", label="potential")
     pt.plot(time, ekin, "b-", label="kinetic")
     if "trajectory/etot" in f:
-        etot = f["trajectory/etot"][start:end:step]/log.energy.conversion
+        etot = f["trajectory/etot"][start:end:step] / log.energy.conversion
         pt.plot(time, etot, "r-", label="total")
     if "trajectory/econs" in f:
-        econs = f["trajectory/econs"][start:end:step]/log.energy.conversion
+        econs = f["trajectory/econs"][start:end:step] / log.energy.conversion
         pt.plot(time, econs, "g-", label="conserved")
     pt.xlim(time[0], time[-1])
     pt.xlabel(tlabel)
@@ -78,21 +82,22 @@ def plot_energies(f, fn_png="energies.png", **kwargs):
 
 def plot_temperature(f, fn_png="temperature.png", **kwargs):
     """Make a plot of the temperature as a function of time.
-    
+
     Parameters
     ----------
     f : h5py.File
         An HDF5 file containing the trajectory data.
     fn_png : str, optional
         The PNG filename to write the figure to.
-    
+
     Notes
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
-    The units for making the plot are taken from the screen logger. 
+    The units for making the plot are taken from the screen logger.
     This type of plot is essential for checking the sanity of a simulation.
     """
     import matplotlib.pyplot as pt
+
     start, end, step = get_slice(f, **kwargs)
     temp = f["trajectory/temp"][start:end:step]
     time, tlabel = get_time(f, start, end, step)
@@ -105,9 +110,9 @@ def plot_temperature(f, fn_png="temperature.png", **kwargs):
     pt.savefig(fn_png)
 
 
-def plot_pressure(f, fn_png="pressure.png", window = 1, **kwargs):
+def plot_pressure(f, fn_png="pressure.png", window=1, **kwargs):
     """Make a plot of the pressure as a function of time.
-    
+
     Parameters
     ----------
     f : h5py.File
@@ -116,26 +121,32 @@ def plot_pressure(f, fn_png="pressure.png", window = 1, **kwargs):
         The PNG filename to write the figure to.
     window : int, optional
         The window over which the pressure is averaged.
-    
+
     Notes
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
-    The units for making the plot are taken from the screen logger. 
+    The units for making the plot are taken from the screen logger.
     This type of plot is essential for checking the sanity of a simulation.
     """
     import matplotlib.pyplot as pt
+
     start, end, step = get_slice(f, **kwargs)
 
     press = f["trajectory/press"][start:end:step]
     time, tlabel = get_time(f, start, end, step)
 
-    press_av = np.zeros(len(press)+1-window)
-    time_av = np.zeros(len(press)+1-window)
+    press_av = np.zeros(len(press) + 1 - window)
+    time_av = np.zeros(len(press) + 1 - window)
     for i in range(len(press_av)):
-        press_av[i] = press[i:i+window].sum()/window
+        press_av[i] = press[i:(i + window)].sum() / window
         time_av[i] = time[i]
     pt.clf()
-    pt.plot(time_av, press_av/(1e9*pascal), "k-",label="simulation (%.3f MPa)" % (press.mean()/(1e6*pascal)))
+    pt.plot(
+        time_av,
+        press_av / (1e9 * pascal),
+        "k-",
+        label="simulation (%.3f MPa)" % (press.mean() / (1e6 * pascal)),
+    )
     pt.xlim(time[0], time[-1])
     pt.xlabel(tlabel)
     pt.ylabel("PRESSURE [GPa]")
@@ -144,9 +155,11 @@ def plot_pressure(f, fn_png="pressure.png", window = 1, **kwargs):
     pt.savefig(fn_png)
 
 
-def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None, **kwargs):
-    """Plot the distribution of the weighted nodal velocities (temperature). 
-    
+def plot_temp_dist(
+    f, fn_png="temp_dist.png", temp=None, ndof=None, select=None, **kwargs
+):
+    """Plot the distribution of the weighted nodal velocities (temperature).
+
     Parameters
     ----------
     f : h5py.File
@@ -167,14 +180,14 @@ def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None,
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
-    from scipy.stats import chi2
+
     start, end, step = get_slice(f, **kwargs)
 
     # Make an array with the weights used to compute the temperature.
     if select is None:
-        weights = np.array(f["system/masses"])/boltzmann
+        weights = np.array(f["system/masses"]) / boltzmann
     else:
-        weights = np.array(f["system/masses"])[select]/boltzmann
+        weights = np.array(f["system/masses"])[select] / boltzmann
 
     if select is None:
         # Just load the temperatures from the output file.
@@ -183,8 +196,8 @@ def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None,
         # Compute the temperatures of the subsystem.
         temps = []
         for i in range(start, end, step):
-             temp = ((f["trajectory/vel"][i,select]**2).mean(axis=1)*weights).mean()
-             temps.append(temp)
+            temp = ((f["trajectory/vel"][i, select] ** 2).mean(axis=1) * weights).mean()
+            temps.append(temp)
         temps = np.array(temps)
 
     if temp is None:
@@ -194,44 +207,46 @@ def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None,
     if select is None:
         nnodes = f["system/pos"].shape[0]
     else:
-        nnodes = 3*len(select)
+        nnodes = 3 * len(select)
     if ndof is None:
         ndof = f["trajectory"].attrs.get("ndof")
     if ndof is None:
-        ndof = 3*nnodes
-    sigma = temp*np.sqrt(2.0/ndof)
-    temp_step = sigma/5
+        ndof = 3 * nnodes
+    sigma = temp * np.sqrt(2.0 / ndof)
+    temp_step = sigma / 5
 
     # Setup the temperature grid and make the histogram.
-    temp_grid = np.arange(max(0, temp-3*sigma), temp+5*sigma, temp_step)
+    temp_grid = np.arange(max(0, temp - 3 * sigma), temp + 5 * sigma, temp_step)
     counts = np.histogram(temps.ravel(), bins=temp_grid)[0]
     total = float(len(temps))
 
     # Transform into empirical pdf and cdf.
-    emp_sys_pdf = counts/total
-    emp_sys_cdf = counts.cumsum()/total
+    emp_sys_pdf = counts / total
+    emp_sys_cdf = counts.cumsum() / total
 
     # B) Make the plots
     pt.clf()
-    xconv = log.temperature.conversion
     ax1 = pt.subplot(2, 1, 1)
-    #pt.title("System (ndof=%i)" % ndof)
-    scale = 1/emp_sys_pdf.max()
-    pt.plot(x_sys/xconv, emp_sys_pdf*scale, "k-", drawstyle="steps-pre", label="simulation (%.0f K)" % (temps.mean()))
+    # pt.title("System (ndof=%i)" % ndof)
+    scale = 1 / emp_sys_pdf.max()
+    pt.plot(
+        emp_sys_pdf * scale,
+        "k-",
+        drawstyle="steps-pre",
+        label="simulation (%.0f K)" % (temps.mean()),
+    )
     pt.axvline(temp, color="r", ls="--")
     pt.axvline(temps.mean(), color="k", ls="--")
     pt.ylim(ymin=0)
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
     pt.ylabel("RESCALED PDF")
     pt.legend(loc=0)
     ax1.grid()
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
-    
+
     ax2 = pt.subplot(2, 1, 2)
-    pt.plot(x_sys/xconv, emp_sys_cdf, "k-", drawstyle="steps-pre")
+    pt.plot(emp_sys_cdf, "k-", drawstyle="steps-pre")
     pt.axvline(temp, color="r", ls="--")
     pt.axvline(temps.mean(), color="k", ls="--")
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
     pt.ylim(0, 1)
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
     pt.ylabel("CDF")
@@ -240,7 +255,9 @@ def plot_temp_dist(f, fn_png="temp_dist.png", temp=None, ndof=None, select=None,
     pt.savefig(fn_png, dpi=500.0)
 
 
-def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, select=None, **kwargs):
+def plot_press_dist(
+    f, temp, fn_png="press_dist.png", press=None, ndof=None, select=None, **kwargs
+):
     """Plot the distribution of the internal pressure.
 
     Parameters
@@ -265,14 +282,14 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
-    from scipy.stats import chi2
+
     start, end, step = get_slice(f, **kwargs)
 
     # Make an array with the weights used to compute the temperature.
     if select is None:
-        weights = np.array(f["system/masses"])/boltzmann
+        weights = np.array(f["system/masses"]) / boltzmann
     else:
-        weights = np.array(f["system/masses"])[select]/boltzmann
+        weights = np.array(f["system/masses"])[select] / boltzmann
 
     if select is None:
         # Just load the temperatures from the output file.
@@ -281,8 +298,8 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
         # Compute the temperatures of the subsystem.
         temps = []
         for i in range(start, end, step):
-             temp = ((f["trajectory/vel"][i, select]**2).mean(axis=1)*weights).mean()
-             temps.append(temp)
+            temp = ((f["trajectory/vel"][i, select] ** 2).mean(axis=1) * weights).mean()
+            temps.append(temp)
         temps = np.array(temps)
 
     if temp is None:
@@ -294,41 +311,39 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
 
     # A) SYSTEM
     sigma = np.std(presss)
-    press_step = sigma/5
-
-    vols = f["trajectory/volume"][start:end:step]
-    vol0 = vols.mean()
+    press_step = sigma / 5
 
     # Setup the pressure grid and make the histogram.
-    press_grid = np.arange(press-5*sigma, press+5*sigma, press_step)
+    press_grid = np.arange(press - 5 * sigma, press + 5 * sigma, press_step)
     counts = np.histogram(presss.ravel(), bins=press_grid)[0]
     total = float(len(presss))
 
     # Transform into empirical pdf and cdf.
-    emp_sys_pdf = counts/total
-    emp_sys_cdf = counts.cumsum()/total
+    emp_sys_pdf = counts / total
+    emp_sys_cdf = counts.cumsum() / total
 
     # B) Make the plots.
     pt.clf()
-    xconv = 1e6*pascal
-
     ax1 = pt.subplot(2, 1, 1)
-    scale = 1/emp_sys_pdf.max()
-    pt.plot(x_sys/xconv, emp_sys_pdf*scale, "k-", drawstyle="steps-pre", label="simulation (%.3f MPa)" % (presss.mean()/(1e6*pascal)))
+    scale = 1 / emp_sys_pdf.max()
+    pt.plot(
+        emp_sys_pdf * scale,
+        "k-",
+        drawstyle="steps-pre",
+        label="simulation (%.3f MPa)" % (presss.mean() / (1e6 * pascal)),
+    )
     pt.axvline(press, color="r", ls="--")
     pt.axvline(presss.mean(), color="k", ls="--")
     pt.ylim(ymin=0)
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
     pt.ylabel("RESCALED PDF")
     ax1.grid()
     pt.legend(loc=0)
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
 
     ax2 = pt.subplot(2, 1, 2)
-    pt.plot(x_sys/xconv, emp_sys_cdf, "k-", drawstyle="steps-pre")
+    pt.plot(emp_sys_cdf, "k-", drawstyle="steps-pre")
     pt.axvline(press, color="r", ls="--")
     pt.axvline(presss.mean(), color="k", ls="--")
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
     pt.ylim(0, 1)
     ax2.grid()
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
@@ -339,7 +354,7 @@ def plot_press_dist(f, temp, fn_png="press_dist.png", press=None, ndof=None, sel
 
 def plot_volume_dist(f, fn_png="volume_dist.png", temp=None, press=None, **kwargs):
     """Plot the distribution of the volume.
-    
+
     Parameters
     ----------
     f : h5py.File
@@ -359,9 +374,9 @@ def plot_volume_dist(f, fn_png="volume_dist.png", temp=None, press=None, **kwarg
     """
     import matplotlib.pyplot as pt
     from matplotlib.ticker import MaxNLocator
-    from scipy.stats import chi2
+
     start, end, step = get_slice(f, **kwargs)
-    
+
     if temp is None:
         # Make an array of the temperature.
         temps = f["trajectory/temp"][start:end:step]
@@ -377,35 +392,29 @@ def plot_volume_dist(f, fn_png="volume_dist.png", temp=None, press=None, **kwarg
     vol0 = vols.mean()
 
     sigma = np.std(vols)
-    vol_step = sigma/5
+    vol_step = sigma / 5
 
     # Setup the volume grid and make the histogram.
-    vol_grid = np.arange(vol0-3*sigma, vol0+3*sigma, vol_step)
+    vol_grid = np.arange(vol0 - 3 * sigma, vol0 + 3 * sigma, vol_step)
     counts = np.histogram(vols.ravel(), bins=vol_grid)[0]
     total = float(len(vols))
 
     # Transform into empirical pdf and cdf.
-    emp_sys_pdf = counts/total
-    emp_sys_cdf = counts.cumsum()/total
+    emp_sys_pdf = counts / total
+    emp_sys_cdf = counts.cumsum() / total
 
     # Make the plots.
     pt.clf()
-    xconv = angstrom**3
-
     ax1 = pt.subplot(2, 1, 1)
-    scale = 1/emp_sys_pdf.max()
-    pt.plot(x_sys/xconv, emp_sys_pdf*scale, "k-", drawstyle="steps-pre")
-    pt.axvline(vol0/xconv, color="k", ls="--")
+    scale = 1 / emp_sys_pdf.max()
+    pt.plot(emp_sys_pdf * scale, "k-", drawstyle="steps-pre")
     pt.ylim(ymin=0)
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
     pt.ylabel("RESCALED PDF")
     ax1.grid()
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
 
     ax2 = pt.subplot(2, 1, 2)
-    pt.plot(x_sys/xconv, emp_sys_cdf, "k-", drawstyle="steps-pre")
-    pt.axvline(vol0/xconv, color="k", ls="--")
-    pt.xlim(x_sys[0]/xconv, x_sys[-1]/xconv)
+    pt.plot(emp_sys_cdf, "k-", drawstyle="steps-pre")
     pt.ylim(0, 1)
     pt.gca().get_xaxis().set_major_locator(MaxNLocator(nbins=5))
     pt.ylabel("CDF")
@@ -417,43 +426,55 @@ def plot_volume_dist(f, fn_png="volume_dist.png", temp=None, press=None, **kwarg
 
 def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
     """Make a plot of the domain parameters as a function of time.
-    
+
     Parameters
     ----------
     f : h5py.File
         An HDF5 file containing the trajectory data.
     fn_png : str, optional
         The PNG filename to write the figure to.
-    
+
     Notes
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
-    The units for making the plot are taken from the screen logger. 
+    The units for making the plot are taken from the screen logger.
     This type of plot is essential for checking the sanity of a simulation.
     """
     import matplotlib.pyplot as pt
+
     start, end, step = get_slice(f, **kwargs)
 
     if "trajectory/domain" in f:
-        domain = f["trajectory/domain"][start:end:step]/log.length.conversion
+        domain = f["trajectory/domain"][start:end:step] / log.length.conversion
     else:
         if "trajectory/cell" in f:
-            domain = f["trajectory/cell"][start:end:step]/log.length.conversion
+            domain = f["trajectory/cell"][start:end:step] / log.length.conversion
         else:
-            raise IOError("File \"%s\" does not contain a domain trajectory." % input_fn)
+            raise IOError("File does not contain a domain trajectory.")
     lengths = np.sqrt((domain**2).sum(axis=2))
     time, tlabel = get_time(f, start, end, step)
     nvec = lengths.shape[1]
 
     def get_angle(i0, i1):
-        return np.arccos(np.clip((domain[:,i0]*domain[:,i1]).sum(axis=1)/lengths[:,i0]/lengths[:,i1], -1,1))/log.angle.conversion
+        return (
+            np.arccos(
+                np.clip(
+                    (domain[:, i0] * domain[:, i1]).sum(axis=1)
+                    / lengths[:, i0]
+                    / lengths[:, i1],
+                    -1,
+                    1,
+                )
+            )
+            / log.angle.conversion
+        )
 
     pt.clf()
     if nvec == 3:
-        ax1 = pt.subplot(2,1,1)
-        pt.plot(time, lengths[:,0], "r-", label="a")
-        pt.plot(time, lengths[:,1], "g-", label="b")
-        pt.plot(time, lengths[:,2], "b-", label="c")
+        ax1 = pt.subplot(2, 1, 1)
+        pt.plot(time, lengths[:, 0], "r-", label="a")
+        pt.plot(time, lengths[:, 1], "g-", label="b")
+        pt.plot(time, lengths[:, 2], "b-", label="c")
         pt.xlim(time[0], time[-1])
         pt.ylabel("LENGTHS [%s]" % log.length.notation)
         ax1.grid()
@@ -472,9 +493,9 @@ def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
         ax2.grid()
         pt.legend(loc=0)
     elif nvec == 2:
-        ax1 = pt.subplot(2,1,1)
-        pt.plot(time, lengths[:,0], "r-", label="a")
-        pt.plot(time, lengths[:,1], "g-", label="b")
+        ax1 = pt.subplot(2, 1, 1)
+        pt.plot(time, lengths[:, 0], "r-", label="a")
+        pt.plot(time, lengths[:, 1], "g-", label="b")
         pt.xlim(time[0], time[-1])
         pt.ylabel("LENGTHS [%s]" % log.length.notation)
         ax1.grid()
@@ -489,7 +510,7 @@ def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
         ax2.grid()
         pt.legend(loc=0)
     elif nvec == 1:
-        pt.plot(time, lengths[:,0], "k-")
+        pt.plot(time, lengths[:, 0], "k-")
         pt.xlim(time[0], time[-1])
         pt.xlabel(tlabel)
         pt.ylabel("LENGTHS [%s]" % log.length.notation)
@@ -498,5 +519,3 @@ def plot_domain_pars(f, fn_png="domain_pars.png", **kwargs):
         raise ValueError("Cannot plot domain parameters if the system is not periodic.")
 
     pt.savefig(fn_png)
-
-

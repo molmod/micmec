@@ -21,16 +21,14 @@
 """Trajectory writers."""
 
 from micmec.sampling.iterative import Hook
-from micmec.log import log, timer
 
 __all__ = [
-    "HDF5Writer", 
+    "HDF5Writer",
     "XYZWriter",
 ]
 
 
 class BaseHDF5Writer(Hook):
-
     def __init__(self, f, start=0, step=1):
         """
         Parameters
@@ -45,7 +43,6 @@ class BaseHDF5Writer(Hook):
         self.f = f
         Hook.__init__(self, start, step)
 
-    
     def __call__(self, iterative):
         if "trajectory" not in self.f:
             self.init_trajectory(iterative)
@@ -61,9 +58,9 @@ class BaseHDF5Writer(Hook):
             ds = tgrp[key]
             if ds.shape[0] <= row:
                 # Do not over-allocate; hdf5 works with chunks internally.
-                ds.resize(row+1, axis=0)
+                ds.resize(row + 1, axis=0)
             ds[row] = item.value
-    
+
     def dump_system(self, system, grp):
         system.to_hdf5(grp)
 
@@ -76,22 +73,19 @@ class BaseHDF5Writer(Hook):
                 continue
             maxshape = (None,) + item.shape
             shape = (0,) + item.shape
-            dset = tgrp.create_dataset(key, shape, maxshape=maxshape, dtype=item.dtype)
+            _ = tgrp.create_dataset(key, shape, maxshape=maxshape, dtype=item.dtype)
             for name, value in item.iter_attrs(iterative):
                 tgrp.attrs[name] = value
 
 
 class HDF5Writer(BaseHDF5Writer):
-    
     def __call__(self, iterative):
         if "system" not in self.f:
             self.dump_system(iterative.mmf.system, self.f)
         BaseHDF5Writer.__call__(self, iterative)
 
 
-
 class XYZWriter(Hook):
-
     def __init__(self, fn_xyz, select=None, start=0, step=1):
         """
         Parameters
@@ -99,7 +93,7 @@ class XYZWriter(Hook):
         fn_xyz : str
             A filename to write the XYZ trajectory to.
         select : list, optional
-            A selection of nodes whose degrees of freedom are included. 
+            A selection of nodes whose degrees of freedom are included.
             If no list is given, all nodal coordinates are included.
         start : int, optional
             The first iteration at which this hook should be called.
@@ -111,18 +105,20 @@ class XYZWriter(Hook):
         self.xyz_writer = None
         Hook.__init__(self, start, step)
 
-    
     def __call__(self, iterative):
-        
         from molmod.periodic import periodic
         from molmod.io import XYZWriter
-        
+
         if self.xyz_writer is None:
             pos = iterative.mmf.system.pos
             if self.select is None:
-                symbols = [periodic[55].symbol for _ in pos] # represent nodes with cesium atoms
+                symbols = [
+                    periodic[55].symbol for _ in pos
+                ]  # represent nodes with cesium atoms
             else:
-                symbols = [periodic[55].symbol for _ in self.select] # represent nodes with cesium atoms
+                symbols = [
+                    periodic[55].symbol for _ in self.select
+                ]  # represent nodes with cesium atoms
             self.xyz_writer = XYZWriter(self.fn_xyz, symbols)
         title = "%7i E_pot = %.10f     " % (iterative.counter, iterative.epot)
         if self.select is None:
@@ -130,6 +126,3 @@ class XYZWriter(Hook):
         else:
             pos = iterative.mmf.system.pos[self.select]
         self.xyz_writer.dump(title, pos)
-
-
-

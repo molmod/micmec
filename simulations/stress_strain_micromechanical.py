@@ -18,13 +18,11 @@
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
 
-import numpy as np
-import pickle as pkl
-
-import h5py
 import argparse
 
-import scipy.linalg as la
+import pickle as pkl
+import numpy as np
+import numpy.linalg as la
 
 from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
@@ -34,7 +32,7 @@ from micmec.sampling.dof import CartesianDOF, StrainCellDOF
 from micmec.analysis.tensor import voigt, voigt_inv
 from micmec.utils import build_type
 
-from molmod.units import kelvin, pascal, femtosecond, angstrom
+from molmod.units import pascal, angstrom
 from micmec.log import log
 
 gigapascal = 1e9*pascal
@@ -50,8 +48,6 @@ def main(args):
     # Add some noise to the initial Cartesian coordinates.
     max_noise = 0.10
     sys.pos += max_noise*(2.0*np.random.random_sample(sys.pos.shape) - 1.0)
-
-    domain_init = sys.domain.rvecs.copy()
 
     # Perform an optimisation of the atomic positions and the domain parameters.
     ddof = StrainCellDOF(mmf, gpos_rms=1e-8, dpos_rms=1e-6, grvecs_rms=1e-8, drvecs_rms=1e-6)
@@ -76,7 +72,7 @@ def main(args):
             strain = voigt_inv(strain_vec)
             domain = domain_eq @ la.sqrtm(2.0*strain + one)
             volume = la.det(domain)
-            
+
             # Optimize coordinates.
             mmf.update_rvecs(domain)
             mmf.update_pos(pos_eq + max_noise*(2.0*np.random.random_sample(pos_eq.shape) - 1.0))
@@ -84,7 +80,7 @@ def main(args):
             osl = OptScreenLog(step=1)
             qnopt = QNOptimizer(cdof, hooks=[osl])
             qnopt.run()
-            
+
             stress_ = np.zeros((3, 3))
             mmf.compute(vtens=stress_)
             stress = stress_/volume
@@ -100,7 +96,7 @@ def main(args):
                 log("     [{:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}, {:6.2f}],".format(*list(stress_vec/gigapascal)))
                 log(" ")
                 log.hline()
-        
+
         elasticity_vec = np.polyfit(strain_devs, stress_devs, deg=1)[0, :]
         elasticity_matrix[:, idx] = elasticity_vec
 
@@ -139,22 +135,19 @@ def main(args):
 
 
 if __name__ == "__main__":
-    
+
     parser = argparse.ArgumentParser(description="Determine the elastic properties of an atomic system from finite deformations.")
     parser.add_argument(
-        "chk_file", 
+        "chk_file",
         type=str,
         help=".chk filename of the input structure"
     )
     parser.add_argument(
-        "pkl_file", 
+        "pkl_file",
         type=str,
         help=".pickle filename of the output elastic properties"
     )
     args = parser.parse_args()
-    
+
     main(args)
-
-
-
 

@@ -20,22 +20,32 @@
 
 """Geometry optimization."""
 
+import time
 import numpy as np
 
-# The implementation in scipy is often more robust.
-from scipy.linalg import eigh
-import time
-
-from molmod.minimizer import ConjugateGradient, QuasiNewton, NewtonLineSearch, Minimizer
+from numpy.linalg import eigh
+from molmod.minimizer import ConjugateGradient, NewtonLineSearch, Minimizer
 
 from micmec.log import log
-from micmec.sampling.iterative import Iterative, AttributeStateItem, \
-    PosStateItem, VolumeStateItem, DomainStateItem, EPotContribStateItem, Hook
+from micmec.sampling.iterative import (
+    Iterative,
+    AttributeStateItem,
+    PosStateItem,
+    VolumeStateItem,
+    DomainStateItem,
+    EPotContribStateItem,
+    Hook,
+)
 
 
 __all__ = [
-    "OptScreenLog", "BaseOptimizer", "CGOptimizer", "BFGSHessianModel",
-    "SR1HessianModel", "QNOptimizer", "solve_trust_radius"
+    "OptScreenLog",
+    "BaseOptimizer",
+    "CGOptimizer",
+    "BFGSHessianModel",
+    "SR1HessianModel",
+    "QNOptimizer",
+    "solve_trust_radius",
 ]
 
 
@@ -50,19 +60,28 @@ class OptScreenLog(Hook):
                 self.time0 = time.time()
                 if log.do_medium:
                     log.hline()
-                    log("Conv.val. =&the highest ratio of a convergence criterion over its threshold.")
-                    log("N         =&the number of convergence criteria that is not met.")
-                    log("Worst     =&the name of the convergence criterion that is worst.")
+                    log(
+                        "Conv.val. =&the highest ratio of a convergence criterion over its threshold."
+                    )
+                    log(
+                        "N         =&the number of convergence criteria that is not met."
+                    )
+                    log(
+                        "Worst     =&the name of the convergence criterion that is worst."
+                    )
                     log("counter  Conv.val.  N           Worst     Energy   Walltime")
                     log.hline()
-            log("%7i % 10.3e %2i %15s %s %10.1f" % (
-                iterative.counter,
-                iterative.dof.conv_val,
-                iterative.dof.conv_count,
-                iterative.dof.conv_worst,
-                log.energy(iterative.epot),
-                time.time() - self.time0,
-            ))
+            log(
+                "%7i % 10.3e %2i %15s %s %10.1f"
+                % (
+                    iterative.counter,
+                    iterative.dof.conv_val,
+                    iterative.dof.conv_count,
+                    iterative.dof.conv_worst,
+                    log.energy(iterative.epot),
+                    time.time() - self.time0,
+                )
+            )
 
 
 class BaseOptimizer(Iterative):
@@ -81,17 +100,17 @@ class BaseOptimizer(Iterative):
         Parameters
         ----------
         dof : micmec.sampling.dof.DOF object
-            A specification of the degrees of freedom. 
+            A specification of the degrees of freedom.
             The convergence criteria are also part of this argument.
         state : list
-            A list with state items. 
-            State items are simple objects that take or derive a property from the current state of the iterative 
+            A list with state items.
+            State items are simple objects that take or derive a property from the current state of the iterative
             algorithm.
-        hooks : 
+        hooks :
             A function (or a list of functions) that is called after every iterative.
         counter0 :
             The counter value associated with the initial state.
-        
+
         """
         self.dof = dof
         Iterative.__init__(self, dof.mmf, state, hooks, counter0)
@@ -127,12 +146,19 @@ class BaseOptimizer(Iterative):
 
 class CGOptimizer(BaseOptimizer):
     """A conjugate gradient optimizer."""
+
     log_name = "CGOPT"
 
     def __init__(self, dof, state=None, hooks=None, counter0=0):
         self.minimizer = Minimizer(
-            dof.x0, self.fun, ConjugateGradient(), NewtonLineSearch(), None,
-            None, anagrad=True, verbose=False,
+            dof.x0,
+            self.fun,
+            ConjugateGradient(),
+            NewtonLineSearch(),
+            None,
+            None,
+            anagrad=True,
+            verbose=False,
         )
         BaseOptimizer.__init__(self, dof, state, hooks, counter0)
 
@@ -143,11 +169,13 @@ class CGOptimizer(BaseOptimizer):
     def propagate(self):
         success = self.minimizer.propagate()
         self.x = self.minimizer.x
-        if success == False:
+        if not success:
             if log.do_warning:
-                log.warn("Line search failed in optimizer. Aborting optimization. \
+                log.warn(
+                    "Line search failed in optimizer. Aborting optimization. \
                             This is probably due to a dicontinuity in the energy or the forces. \
-                            Check the truncation of the non-bonding interactions and the Ewald summation parameters.")
+                            Check the truncation of the non-bonding interactions and the Ewald summation parameters."
+                )
             return True
         return BaseOptimizer.propagate(self)
 
@@ -161,7 +189,7 @@ class HessianModel(object):
             The number of degrees of freedom.
         hessian0 : optional
             An initial guess for the hessian.
-        
+
         """
         self.ndof = ndof
         if hessian0 is None:
@@ -169,7 +197,9 @@ class HessianModel(object):
         else:
             self.hessian = hessian0.copy()
             if self.hessian.shape != (ndof, ndof):
-                raise TypeError("Incorrect shape of the initial hessian in quasi-newton method.")
+                raise TypeError(
+                    "Incorrect shape of the initial hessian in quasi-newton method."
+                )
 
     def get_spectrum(self):
         return eigh(self.hessian)
@@ -181,19 +211,28 @@ class BFGSHessianModel(HessianModel):
         hmax = abs(self.hessian).max()
         # Only compute updates if the denominators do not blow up
         denom1 = np.dot(dx, tmp)
-        if hmax*denom1 <= 1e-5*abs(tmp).max()**2:
+        if hmax * denom1 <= 1e-5 * abs(tmp).max() ** 2:
             if log.do_high:
-                log("Skipping BFGS update because denom1=%10.3e is not positive enough." % denom1)
+                log(
+                    "Skipping BFGS update because denom1=%10.3e is not positive enough."
+                    % denom1
+                )
             return False
         denom2 = np.dot(dg, dx)
-        if hmax*denom2 <= 1e-5*abs(dg).max()**2:
+        if hmax * denom2 <= 1e-5 * abs(dg).max() ** 2:
             if log.do_high:
-                log("Skipping BFGS update because denom2=%10.3e is not positive enough." % denom2)
+                log(
+                    "Skipping BFGS update because denom2=%10.3e is not positive enough."
+                    % denom2
+                )
             return False
         if log.do_debug:
-            log("Updating BFGS Hessian.    denom1=%10.3e   denom2=%10.3e" % (denom1, denom2))
-        self.hessian -= np.outer(tmp, tmp)/denom1
-        self.hessian += np.outer(dg, dg)/denom2
+            log(
+                "Updating BFGS Hessian.    denom1=%10.3e   denom2=%10.3e"
+                % (denom1, denom2)
+            )
+        self.hessian -= np.outer(tmp, tmp) / denom1
+        self.hessian += np.outer(dg, dg) / denom2
         return True
 
 
@@ -202,49 +241,63 @@ class SR1HessianModel(HessianModel):
         tmp = dg - np.dot(self.hessian, dx)
 
         denom = np.dot(tmp, dx)
-        if abs(denom) > 1e-5*np.linalg.norm(dx)*np.linalg.norm(tmp):
+        if abs(denom) > 1e-5 * np.linalg.norm(dx) * np.linalg.norm(tmp):
             if log.do_debug:
                 log("Updating SR1 Hessian.       denom=%10.3e" % denom)
-            self.hessian += np.outer(tmp, tmp)/denom
+            self.hessian += np.outer(tmp, tmp) / denom
             return True
         else:
             if log.do_high:
-                log("Skipping SR1 update because denom=%10.3e is not big enough." % denom)
+                log(
+                    "Skipping SR1 update because denom=%10.3e is not big enough."
+                    % denom
+                )
             return False
 
 
 class QNOptimizer(BaseOptimizer):
     """A Quasi-Newtonian optimizer."""
+
     log_name = "QNOPT"
 
-    def __init__(self, dof, state=None, hooks=None, counter0=0, trust_radius=1.0, small_radius=1e-5, too_small_radius=1e-10, hessian0=None):
+    def __init__(
+        self,
+        dof,
+        state=None,
+        hooks=None,
+        counter0=0,
+        trust_radius=1.0,
+        small_radius=1e-5,
+        too_small_radius=1e-10,
+        hessian0=None,
+    ):
         """
         Parameters
         ----------
         dof : micmec.sampling.dof.DOF object
-            A specification of the degrees of freedom. 
+            A specification of the degrees of freedom.
             The convergence criteria are also part of this argument.
         state : list
-            A list with state items. 
-            State items are simple objects that take or derive a property from the current state of the iterative 
+            A list with state items.
+            State items are simple objects that take or derive a property from the current state of the iterative
             algorithm.
-        hooks : 
+        hooks :
             A function (or a list of functions) that is called after every iterative.
         counter0 :
             The counter value associated with the initial state.
         trust_radius : float
-            The initial value for the trust radius. 
-            It is adapted by the algorithm after every step. 
+            The initial value for the trust radius.
+            It is adapted by the algorithm after every step.
             The adapted trust radius is never allowed to increase above this initial value.
         small_radius : float
-            If the trust radius goes below this limit, the decrease in energy is no longer essential. 
+            If the trust radius goes below this limit, the decrease in energy is no longer essential.
             Instead a decrease in the norm of the gradient is used to accept/reject a step.
         too_small_radius : float
-            If the trust radius becomes smaller than this parameter, the optimizer gives up. 
+            If the trust radius becomes smaller than this parameter, the optimizer gives up.
             Insanely small trust radii are typical for potential energy surfaces that are not entirely smooth.
-        hessian0 : 
+        hessian0 :
             An initial guess for the Hessian.
-        
+
         """
         self.x_old = dof.x0
         self.hessian = SR1HessianModel(len(dof.x0), hessian0)
@@ -261,8 +314,8 @@ class QNOptimizer(BaseOptimizer):
 
     def propagate(self):
         # Update the Hessian.
-        assert not self.g is self.g_old
-        assert not self.x is self.x_old
+        assert self.g is not self.g_old
+        assert self.x is not self.x_old
         hessian_safe = self.hessian.update(self.x - self.x_old, self.g - self.g_old)
         if not hessian_safe:
             # Reset the Hessian completely.
@@ -288,7 +341,7 @@ class QNOptimizer(BaseOptimizer):
         grad_eigen = np.dot(evecs.T, self.g_old)
 
         while True:
-            # Find the step with the given radius. If the hessian is positive definite and the unconstrained step is 
+            # Find the step with the given radius. If the hessian is positive definite and the unconstrained step is
             # smaller than the trust radius, this step is returned.
             delta_eigen = solve_trust_radius(grad_eigen, evals, self.trust_radius)
             radius = np.linalg.norm(delta_eigen)
@@ -313,8 +366,8 @@ class QNOptimizer(BaseOptimizer):
                     log("Function increases.")
                 must_shrink = True
 
-            if (self.trust_radius < self.small_radius and delta_norm_g > 0):
-                # When the trust radius becomes small, the numerical noise on the energy may be too large to detect 
+            if self.trust_radius < self.small_radius and delta_norm_g > 0:
+                # When the trust radius becomes small, the numerical noise on the energy may be too large to detect
                 # an increase energy.
                 # In that case the norm of the gradient is used instead.
                 if log.do_high:
@@ -326,7 +379,9 @@ class QNOptimizer(BaseOptimizer):
                 while self.trust_radius >= radius:
                     self.trust_radius *= 0.5
                 if self.trust_radius < self.too_small_radius:
-                    raise RuntimeError("The trust radius becomes too small. Is the potential energy surface smooth?")
+                    raise RuntimeError(
+                        "The trust radius becomes too small. Is the potential energy surface smooth?"
+                    )
             else:
                 # If we get here, we are done with the trust radius loop.
                 if log.do_high:
@@ -342,13 +397,13 @@ def solve_trust_radius(grad, evals, radius, threshold=1e-5):
     """Find a step in eigenspace with the given radius."""
     # First try an unconstrained step if the eigenvalues are all strictly positive.
     if evals.min() > 0:
-        step = -grad/evals
+        step = -grad / evals
         if np.linalg.norm(step) <= radius:
             return step
 
     # Define some auxiliary functions.
     def compute_step(ridge):
-        return -grad/(evals+ridge)
+        return -grad / (evals + ridge)
 
     def compute_error(ridge):
         return np.linalg.norm(compute_step(ridge)) - radius
@@ -360,7 +415,7 @@ def solve_trust_radius(grad, evals, radius, threshold=1e-5):
         while True:
             ridge = ridge_min + alpha
             error = compute_error(ridge)
-            if sign*error < 0:
+            if sign * error < 0:
                 return ridge, error
             if sign > 0:
                 alpha *= 2
@@ -374,8 +429,8 @@ def solve_trust_radius(grad, evals, radius, threshold=1e-5):
 
     # Bisection algorithm to find root.
     error = np.inf
-    while abs(error) > radius*threshold:
-        ridge = (a[1]*a[0]-b[1]*b[0])/(a[1]-b[1])
+    while abs(error) > radius * threshold:
+        ridge = (a[1] * a[0] - b[1] * b[0]) / (a[1] - b[1])
         error = compute_error(ridge)
         c = ridge, error
         if error > 0 and a[1] > 0:
@@ -386,5 +441,3 @@ def solve_trust_radius(grad, evals, radius, threshold=1e-5):
     # Best guess.
     ridge = c[0]
     return compute_step(ridge)
-
-

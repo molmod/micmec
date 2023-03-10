@@ -22,26 +22,22 @@
 
 import numpy as np
 
-from molmod.units import kelvin, pascal, angstrom
+from molmod.units import kelvin
 
-__all__ = [
-    "build_system",
-    "build_type",
-    "neighbor_cells",
-    "neighbor_nodes",
-    "Grid"
-]
+
+__all__ = ["build_system", "build_type", "neighbor_cells", "neighbor_nodes", "Grid"]
+
 
 # Each node has at most eight neighboring cells.
 neighbor_cells = [
-    ( 0,  0,  0),
-    (-1,  0,  0),
-    ( 0, -1,  0),
-    ( 0,  0, -1),
-    (-1, -1,  0),
-    (-1,  0, -1),
-    ( 0, -1, -1),
-    (-1, -1, -1)
+    (0, 0, 0),
+    (-1, 0, 0),
+    (0, -1, 0),
+    (0, 0, -1),
+    (-1, -1, 0),
+    (-1, 0, -1),
+    (0, -1, -1),
+    (-1, -1, -1),
 ]
 # Each cell always has eight neighboring nodes.
 neighbor_nodes = [
@@ -52,12 +48,11 @@ neighbor_nodes = [
     (1, 1, 0),
     (1, 0, 1),
     (0, 1, 1),
-    (1, 1, 1)
+    (1, 1, 1),
 ]
 
 
 class Grid(object):
-
     def __init__(self, grid, pbc=None):
         self.grid = grid
 
@@ -125,8 +120,12 @@ class Grid(object):
                         kappa = kk + neighbor_idxs[0]
                         lambda_ = ll + neighbor_idxs[1]
                         mu = mm + neighbor_idxs[2]
-                        kappa_invalid = (kappa < 0 or kappa >= self.nx) and (not self.pbc[0])
-                        lambda_invalid = (lambda_ < 0 or lambda_ >= self.ny) and (not self.pbc[1])
+                        kappa_invalid = (kappa < 0 or kappa >= self.nx) and (
+                            not self.pbc[0]
+                        )
+                        lambda_invalid = (lambda_ < 0 or lambda_ >= self.ny) and (
+                            not self.pbc[1]
+                        )
                         mu_invalid = (mu < 0 or mu >= self.nz) and (not self.pbc[2])
                         if kappa_invalid or lambda_invalid or mu_invalid:
                             continue
@@ -140,9 +139,9 @@ class Grid(object):
         # Store the indices of nodes located at the boundaries of the grid.
         boundary_nodes = []
         for node_idx, (kk, ll, mm) in enumerate(self.nodes):
-            bx = (kk == 0 or kk == self.nx_nodes - 1)
-            by = (ll == 0 or ll == self.ny_nodes - 1)
-            bz = (mm == 0 or mm == self.nz_nodes - 1)
+            bx = kk == 0 or kk == self.nx_nodes - 1
+            by = ll == 0 or ll == self.ny_nodes - 1
+            bz = mm == 0 or mm == self.nz_nodes - 1
             if bx or by or bz:
                 boundary_nodes.append(node_idx)
         return boundary_nodes
@@ -164,11 +163,11 @@ class Grid(object):
 
 def build_system(data, grid, pbc=None):
     """Prepare a micromechanical system and store it in a dictionary.
-    
+
     Parameters
     ----------
     data : dict
-        The micromechanical cell types, stored in a dictionary with integer keys. 
+        The micromechanical cell types, stored in a dictionary with integer keys.
         The corresponding values are dictionaries which contain information about the cell type.
     grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
         A three-dimensional grid that maps the types of cells present in the micromechanical system.
@@ -188,9 +187,9 @@ def build_system(data, grid, pbc=None):
     If the Builder application does not work, the user can still benefit from the automatic creation
     of a micromechanical structure by using this method manually.
     The output dictionary can be stored as a CHK file by using:
-    
+
         ``molmod.io.chk.dump_chk("output.chk", output)``.
-    
+
     Then, the CHK file can be used as the input of a ``micmec.system.System`` instance.
     """
     grid_structure = Grid(grid, pbc=pbc)
@@ -255,7 +254,7 @@ def build_system(data, grid, pbc=None):
         "surrounding_cells": surrounding_cells,
         "surrounding_nodes": surrounding_nodes,
         "boundary_nodes": grid_structure.boundary_nodes,
-        "masses": masses
+        "masses": masses,
     }
     for type_idx, type_data in data.items():
         for key, value in type_data.items():
@@ -264,7 +263,15 @@ def build_system(data, grid, pbc=None):
     return output
 
 
-def build_type(material, mass, cell0, elasticity0, free_energy=None, effective_temp=None, topology=None):
+def build_type(
+    material,
+    mass,
+    cell0,
+    elasticity0,
+    free_energy=None,
+    effective_temp=None,
+    topology=None,
+):
     """Prepare a micromechanical cell type and store it in a dictionary.
 
     Parameters
@@ -313,10 +320,10 @@ def build_type(material, mass, cell0, elasticity0, free_energy=None, effective_t
         "cell": cell0,
         "elasticity": elasticity0,
         "free_energy": free_energy,
-        "effective_temp": effective_temp
+        "effective_temp": effective_temp,
     }
-    check1 = (len(cell0) == len(elasticity0))
-    check2 = (len(cell0) == len(free_energy))
+    check1 = len(cell0) == len(elasticity0)
+    check2 = len(cell0) == len(free_energy)
     if check1 and check2:
         return output
     raise ValueError

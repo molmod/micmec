@@ -89,13 +89,15 @@ if __name__ == "__main__":
                         help="step of the screen logger")
 
     args = parser.parse_args()
-    main(args.input_fn,
+    main(
+        args.input_fn,
         args.output_fn, 
         args.timestep, 
         args.steps, 
         args.temp, 
         args.press, 
         args.file_step,
-        args.log_step)
+        args.log_step
+    )
 
 

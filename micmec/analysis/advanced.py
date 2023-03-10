@@ -20,22 +20,15 @@
 
 """Advanced trajectory analysis routines."""
 
-import h5py as h5
-
 import numpy as np
 
-from molmod import boltzmann, pascal, angstrom, second, lightspeed, centimeter, kelvin
+from molmod import boltzmann, kelvin
 
-from micmec.log import log
 from micmec.analysis.tensor import voigt, voigt_inv
 from micmec.analysis.utils import get_slice
 
 
-__all__ = [
-    "get_mass",
-    "get_cell0",
-    "get_elasticity0"
-]
+__all__ = ["get_mass", "get_cell0", "get_elasticity0"]
 
 
 # The numbers refer to equations in the master's thesis of Joachim Vandewalle.
@@ -52,13 +45,13 @@ def _compute_volume(cell):
     volume : float
         The volume of the domain, in atomic units.
     """
-    volume = np.linalg.det(cell) # (3.2)
+    volume = np.linalg.det(cell)  # (3.2)
     return volume
 
 
 def _compute_strain(cell, cell0_inv):
     """Compute the strain tensor of a simulation domain.
-    
+
     Parameters
     ----------
     cell : numpy.ndarray, shape=(3, 3)
@@ -67,21 +60,21 @@ def _compute_strain(cell, cell0_inv):
         The inverse equilibrium cell matrix.
 
     Returns
-    ------- 
+    -------
     strain : numpy.ndarray, shape=(3, 3)
         The resulting strain tensor, in atomic units.
-    
+
     Notes
     -----
     By Yaff convention, the domain vectors ``a``, ``b`` and ``c`` appear as rows in every cell matrix.
     """
-    strain = 0.5*((cell0_inv @ cell) @ (cell0_inv @ cell).T - np.identity(3)) # (3.3) 
-    return strain 
+    strain = 0.5 * ((cell0_inv @ cell) @ (cell0_inv @ cell).T - np.identity(3))  # (3.3)
+    return strain
 
 
 def _compute_compliance(strain, strain0, volume0, temp0):
     """Compute the (instantaneous) compliance tensor of a simulation domain.
-    
+
     Parameters
     ----------
     strain : numpy.ndarray, shape=(3, 3)
@@ -94,7 +87,7 @@ def _compute_compliance(strain, strain0, volume0, temp0):
         The equilibrium temperature of the domain.
 
     Returns
-    ------- 
+    -------
     compliance : numpy.ndarray, shape=(3, 3, 3, 3)
         The resulting compliance tensor, in atomic units.
 
@@ -104,17 +97,19 @@ def _compute_compliance(strain, strain0, volume0, temp0):
     clarify our calculation of the true compliance tensor, which is defined at (mechanical) equilibrium.
     The true compliance tensor is the mean of all instantaneous compliance tensors, according to the ergodic hypothesis.
     """
-    return (volume0/(boltzmann*kelvin*temp0))*np.tensordot(strain-strain0, strain-strain0, axes=0) # (3.19)
+    return (volume0 / (boltzmann * kelvin * temp0)) * np.tensordot(
+        strain - strain0, strain - strain0, axes=0
+    )  # (3.19)
 
 
 def get_mass(f):
     """Get the total mass of a simulation domain from an HDF5 file.
-    
+
     Parameters
     ----------
     f : h5py.File
-        An HDF5 file, may be ``None`` if it is not available. 
-    
+        An HDF5 file, may be ``None`` if it is not available.
+
     Returns
     -------
     mass : float
@@ -127,14 +122,14 @@ def get_mass(f):
 
 def get_cell0(f, **kwargs):
     """Get the equilibrium cell matrix of a simulation domain, based on trajectory data.
-    
+
     Parameters
     ----------
     f : h5py.File
         An HDF5 file containing the trajectory data.
-    
+
     Returns
-    ------- 
+    -------
     cell0 : numpy.ndarray, shape=(3, 3)
         The equilibrium cell matrix, in atomic units.
 
@@ -142,10 +137,10 @@ def get_cell0(f, **kwargs):
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     Please be aware that the simulation domain in this method can refer to:
-    
+
     -   an atomistic force field simulation, in which case the trajectory of the domain is stored in ``trajectory/cell``;
     -   a micromechanical force field simulation, in which case the trajectory of the domain is stored in ``trajectory/domain``.
-    
+
     As such, this method can be used to analyze HDF5 files from both Yaff and MicMec.
     """
     start, end, step = get_slice(f, **kwargs)
@@ -156,7 +151,9 @@ def get_cell0(f, **kwargs):
         if "trajectory/cell" in f:
             cells = f["trajectory/cell"][start:end:step]
         else:
-            raise IOError("File \"%s\" does not contain a Cell/Domain trajectory." % input_fn)
+            raise IOError(
+                "File does not contain a Cell/Domain trajectory."
+            )
     # Be mindful of potential rotations of the simulation domain when computing the mean.
     cell0 = np.mean(cells, axis=0)
     return cell0
@@ -164,14 +161,14 @@ def get_cell0(f, **kwargs):
 
 def get_elasticity0(f, **kwargs):
     """Get the elasticity tensor of a simulation domain, based on trajectory data.
-    
+
     Parameters
     ----------
     f : h5py.File
         An HDF5 file containing the trajectory data.
 
     Returns
-    ------- 
+    -------
     elasticity0 : numpy.ndarray, shape=(3, 3, 3, 3)
         The elasticity tensor, in atomic units.
 
@@ -179,10 +176,10 @@ def get_elasticity0(f, **kwargs):
     -----
     The optional arguments of the ``get_slice`` function are also accepted in the form of keyword arguments.
     Please be aware that the simulation domain in this method can refer to:
-    
+
     -   an atomistic force field simulation, in which case the trajectory of the domain is stored in ``trajectory/cell``;
     -   a micromechanical force field simulation, in which case the trajectory of the domain is stored in ``trajectory/domain``.
-    
+
     As such, this method can be used to analyze HDF5 files from both Yaff and MicMec.
     """
     start, end, step = get_slice(f, **kwargs)
@@ -193,7 +190,7 @@ def get_elasticity0(f, **kwargs):
         if "trajectory/cell" in f:
             cells = np.array(f["trajectory/cell"][start:end:step])
         else:
-            raise IOError("File \"%s\" does not contain a domain trajectory." % input_fn)
+            raise IOError("File does not contain a domain trajectory.")
     nsamples = len(cells)
     temp0 = np.mean(f["trajectory/temp"][start:end:step])
     # Be mindful of potential rotations of the simulation domain when computing the mean.
@@ -217,4 +214,3 @@ def get_elasticity0(f, **kwargs):
     # Construct the elasticity tensor from the elasticity matrix.
     elasticity0 = voigt_inv(elasticity0_matrix, mode="elasticity")
     return elasticity0
-

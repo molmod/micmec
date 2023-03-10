@@ -29,6 +29,7 @@ from yaff.pes.ext import Cell
 from molmod.units import angstrom
 from molmod.molecular_graphs import MolecularGraph
 
+
 def get_cell_dimensions(n_elements):
     x_dim = 1
     y_dim = 1
@@ -41,6 +42,7 @@ def get_cell_dimensions(n_elements):
         if z + 1 > z_dim:
             z_dim = z + 1
     return x_dim, y_dim, z_dim
+
 
 def create_supercell(supercell, sys, central_cut):
     # Create system matrix.
@@ -108,6 +110,7 @@ def create_supercell(supercell, sys, central_cut):
     final = System(final_numbers, final_pos, ffatypes = final_ffatypes, bonds = final_bonds, rvecs = final_rvecs)
 
     return final
+
 
 def check(supercell, system, n_fo = {"fcu": 0, "reo": 12}, n_bonds = {"fcu": 592, "reo": 384}):
     # Create check criteria.
@@ -183,7 +186,7 @@ if __name__ == "__main__":
                 (2,2,1): "fcu", #25
                 (2,2,2): "fcu", #26
             }
-        ]
+        ],
         ["conf1", 
             {
                 (0,0,0): "fcu", #0

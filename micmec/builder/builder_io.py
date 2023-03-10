@@ -20,22 +20,23 @@
 
 """Input and output handling of the Micromechanical Model Builder."""
 
-import numpy as np
 
 from micmec.utils import build_system
 
+
 __all__ = ["build_output", "build_input"]
+
 
 def build_output(data, colors_types, grid, pbc):
     """Build the output of the Builder application (``builder.py``) and store it as a dictionary.
-    
+
     Parameters
     ----------
     data : dict
-        A dictionary with the names of the micromechanical cell types as keys. 
+        A dictionary with the names of the micromechanical cell types as keys.
         The corresponding values are dictionaries which contain information about the cell types.
     colors_types : dict
-        A dictionary with integer keys. 
+        A dictionary with integer keys.
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
     grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
@@ -52,7 +53,7 @@ def build_output(data, colors_types, grid, pbc):
 
     Notes
     -----
-    ``build_input`` is the inverse operation of ``build_output``. 
+    ``build_input`` is the inverse operation of ``build_output``.
     """
     new_data = {}
     for type_key, color_type in colors_types.items():
@@ -67,7 +68,7 @@ def build_output(data, colors_types, grid, pbc):
 
 def build_input(output):
     """Build the input of the Builder application (``builder.py``) from a dictionary.
-    
+
     Parameters
     ----------
     output : dict
@@ -76,10 +77,10 @@ def build_input(output):
     Returns
     -------
     data : dict
-        A dictionary with the names of the micromechanical cell types as keys. 
+        A dictionary with the names of the micromechanical cell types as keys.
         The corresponding values are dictionaries which contain information about the cell types.
     colors_types : dict
-        A dictionary with integer keys. 
+        A dictionary with integer keys.
         These integers appear in the three-dimensional grid.
         The values corresponding to the keys are tuples of a color and the name of a type.
     grid : numpy.ndarray, dtype=int, shape=(``nx``, ``ny``, ``nz``)
@@ -88,10 +89,10 @@ def build_input(output):
         An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.
     pbc : list of bool
         The domain vectors for which periodic boundary conditions should be enabled.
-    
+
     Notes
     -----
-    ``build_input`` is the inverse operation of ``build_output``. 
+    ``build_input`` is the inverse operation of ``build_output``.
     """
     data = {}
     colors_types = {}
@@ -107,7 +108,7 @@ def build_input(output):
             if key not in temp.keys():
                 temp[key] = []
             temp[key].append((key_, value))
-    
+
     for key, tups in temp.items():
         type_dict = {}
         for tup in tups:
@@ -120,11 +121,5 @@ def build_input(output):
         if key != 0:
             data[name] = type_dict
         colors_types[key] = (color, name)
-            
+
     return data, colors_types, grid, pbc
-
-
-            
-
-
-

@@ -29,16 +29,50 @@ __all__ = ["multiplicator", "cell_xderivs", "cell_yderivs", "cell_zderivs"]
 
 # Construct a multiplicator array.
 # This array converts the eight Cartesian coordinate vectors of a cell's surrounding nodes into eight matrix representations.
-multiplicator = np.array([
-    [[-1, 1, 0, 0, 0, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
-    [[-1, 1, 0, 0, 0, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 0, 1, 0, 0]],
-    [[ 0, 0,-1, 0, 1, 0, 0, 0], [-1, 0, 1, 0, 0, 0, 0, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
-    [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0,-1, 0, 0, 1, 0], [-1, 0, 0, 1, 0, 0, 0, 0]],
-    [[ 0, 0,-1, 0, 1, 0, 0, 0], [ 0,-1, 0, 0, 1, 0, 0, 0], [ 0, 0, 0, 0,-1, 0, 0, 1]],
-    [[ 0, 0, 0,-1, 0, 1, 0, 0], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0,-1, 0, 0, 0, 1, 0, 0]],
-    [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0,-1, 0, 0, 1, 0], [ 0, 0,-1, 0, 0, 0, 1, 0]],
-    [[ 0, 0, 0, 0, 0, 0,-1, 1], [ 0, 0, 0, 0, 0,-1, 0, 1], [ 0, 0, 0, 0,-1, 0, 0, 1]]
-])
+multiplicator = np.array(
+    [
+        [
+            [-1, 1, 0, 0, 0, 0, 0, 0],
+            [-1, 0, 1, 0, 0, 0, 0, 0],
+            [-1, 0, 0, 1, 0, 0, 0, 0],
+        ],
+        [
+            [-1, 1, 0, 0, 0, 0, 0, 0],
+            [0, -1, 0, 0, 1, 0, 0, 0],
+            [0, -1, 0, 0, 0, 1, 0, 0],
+        ],
+        [
+            [0, 0, -1, 0, 1, 0, 0, 0],
+            [-1, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, -1, 0, 0, 0, 1, 0],
+        ],
+        [
+            [0, 0, 0, -1, 0, 1, 0, 0],
+            [0, 0, 0, -1, 0, 0, 1, 0],
+            [-1, 0, 0, 1, 0, 0, 0, 0],
+        ],
+        [
+            [0, 0, -1, 0, 1, 0, 0, 0],
+            [0, -1, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, -1, 0, 0, 1],
+        ],
+        [
+            [0, 0, 0, -1, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, -1, 0, 1],
+            [0, -1, 0, 0, 0, 1, 0, 0],
+        ],
+        [
+            [0, 0, 0, 0, 0, 0, -1, 1],
+            [0, 0, 0, -1, 0, 0, 1, 0],
+            [0, 0, -1, 0, 0, 0, 1, 0],
+        ],
+        [
+            [0, 0, 0, 0, 0, 0, -1, 1],
+            [0, 0, 0, 0, 0, -1, 0, 1],
+            [0, 0, 0, 0, -1, 0, 0, 1],
+        ],
+    ]
+)
 
 # Initialize the derivatives of the neighboring cell matrices to x, y and z.
 cell_xderivs = []
@@ -54,7 +88,9 @@ for neighbor_cell in neighbor_cells:
         yderiv = np.zeros((3, 3))
         zderiv = np.zeros((3, 3))
         deriv = np.array([1.0 if n == -1 else -1.0 for n in neighbor_cell])
-        dist_vec = np.abs([e1 - e2 for e1, e2 in zip(neighbor_cell, cell_representation)])
+        dist_vec = np.abs(
+            [e1 - e2 for e1, e2 in zip(neighbor_cell, cell_representation)]
+        )
         dist = np.sum(dist_vec)
         if dist == 0.0:
             xderiv[:, 0] = deriv
