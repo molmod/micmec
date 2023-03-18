@@ -27,15 +27,7 @@ Finally, we should note that the trajectory analysis routines included in MicMec
 PICKLE files
 ============
 
-In MicMec, the properties of a cell are stored in a PICKLE file by default. In the ``data`` directory, four examples of PICKLE files are shown, including the scripts that were used to generate them.
-
--   ``data/test/types/generate_test_types.py``
-    -   ``type_test.pickle``
-    -   ``type_shrunk.pickle``
--   ``data/uio66/types/generate_fcu_type.py``
-    -   ``type_fcu.pickle``
--   ``data/uio66/types/generate_reo_type.py``
-    -   ``type_reo.pickle``
+In MicMec, the properties of a cell are stored in a PICKLE file by default. In the ``data`` directory, several examples of PICKLE files are shown.
 
 Please note that the **fcu** and **reo** type files cannot be generated without appropriate atomistic trajectory files. These atomistic trajectory files are multiple gigabytes in size and are therefore not included in MicMec.
 
@@ -49,4 +41,5 @@ PICKLE files are not human-readable, but they can be opened and read with Python
 
 Some nanocell types are multistable and therefore have multiple sets of elastic properties. The ``cell``, ``elasticity`` and ``free_energy`` groups of such a PICKLE file are always defined as lists to account for that fact.
 
-
+To construct a custom cell type, the function ``micmec.utils.build_type`` is available.
+That function will create a dictionary that can be saved as a PICKLE file.

@@ -9,6 +9,13 @@
 
 
 
+``micmec.pes.ext`` -- C routines
+================================
+
+.. automodule:: micmec.pes.ext
+    :members:
+
+
 ``micmec.pes.mmff`` -- MicMecForceField, the micromechanical force field.
 =========================================================================
 
@@ -23,13 +30,6 @@
     :members:
 
 
-``micmec.pes.nanocell_jax`` -- Micromechanical description of a single nanocell state (JAX).
-============================================================================================
-
-.. automodule:: micmec.pes.nanocell_jax
-    :members:
-
-
 ``micmec.pes.nanocell_original`` -- Micromechanical description of a single nanocell state (original).
 ======================================================================================================
 
@@ -41,4 +41,11 @@
 ==================================================================================================
 
 .. automodule:: micmec.pes.nanocell_thesis
+    :members:
+
+
+``micmec.pes.nanocell_utils`` -- Fixed parameters for the evaluation of a nanocell's potential energy surface. DO NOT CHANGE.
+=============================================================================================================================
+
+.. automodule:: micmec.pes.nanocell_utils
     :members:
