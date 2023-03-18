@@ -15,7 +15,7 @@ The rest of the MicMec API is explained in detail [here](https://jlvdwall.github
 
 ## Installation
 
-Clone this repository to an empty target directory of your liking and use `pip` to install it.
+Clone this repository to an empty target directory of your liking and use `pip` to install the MicMec package.
 
 ```bash
 git clone https://github.com/Jlvdwall/micmec.git <target>
