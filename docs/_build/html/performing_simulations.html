@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>4. Performing simulations &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. micmec – MicMec, the micromechanical model." href="rg_micmec.html" />
+    <link rel="prev" title="3. Constructing micromechanical systems" href="constructing_systems.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec.html" title="1. micmec – MicMec, the micromechanical model."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="constructing_systems.html" title="3. Constructing micromechanical systems"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Performing simulations</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="performing-simulations">
+<h1><span class="section-number">4. </span>Performing simulations<a class="headerlink" href="#performing-simulations" title="Permalink to this heading">¶</a></h1>
+<p>With a newly constructed micromechanical system, simulations can be performed. In the <code class="docutils literal notranslate"><span class="pre">simulations</span></code> directory, we have included four fully functional simulation scripts, which are accessed via the command line:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python simulations/md.py
+python simulations/optimisation.py
+python simulations/static_scan.py
+python simulations/relaxed_scan.py
+</pre></div>
+</div>
+<p>Please note that these terminal scripts have a wide range of optional arguments. The <code class="docutils literal notranslate"><span class="pre">md.py</span></code> script, for instance, can be used to perform a simulation:</p>
+<ul class="simple">
+<li><p>in the (N, V, E) ensemble, if no pressure or temperature are defined;</p></li>
+<li><p>in the (N, V, T) ensemble, if only a temperature (<code class="docutils literal notranslate"><span class="pre">temp</span></code>) is defined;</p></li>
+<li><p>in the (N, P, T) ensemble, if a temperature (<code class="docutils literal notranslate"><span class="pre">temp</span></code>) and a pressure (<code class="docutils literal notranslate"><span class="pre">press</span></code>) are defined.</p></li>
+</ul>
+<p>By studying these scripts carefully, it should become clear how most other simulations can be performed. The underlying mechanisms of the core routines of MicMec have been summarized in the following figure.</p>
+<a class="reference internal image-reference" href="_images/core_routines.png"><img alt="CORE ROUTINES MICMEC" src="_images/core_routines.png" style="width: 700px;" /></a>
+<p>The black arrows indicate the order in which methods or instances are called. However, one important feature of MicMec has been omitted from this figure, namely, the following three modules:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">micmec/pes/nanocell.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micmec/pes/nanocell_thesis.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">micmec/pes/nanocell_original.py</span></code></p></li>
+</ul>
+<p>One of these modules is imported into <code class="docutils literal notranslate"><span class="pre">micmec/pes/mmff.py</span></code> to complete the micromechanical force field. By default, it should be the first script. These <code class="docutils literal notranslate"><span class="pre">nanocell</span></code> scripts each have the same goal: to calculate <strong>the elastic deformation energy</strong> and <strong>the gradient of the elastic deformation energy</strong> of a single metastable state of a nanocell. Prior to and during the development of MicMec, different methods were invented to obtain these values. The original implementation (<code class="docutils literal notranslate"><span class="pre">nanocell_original.py</span></code>) was based on:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>S. M. J. Rogge, “The micromechanical model to computationally investigate cooperative and
+correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225, pp. 271–285, 2020.
+</pre></div>
+</div>
+<p>In Joachim Vandewalle’s thesis, another implementation was used (<code class="docutils literal notranslate"><span class="pre">nanocell_thesis.py</span></code>). Unfortunately, both of these implementations are flawed. The latest implementation (<code class="docutils literal notranslate"><span class="pre">nanocell.py</span></code>) has fixed all of its predecessors’ flaws and should be the superior model. There exists yet another implementation, in <code class="docutils literal notranslate"><span class="pre">mmff_jax.py</span></code>, which uses automatic differentiation to access a wide range of energy functions and just-in-time compilation for a speed boost. Curious readers could perform two static scans, one using <code class="docutils literal notranslate"><span class="pre">mmff.py</span></code>, the other using <code class="docutils literal notranslate"><span class="pre">mmff_jax.py</span></code> and observe that both scans yield the same results. These two methods are therefore equivalent, but JAX is still quite slow.</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="constructing_systems.html"
+                          title="previous chapter"><span class="section-number">3. </span>Constructing micromechanical systems</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="rg_micmec.html"
+                          title="next chapter"><span class="section-number">1. </span><code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/performing_simulations.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec.html" title="1. micmec – MicMec, the micromechanical model."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="constructing_systems.html" title="3. Constructing micromechanical systems"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">4. </span>Performing simulations</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>

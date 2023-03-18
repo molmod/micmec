@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>2. micmec.builder – The Micromechanical Model Builder. &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)." href="rg_micmec_pes.html" />
+    <link rel="prev" title="1. micmec – MicMec, the micromechanical model." href="rg_micmec.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_pes.html" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec.html" title="1. micmec – MicMec, the micromechanical model."
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">2. </span><code class="docutils literal notranslate"><span class="pre">micmec.builder</span></code> – The Micromechanical Model Builder.</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="micmec-builder-the-micromechanical-model-builder">
+<h1><span class="section-number">2. </span><code class="docutils literal notranslate"><span class="pre">micmec.builder</span></code> – The Micromechanical Model Builder.<a class="headerlink" href="#micmec-builder-the-micromechanical-model-builder" title="Permalink to this heading">¶</a></h1>
+<section id="module-micmec.builder.builder_io">
+<span id="micmec-builder-builder-io-input-and-output-handling-of-the-micromechanical-model-builder"></span><h2><span class="section-number">2.1. </span><code class="docutils literal notranslate"><span class="pre">micmec.builder.builder_io</span></code> – Input and output handling of the Micromechanical Model Builder.<a class="headerlink" href="#module-micmec.builder.builder_io" title="Permalink to this heading">¶</a></h2>
+<p>Input and output handling of the Micromechanical Model Builder.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.builder.builder_io.build_input">
+<span class="sig-prename descclassname"><span class="pre">micmec.builder.builder_io.</span></span><span class="sig-name descname"><span class="pre">build_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.builder.builder_io.build_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the input of the Builder application (<code class="docutils literal notranslate"><span class="pre">builder.py</span></code>) from a dictionary.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>output</strong><span class="classifier">dict</span></dt><dd><p>A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>A dictionary with the names of the micromechanical cell types as keys.
+The corresponding values are dictionaries which contain information about the cell types.</p>
+</dd>
+<dt><strong>colors_types</strong><span class="classifier">dict</span></dt><dd><p>A dictionary with integer keys.
+These integers appear in the three-dimensional grid.
+The values corresponding to the keys are tuples of a color and the name of a type.</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code>)</span></dt><dd><p>A three-dimensional grid that maps the types of cells present in the micromechanical system.
+An integer value of 0 in the grid signifies an empty cell, a vacancy.
+An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.</p>
+</dd>
+<dt><strong>pbc</strong><span class="classifier">list of bool</span></dt><dd><p>The domain vectors for which periodic boundary conditions should be enabled.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p><code class="docutils literal notranslate"><span class="pre">build_input</span></code> is the inverse operation of <code class="docutils literal notranslate"><span class="pre">build_output</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.builder.builder_io.build_output">
+<span class="sig-prename descclassname"><span class="pre">micmec.builder.builder_io.</span></span><span class="sig-name descname"><span class="pre">build_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.builder.builder_io.build_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the output of the Builder application (<code class="docutils literal notranslate"><span class="pre">builder.py</span></code>) and store it as a dictionary.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>A dictionary with the names of the micromechanical cell types as keys.
+The corresponding values are dictionaries which contain information about the cell types.</p>
+</dd>
+<dt><strong>colors_types</strong><span class="classifier">dict</span></dt><dd><p>A dictionary with integer keys.
+These integers appear in the three-dimensional grid.
+The values corresponding to the keys are tuples of a color and the name of a type.</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code>)</span></dt><dd><p>A three-dimensional grid that maps the types of cells present in the micromechanical system.
+An integer value of 0 in the grid signifies an empty cell, a vacancy.
+An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.</p>
+</dd>
+<dt><strong>pbc</strong><span class="classifier">list of bool</span></dt><dd><p>The domain vectors for which periodic boundary conditions should be enabled.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>output</strong><span class="classifier">dict</span></dt><dd><p>A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p><code class="docutils literal notranslate"><span class="pre">build_input</span></code> is the inverse operation of <code class="docutils literal notranslate"><span class="pre">build_output</span></code>.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">2. <code class="docutils literal notranslate"><span class="pre">micmec.builder</span></code> – The Micromechanical Model Builder.</a><ul>
+<li><a class="reference internal" href="#module-micmec.builder.builder_io">2.1. <code class="docutils literal notranslate"><span class="pre">micmec.builder.builder_io</span></code> – Input and output handling of the Micromechanical Model Builder.</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="rg_micmec.html"
+                          title="previous chapter"><span class="section-number">1. </span><code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="rg_micmec_pes.html"
+                          title="next chapter"><span class="section-number">3. </span><code class="docutils literal notranslate"><span class="pre">micmec.pes</span></code> – Micromechanical potential energy surfaces (PESs).</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rg_micmec_builder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_pes.html" title="3. micmec.pes – Micromechanical potential energy surfaces (PESs)."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec.html" title="1. micmec – MicMec, the micromechanical model."
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">2. </span><code class="docutils literal notranslate"><span class="pre">micmec.builder</span></code> – The Micromechanical Model Builder.</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>

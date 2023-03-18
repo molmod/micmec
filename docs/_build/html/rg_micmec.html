@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>1. micmec – MicMec, the micromechanical model. &#8212; MicMec 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. micmec.builder – The Micromechanical Model Builder." href="rg_micmec_builder.html" />
+    <link rel="prev" title="4. Performing simulations" href="performing_simulations.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_builder.html" title="2. micmec.builder – The Micromechanical Model Builder."
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="performing_simulations.html" title="4. Performing simulations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span><code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="micmec-micmec-the-micromechanical-model">
+<h1><span class="section-number">1. </span><code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.<a class="headerlink" href="#micmec-micmec-the-micromechanical-model" title="Permalink to this heading">¶</a></h1>
+<section id="module-micmec.log">
+<span id="micmec-log-screen-logger"></span><h2><span class="section-number">1.1. </span><code class="docutils literal notranslate"><span class="pre">micmec.log</span></code> – Screen logger.<a class="headerlink" href="#module-micmec.log" title="Permalink to this heading">¶</a></h2>
+<p>Screen logger.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">log</span></code> object is an instance of the <code class="docutils literal notranslate"><span class="pre">molmod.log.ScreenLog</span></code> class.
+The logger comes with a timer infrastructure, which is also implemented in the <code class="docutils literal notranslate"><span class="pre">molmod.log</span></code> module.</p>
+</section>
+<section id="module-micmec.system">
+<span id="micmec-system-representation-of-a-micromechanical-system"></span><h2><span class="section-number">1.2. </span><code class="docutils literal notranslate"><span class="pre">micmec.system</span></code> – Representation of a micromechanical system.<a class="headerlink" href="#module-micmec.system" title="Permalink to this heading">¶</a></h2>
+<p>Representation of a micromechanical system.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.system.System">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.system.</span></span><span class="sig-name descname"><span class="pre">System</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvecs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surrounding_cells</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surrounding_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.system.System" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a micromechanical system.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>pos</strong><span class="classifier">numpy.ndarray, shape=(<code class="docutils literal notranslate"><span class="pre">nnodes</span></code>, 3)</span></dt><dd><p>The Cartesian coordinates of the micromechanical nodes.</p>
+</dd>
+<dt><strong>masses</strong><span class="classifier">numpy.ndarray, shape=(<code class="docutils literal notranslate"><span class="pre">nnodes</span></code>,)</span></dt><dd><p>The masses of the micromechanical nodes.</p>
+</dd>
+<dt><strong>rvecs</strong><span class="classifier">numpy.ndarray, shape=(<code class="docutils literal notranslate"><span class="pre">nper</span></code>, 3)</span></dt><dd><p>The domain vectors, which represent the periodicity of the simulation domain.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nper</span> <span class="pre">=</span> <span class="pre">3</span></code> corresponds to periodic boundary conditions in the <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> directions, where <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> are the domain vectors.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nper</span> <span class="pre">=</span> <span class="pre">0</span></code> corresponds to an absence of periodicity, used to simulate finite (three-dimensional) crystals.</p></li>
+</ul>
+</dd>
+<dt><strong>surrounding_cells</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nnodes</span></code>, 8)</span></dt><dd><p>The cells adjacent to each node.
+Each node has, at most, eight surrounding cells.
+In some cases, nodes have less than eight surrounding cells, due to internal surfaces (mesopores)
+or external surfaces (finite crystals).
+In that case, the specific order in which the surrounding cells are listed, is preserved, but the indices
+of the missing cells are replaced with -1.</p>
+</dd>
+<dt><strong>surrounding_nodes</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">ncells</span></code>, 8)</span></dt><dd><p>The nodes adjacent to each cell.
+Each cell has eight surrounding nodes, always.
+The order in which the surrounding nodes of a given cell are listed, is specific and must not be changed.</p>
+</dd>
+<dt><strong>boundary_nodes</strong><span class="classifier">numpy.ndarray, dtype=int, optional</span></dt><dd><p>The nodes at the boundary of the micromechanical system.
+The minimum image convention is only relevant for these boundary nodes.</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code>), optional</span></dt><dd><p>A three-dimensional grid that maps the types of cells present in the micromechanical system.
+An integer value of 0 in the grid signifies an empty cell, a vacancy.
+An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.</p>
+</dd>
+<dt><strong>types</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">ncells</span></code>,), optional</span></dt><dd><p>The cell types present in the micromechanical system.</p>
+</dd>
+<dt><strong>params</strong><span class="classifier">dict, optional</span></dt><dd><p>The coarse-grained parameters of the micromechanical system.
+A system may consist of several cell types, each with one or more metastable states.
+A single metastable state is represented by an equilibrium cell matrix, a free energy, and an elasticity tensor.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>All quantities are expressed in atomic units.
+The optional arguments of the <code class="docutils literal notranslate"><span class="pre">System</span></code> class are technically not required to initialize a system, but all of
+them are required to perform a simulation.</p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#micmec.system.System.from_file" title="micmec.system.System.from_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_file</span></code></a>(fn, **user_kwargs)</p></td>
+<td><p>Construct a micromechanical system from a CHK file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#micmec.system.System.from_hdf5" title="micmec.system.System.from_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_hdf5</span></code></a>(f)</p></td>
+<td><p>Construct a micromechanical system from an HDF5 file with a system group.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#micmec.system.System.to_file" title="micmec.system.System.to_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_file</span></code></a>(fn)</p></td>
+<td><p>Write the micromechanical system to a CHK, HDF5 or XYZ file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#micmec.system.System.to_hdf5" title="micmec.system.System.to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_hdf5</span></code></a>(f)</p></td>
+<td><p>Write the system to an HDF5 file.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 63%" />
+<col style="width: 37%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_params</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.system.System.from_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">user_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.system.System.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a micromechanical system from a CHK file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fn</strong><span class="classifier">str</span></dt><dd><p>The name of the CHK file to load.</p>
+</dd>
+<dt><strong>user_kwargs</strong><span class="classifier">dict, optional</span></dt><dd><p>Additional information to construct the micromechanical system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>micmec.system.System</dt><dd><p>The micromechanical system, constructed from the CHK file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>IOError</dt><dd><p>If the input is not a CHK file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.system.System.from_hdf5">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.system.System.from_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a micromechanical system from an HDF5 file with a system group.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file with a system group.
+The system group must at least contain a <code class="docutils literal notranslate"><span class="pre">pos</span></code> dataset.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>micmec.system.System</dt><dd><p>The micromechanical system, constructed from the HDF5 file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.system.System.to_file">
+<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.system.System.to_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the micromechanical system to a CHK, HDF5 or XYZ file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fn</strong><span class="classifier">str</span></dt><dd><p>The name of the file to write to.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>NotImplementedError</dt><dd><p>If the extension of the file does not match <code class="docutils literal notranslate"><span class="pre">.chk</span></code>, <code class="docutils literal notranslate"><span class="pre">.h5</span></code> or <code class="docutils literal notranslate"><span class="pre">.xyz</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Supported file formats are:</p>
+<ul class="simple">
+<li><p>CHK (<code class="docutils literal notranslate"><span class="pre">.chk</span></code>) : internal text-based checkpoint format.
+This format includes all information about the <code class="docutils literal notranslate"><span class="pre">System</span></code> instance.</p></li>
+<li><p>HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>) : internal binary checkpoint format.
+This format includes all information about the <code class="docutils literal notranslate"><span class="pre">System</span></code> instance.</p></li>
+<li><p>XYZ (<code class="docutils literal notranslate"><span class="pre">.xyz</span></code>) : a simple file with node positions.</p></li>
+</ul>
+<p>All data are stored in atomic units.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.system.System.to_hdf5">
+<span class="sig-name descname"><span class="pre">to_hdf5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.system.System.to_hdf5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the system to an HDF5 file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>A writable HDF5 file.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the HDF5 file already contains a system description.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-micmec.utils">
+<span id="micmec-utils-auxiliary-routines-for-system-construction"></span><h2><span class="section-number">1.3. </span><code class="docutils literal notranslate"><span class="pre">micmec.utils</span></code> – Auxiliary routines for system construction.<a class="headerlink" href="#module-micmec.utils" title="Permalink to this heading">¶</a></h2>
+<p>Auxiliary routines for system construction.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.utils.build_system">
+<span class="sig-prename descclassname"><span class="pre">micmec.utils.</span></span><span class="sig-name descname"><span class="pre">build_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.utils.build_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare a micromechanical system and store it in a dictionary.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>The micromechanical cell types, stored in a dictionary with integer keys.
+The corresponding values are dictionaries which contain information about the cell type.</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code>)</span></dt><dd><p>A three-dimensional grid that maps the types of cells present in the micromechanical system.
+An integer value of 0 in the grid signifies an empty cell, a vacancy.
+An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.</p>
+</dd>
+<dt><strong>pbc</strong><span class="classifier">list of bool, default=[True, True, True], optional</span></dt><dd><p>The domain vectors for which periodic boundary conditions should be enabled.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>output</strong><span class="classifier">dict</span></dt><dd><p>A dictionary which is ready to be stored as a CHK file, containing a complete description of the micromechanical system.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This method is also used by the Micromechanical Model Builder, specifically by the <code class="docutils literal notranslate"><span class="pre">builder_io.py</span></code> script.
+If the Builder application does not work, the user can still benefit from the automatic creation
+of a micromechanical structure by using this method manually.
+The output dictionary can be stored as a CHK file by using:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">molmod.io.chk.dump_chk(&quot;output.chk&quot;,</span> <span class="pre">output)</span></code>.</p>
+</div></blockquote>
+<p>Then, the CHK file can be used as the input of a <code class="docutils literal notranslate"><span class="pre">micmec.system.System</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="micmec.utils.build_type">
+<span class="sig-prename descclassname"><span class="pre">micmec.utils.</span></span><span class="sig-name descname"><span class="pre">build_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elasticity0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">effective_temp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.utils.build_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare a micromechanical cell type and store it in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>material</strong><span class="classifier">str</span></dt><dd><p>The name of the cell type’s material.</p>
+</dd>
+<dt><strong>mass</strong><span class="classifier">float</span></dt><dd><p>The total mass of the cell type.</p>
+</dd>
+<dt><strong>cell0</strong><span class="classifier">(list of) numpy.ndarray, shape=(3, 3)</span></dt><dd><p>The equilibrium cell matrix for each metastable state of the cell type.</p>
+</dd>
+<dt><strong>elasticity0</strong><span class="classifier">(list of) numpy.ndarray, shape=(3,3,3,3)</span></dt><dd><p>The elasticity tensor for each metastable state of the cell type.</p>
+</dd>
+<dt><strong>free_energy</strong><span class="classifier">(list of) float, optional</span></dt><dd><p>The free energy for each metastable state of the cell type.</p>
+</dd>
+<dt><strong>effective_temp</strong><span class="classifier">float, optional</span></dt><dd><p>The effective temperature for a multistable cell type.</p>
+</dd>
+<dt><strong>topology</strong><span class="classifier">str, optional</span></dt><dd><p>The topology of the cell type’s atomic structure.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>output</strong><span class="classifier">dict</span></dt><dd><p>A dictionary which is ready to be stored as a PICKLE file, containing a complete description of the micromechanical cell type.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If the number of metastable states is not consistent for the equilibrium cell matrix, elasticity tensor or free energy.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">1. <code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.</a><ul>
+<li><a class="reference internal" href="#module-micmec.log">1.1. <code class="docutils literal notranslate"><span class="pre">micmec.log</span></code> – Screen logger.</a></li>
+<li><a class="reference internal" href="#module-micmec.system">1.2. <code class="docutils literal notranslate"><span class="pre">micmec.system</span></code> – Representation of a micromechanical system.</a></li>
+<li><a class="reference internal" href="#module-micmec.utils">1.3. <code class="docutils literal notranslate"><span class="pre">micmec.utils</span></code> – Auxiliary routines for system construction.</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="performing_simulations.html"
+                          title="previous chapter"><span class="section-number">4. </span>Performing simulations</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="rg_micmec_builder.html"
+                          title="next chapter"><span class="section-number">2. </span><code class="docutils literal notranslate"><span class="pre">micmec.builder</span></code> – The Micromechanical Model Builder.</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/rg_micmec.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rg_micmec_builder.html" title="2. micmec.builder – The Micromechanical Model Builder."
+             >next</a> |</li>
+        <li class="right" >
+          <a href="performing_simulations.html" title="4. Performing simulations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MicMec 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><span class="section-number">1. </span><code class="docutils literal notranslate"><span class="pre">micmec</span></code> – MicMec, the micromechanical model.</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Joachim Vandewalle.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>
