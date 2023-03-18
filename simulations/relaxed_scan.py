@@ -20,7 +20,6 @@
 
 import numpy as np
 
-import json
 import argparse
 
 import matplotlib.pyplot as plt
@@ -60,8 +59,7 @@ def main(input_fns, fn_png, lower_limit, upper_limit):
             
             epots.append(qnopt.epot)
             volumes.append(np.linalg.det(sys.domain.rvecs)) 
-            
-        V = np.array(volumes)
+
         E = np.array(epots)
         dV = np.diff(volumes)
         dV2 = (0.5*(dV[1:] + dV[:-1]))**2
@@ -72,10 +70,12 @@ def main(input_fns, fn_png, lower_limit, upper_limit):
         if log.do_medium:
             with log.section("SCAN"):
                 log.hline()
-                s1 = "A relaxed potential energy scan has been performed by varying the volume of the simulation domain, isotropically, "
+                s1 = "A relaxed potential energy scan has been performed "\
+                     "by varying the volume of the simulation domain, isotropically, "
                 s2 = f"from {(100*lower_limit):.0f} % to {(100*upper_limit):.0f} % of its original volume. "
                 s3 = f"The result has been saved as `{fn_png}`. "
-                s4 = f"Additionally, a static bulk modulus of {(bulk_modulus/gigapascal):.2f} GPa has been calculated for this simulation domain."
+                s4 = f"Additionally, a static bulk modulus of {(bulk_modulus/gigapascal):.2f} GPa has been "\
+                     "calculated for this simulation domain."
                 log(s1+s2+s3+s4)
                 log.hline()
         
@@ -85,13 +85,6 @@ def main(input_fns, fn_png, lower_limit, upper_limit):
             plt.plot(scalings, np.array(epots)/np.array(volumes)/(kjmol/angstrom**3))
         all_scalings.append(scalings.tolist())
         all_energy_densities.append((np.array(epots)/np.array(volumes)/(kjmol/angstrom**3)).tolist())
-
-    with open("output_relaxed_scan.json", "w") as jfile:
-        jobj = {
-            "all_scalings": all_scalings,
-            "all_energy_densities": all_energy_densities,
-        }
-        json.dump(jobj, jfile, indent=4)
 
     plt.xlabel(r"$V/V_0$ [-]")
     plt.ylabel("POTENTIAL ENERGY DENSITY [kJ/mol/Å³]")

@@ -17,6 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
+"""Perform a micromechanical molecular dynamics simulation."""
 
 import numpy as np
 
@@ -27,7 +28,7 @@ from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
 from micmec.sampling.verlet import VerletIntegrator, VerletScreenLog
 
-from micmec.sampling.trajectory import HDF5Writer, XYZWriter
+from micmec.sampling.trajectory import HDF5Writer
 from micmec.sampling.nvt import NHCThermostat, LangevinThermostat
 from micmec.sampling.npt import MTKBarostat, TBCombination, LangevinBarostat
 
@@ -58,7 +59,7 @@ def main(input_fn, output_fn, timestep, steps, temp, press, file_step, log_step)
         elif (temp is not None) and (press is not None):
             # (N, P, T) ensemble.
             temp *= kelvin
-            press *= (1e6)*pascal   
+            press *= (1e6)*pascal
             # Define the thermostat-barostat combination.
             lt = LangevinThermostat(temp=temp, timecon=100*timestep)
             lb = LangevinBarostat(mmf, temp=temp, press=press, timecon=1000*timestep)

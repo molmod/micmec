@@ -14,7 +14,7 @@ from micmec.system import System
 from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
 from micmec.sampling.verlet import VerletIntegrator, VerletScreenLog
 
-from micmec.sampling.trajectory import HDF5Writer, XYZWriter
+from micmec.sampling.trajectory import HDF5Writer
 from molmod.units import *
 
 

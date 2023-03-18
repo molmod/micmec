@@ -17,6 +17,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
+"""Perform an optimization of the micromechanical nodes."""
 
 import numpy as np
 
@@ -28,9 +29,7 @@ from micmec.pes.mmff import MicMecForceField, ForcePartMechanical
 from micmec.sampling.opt import CGOptimizer, OptScreenLog, QNOptimizer
 from micmec.sampling.dof import CartesianDOF
 
-from micmec.sampling.trajectory import HDF5Writer, XYZWriter
-
-from molmod.units import kelvin, pascal, femtosecond
+from micmec.sampling.trajectory import HDF5Writer
 
 
 def main(input_fn, output_fn, file_step, log_step):
@@ -61,10 +60,12 @@ if __name__ == "__main__":
                         help="step of the screen logger")
 
     args = parser.parse_args()
-    main(args.input_fn, 
+    main(
+        args.input_fn,
         args.output_fn, 
         args.file_step,
-        args.log_step)
+        args.log_step
+    )
 
 
 

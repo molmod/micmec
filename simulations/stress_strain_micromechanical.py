@@ -121,7 +121,8 @@ def main(args):
     elasticity_tensor = voigt_inv(elasticity_matrix, mode="elasticity")
 
     # Store the output as a new, micromechanical domain type.
-    # Note that the convention for a nanodomain matrix is different than the convention for a domain matrix, hence the transpose.
+    # Note that the convention for a nanocell matrix is different than
+    # the convention for a domain matrix, hence the transpose.
     output = build_type(
         material="UiO-66(Zr)",
         mass=mass,
@@ -135,8 +136,9 @@ def main(args):
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Determine the elastic properties of an atomic system from finite deformations.")
+    parser = argparse.ArgumentParser(
+        description="Determine the elastic properties of an atomic system from finite deformations."
+    )
     parser.add_argument(
         "chk_file",
         type=str,
@@ -148,6 +150,5 @@ if __name__ == "__main__":
         help=".pickle filename of the output elastic properties"
     )
     args = parser.parse_args()
-
     main(args)
 

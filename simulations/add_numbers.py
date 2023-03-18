@@ -17,15 +17,21 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see https://www.gnu.org/licenses/.
 
+"""Small convenience script to be able to view micromechanical trajectories.
+
+It adds fake atomic numbers to the micromechanical nodes.
+"""
 
 import numpy as np
 import h5py
+import argparse
+
 
 def main(h5_fn, num):
     with h5py.File(h5_fn, mode = 'a') as f:
         atomic_number = num
         num_nodes = len(np.array(f['system/pos']))
-        f['system/numbers'] = atomic_number*np.ones((num_nodes,))
+        f['system/numbers'] = atomic_number * np.ones((num_nodes,))
 
 
 if __name__ == "__main__":

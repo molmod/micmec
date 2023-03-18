@@ -19,7 +19,6 @@
 
 import numpy as np
 
-import json
 import argparse
 
 import matplotlib.pyplot as plt
@@ -112,23 +111,6 @@ def main(input_fn, fn_png, node_idx, num):
     ax2.set_xlabel("$x - x_0$ [Å]")
     ax2.set_ylabel("$y - y_0$ [Å]")
     ax2.set_zlabel("POTENTIAL ENERGY [kJ/mol]")
-
-    with open("output_energy.json", "w") as jfile:
-        jobj = {
-            "X_ana": (X_ana[:, :, mid]/angstrom).tolist(),
-            "Y_ana": (Y_ana[:, :, mid]/angstrom).tolist(),
-            "ENERGY_POT": (ENERGY_POT[:, :, mid]/kjmol).tolist(),
-        }
-        json.dump(jobj, jfile)
-
-    with open("output_forces.json", "w") as jfile:
-        jobj = {
-            "X_ana": (X_ana[:, mid, mid]/angstrom).tolist(),
-            "X_num": (X_num[:, mid, mid]/angstrom).tolist(),
-            "FX_ana": (FX_ana[:, mid, mid]*angstrom/kjmol).tolist(),
-            "FX_num": (FX_num[:, mid, mid]*angstrom/kjmol).tolist(),
-        }
-        json.dump(jobj, jfile)
 
     plt.savefig(fn_png)
     plt.show()
