@@ -141,7 +141,7 @@ Please be aware that the simulation domain in this method can refer to:</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
-The units for making the plot are taken from the screen logger. 
+The units for making the plot are taken from the screen logger.
 This type of plot is essential for checking the sanity of a simulation.</p>
 </dd></dl>
 
@@ -161,7 +161,7 @@ This type of plot is essential for checking the sanity of a simulation.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
-The units for making the plot are taken from the screen logger. 
+The units for making the plot are taken from the screen logger.
 This type of plot is essential for checking the sanity of a simulation.</p>
 </dd></dl>
 
@@ -210,7 +210,7 @@ By default, information from all nodes is combined.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
-The units for making the plot are taken from the screen logger. 
+The units for making the plot are taken from the screen logger.
 This type of plot is essential for checking the sanity of a simulation.</p>
 </dd></dl>
 
@@ -255,7 +255,7 @@ By default, information from all nodes is combined.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>The optional arguments of the <code class="docutils literal notranslate"><span class="pre">get_slice</span></code> function are also accepted in the form of keyword arguments.
-The units for making the plot are taken from the screen logger. 
+The units for making the plot are taken from the screen logger.
 This type of plot is essential for checking the sanity of a simulation.</p>
 </dd></dl>
 
@@ -403,14 +403,14 @@ hence the (optional) keyword <code class="docutils literal notranslate"><span cl
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>f</strong><span class="classifier">h5py.File object (open)</span></dt><dd><p>A .h5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available. 
-If it contains a trajectory group, this group will be used to determine the number of time steps in 
+<dt><strong>f</strong><span class="classifier">h5py.File object (open)</span></dt><dd><p>A .h5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available.
+If it contains a trajectory group, this group will be used to determine the number of time steps in
 the trajectory.</p>
 </dd>
-<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis. 
+<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis.
 This may be negative to indicate that the analysis should start from the <code class="docutils literal notranslate"><span class="pre">-start</span></code> last samples.</p>
 </dd>
-<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis. 
+<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis.
 This may be negative to indicate that the last <code class="docutils literal notranslate"><span class="pre">-end</span></code> samples should not be considered.</p>
 </dd>
 <dt><strong>max_sample</strong><span class="classifier">int, optional</span></dt><dd><p>When given, <code class="docutils literal notranslate"><span class="pre">step</span></code> is set such that the number of samples does not exceed <code class="docutils literal notranslate"><span class="pre">max_sample</span></code>.</p>
@@ -427,9 +427,9 @@ This may be negative to indicate that the last <code class="docutils literal not
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The optional arguments can be given to all of the analysis routines. 
-Just make sure you never specify <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> at the same time. 
-The <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> argument assures that the step is set such that the number of samples does not exceed <code class="docutils literal notranslate"><span class="pre">max_sample</span></code>. 
+<p>The optional arguments can be given to all of the analysis routines.
+Just make sure you never specify <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> at the same time.
+The <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> argument assures that the step is set such that the number of samples does not exceed <code class="docutils literal notranslate"><span class="pre">max_sample</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> option only works when <code class="docutils literal notranslate"><span class="pre">f</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, or when <code class="docutils literal notranslate"><span class="pre">end</span></code> is positive.
 If <code class="docutils literal notranslate"><span class="pre">f</span></code> is present or <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> are positive, and <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> and <code class="docutils literal notranslate"><span class="pre">step</span></code> or not given, <code class="docutils literal notranslate"><span class="pre">max_sample</span></code> defaults to 1000.</p>
 </dd></dl>
@@ -443,10 +443,10 @@ If <code class="docutils literal notranslate"><span class="pre">f</span></code> 
 <dd class="field-odd"><dl class="simple">
 <dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file, may be <code class="docutils literal notranslate"><span class="pre">None</span></code> if it is not available.</p>
 </dd>
-<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis. 
+<dt><strong>start</strong><span class="classifier">int, optional</span></dt><dd><p>The first sample to be considered for analysis.
 This may be negative to indicate that the analysis should start from the <code class="docutils literal notranslate"><span class="pre">-start</span></code> last samples.</p>
 </dd>
-<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis. 
+<dt><strong>end</strong><span class="classifier">int, optional</span></dt><dd><p>The last sample to be considered for analysis.
 This may be negative to indicate that the last <code class="docutils literal notranslate"><span class="pre">-end</span></code> samples should not be considered.</p>
 </dd>
 <dt><strong>step</strong><span class="classifier">int, optional</span></dt><dd><p>The spacing between the samples used for the analysis.</p>

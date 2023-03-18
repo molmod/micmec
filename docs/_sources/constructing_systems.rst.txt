@@ -1,10 +1,7 @@
 Constructing micromechanical systems
 ####################################
 
-In Yaff, atomic structures are written to CHK files. These files are human-readable and are therefore ideal for quick reference and editing. In MicMec, we have attempted to replicate this experience. The following two directories contain examples of micromechanical structures, stored as CHK files:
-
--   ``data/test/struct/``,
--   ``data/uio66/struct/``.
+In Yaff, atomic structures are written to CHK files. These files are human-readable and are therefore ideal for quick reference and editing. In MicMec, we have attempted to replicate this experience. The ``data`` directory contain examples of micromechanical structures, stored as CHK files.
 
 The CHK files can be opened in a text editor to view their contents. Immediately, you should notice an important distinction between CHK files in Yaff and MicMec. Yaff stores atomic structures and force field parameters in separate files, while MicMec incorporates the micromechanical force field parameters (i.e. the cell types) into its micromechanical structure files. The advantage of Yaff is obvious: an atomic structure should not be tied to an atomistic force field, however accurate it may be. However, we should also note that the micromechanical force field parameters in MicMec's CHK files are included in separate groups, labeled according to cell type (``"type1/cell"``, ``"type1/elasticity"``...). Thus, the advantage of Yaff is redundant, because we can edit the micromechanical force field parameters separately from the structure parameters.
 

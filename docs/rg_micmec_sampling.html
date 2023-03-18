@@ -49,13 +49,107 @@
 <section id="module-micmec.sampling.dof">
 <span id="micmec-sampling-dof-abstraction-layer-for-degrees-of-freedom"></span><h2><span class="section-number">4.1. </span><code class="docutils literal notranslate"><span class="pre">micmec.sampling.dof</span></code> – Abstraction layer for degrees of freedom.<a class="headerlink" href="#module-micmec.sampling.dof" title="Permalink to this heading">¶</a></h2>
 <p>Abstraction layer for degrees of freedom.</p>
-<p>All these classes are called DOF classes, because they specify a set of degrees of freedom. 
+<p>All these classes are called DOF classes, because they specify a set of degrees of freedom.
 These DOF classes are used for geometry/domain optimization and harmonic approximations.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.dof.BaseCellDOF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.dof.</span></span><span class="sig-name descname"><span class="pre">BaseCellDOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_frozen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freemask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.BaseCellDOF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fractional coordinates and cell parameters.</p>
+<p>Each subclass of BaseCellDOF considers a specific representation and subset of the cell parameters.
+The following variable names are consistently used (also in subclasses).</p>
+<dl class="simple">
+<dt>cellvars</dt><dd><p>An array with all variables for the cell (specific for BaseCellDOF
+subclass).</p>
+</dd>
+<dt>ncellvar</dt><dd><p>The number of cellvars (at most 9).</p>
+</dd>
+<dt>celldofs</dt><dd><p>A selection of the elements in cellvars, based on freemask.</p>
+</dd>
+<dt>ncelldof</dt><dd><p>The number of celldofs (less than or equal to ncellvar).</p>
+</dd>
+<dt>frac</dt><dd><p>Fractional coordinates.</p>
+</dd>
+<dt>x</dt><dd><p>All degrees of freedom, i.e. celldofs and frac (in that order, frac is optional).</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><a class="reference internal" href="#micmec.sampling.dof.BaseCellDOF.ncelldof" title="micmec.sampling.dof.BaseCellDOF.ncelldof"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncelldof</span></code></a></dt><dd><p>The number of celldofs (free cellvars)</p>
+</dd>
+<dt><a class="reference internal" href="#micmec.sampling.dof.BaseCellDOF.ncellvar" title="micmec.sampling.dof.BaseCellDOF.ncellvar"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncellvar</span></code></a></dt><dd><p>The number of cellvars</p>
+</dd>
+<dt><strong>ndof</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_delta</span></code>([x, eps, zero])</p></td>
+<td><p>Test the analytical derivatives.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#micmec.sampling.dof.BaseCellDOF.fun" title="micmec.sampling.dof.BaseCellDOF.fun"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fun</span></code></a>(x[, do_gradient])</p></td>
+<td><p>Computes the energy and optionally the gradient.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>check_convergence</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>log</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>reset</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="micmec.sampling.dof.BaseCellDOF.fun">
+<span class="sig-name descname"><span class="pre">fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.BaseCellDOF.fun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the energy and optionally the gradient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong></dt><dd><p>All degrees of freedom.</p>
+</dd>
+<dt><strong>do_gradient</strong></dt><dd><p>When True, the gradient is also returned.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="micmec.sampling.dof.BaseCellDOF.ncelldof">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ncelldof</span></span><a class="headerlink" href="#micmec.sampling.dof.BaseCellDOF.ncelldof" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of celldofs (free cellvars)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="micmec.sampling.dof.BaseCellDOF.ncellvar">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ncellvar</span></span><a class="headerlink" href="#micmec.sampling.dof.BaseCellDOF.ncellvar" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of cellvars</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="micmec.sampling.dof.CartesianDOF">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.dof.</span></span><span class="sig-name descname"><span class="pre">CartesianDOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.CartesianDOF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cartesian degrees of freedom.</p>
-<p>This DOF is also applicable to periodic systems. 
+<p>This DOF is also applicable to periodic systems.
 Domain parameters are not modified when this DOF is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -112,6 +206,120 @@ Domain parameters are not modified when this DOF is used.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.dof.FullCellDOF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.dof.</span></span><span class="sig-name descname"><span class="pre">FullCellDOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_frozen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freemask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.FullCellDOF" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOF that includes all 9 components of the cell vectors.</p>
+<p>The degrees of freedom are rescaled cell vectors ordered in one row:
+3D periodic: [a_x/s, a_y/s, a_z/s, b_x/s, b_y/s, b_z/s, c_x/s, c_y/s, c_z/s]</p>
+<blockquote>
+<div><p>where s is the cube root of the initial cell volume such that the cell DOFs become dimensionless.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>2D periodic: [a_x/s, a_y/s, a_z/s, b_x/s, b_y/s, b_z/s]</dt><dd><p>where s is the square root of the initial cell surface such that the cell DOFs become dimensionless.</p>
+</dd>
+<dt>1D periodic: [a_x/s, a_y/s, a_z/s]</dt><dd><p>where s is the length of the initial cell vector such that the cell DOFs become dimensionless.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncelldof</span></code></dt><dd><p>The number of celldofs (free cellvars)</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncellvar</span></code></dt><dd><p>The number of cellvars</p>
+</dd>
+<dt><strong>ndof</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_delta</span></code>([x, eps, zero])</p></td>
+<td><p>Test the analytical derivatives.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fun</span></code>(x[, do_gradient])</p></td>
+<td><p>Computes the energy and optionally the gradient.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>check_convergence</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>log</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>reset</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="micmec.sampling.dof.StrainCellDOF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.dof.</span></span><span class="sig-name descname"><span class="pre">StrainCellDOF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpos_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drvecs_rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_frozen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freemask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.dof.StrainCellDOF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eliminates rotations of the unit cell. thus six cell parameters are free.</p>
+<p>The degrees of freedom are coefficients in symmetrix matrix
+transformation, A, that is applied to  the initial cell vectors.</p>
+<p>3D periodic: [A_00, A_11, A_22, 2*A_12, 2*A_20, 2*A_01]
+2D periodic: [A_00, A_11, 2*A_01]
+1D periodic: [A_00]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncelldof</span></code></dt><dd><p>The number of celldofs (free cellvars)</p>
+</dd>
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">ncellvar</span></code></dt><dd><p>The number of cellvars</p>
+</dd>
+<dt><strong>ndof</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_delta</span></code>([x, eps, zero])</p></td>
+<td><p>Test the analytical derivatives.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fun</span></code>(x[, do_gradient])</p></td>
+<td><p>Computes the energy and optionally the gradient.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 68%" />
+<col style="width: 32%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>check_convergence</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>log</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>reset</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </section>
@@ -839,7 +1047,7 @@ TYPE: numpy.ndarray
 DTYPE: float
 The inertia tensor.</p>
 </dd>
-<dt><strong>epsilon</strong><span class="classifier">float</span></dt><dd><p>A threshold for the low eigenvalues of the inertia tensor. 
+<dt><strong>epsilon</strong><span class="classifier">float</span></dt><dd><p>A threshold for the low eigenvalues of the inertia tensor.
 When an eigenvalue is below this threshold, it is assumed to be zero plus some (irrelevant) numerical noise.</p>
 </dd>
 </dl>
@@ -856,7 +1064,7 @@ The angular velocity vector.</p>
 </dl>
 <p class="rubric">Notes</p>
 <p>In principle, this routine should merely return: <cite>np.linalg.solve(itens, amom)</cite>.
-However, when the inertia tensor has zero eigenvalues, this routine will use a proper pseudo-inverse of 
+However, when the inertia tensor has zero eigenvalues, this routine will use a proper pseudo-inverse of
 the inertia tensor.</p>
 </dd></dl>
 
@@ -870,13 +1078,13 @@ the inertia tensor.</p>
 <dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal positions (Cartesian coordinates). 
+The nodal positions (Cartesian coordinates).
 This array is modified in-place.</p>
 </dd>
 <dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal velocities. 
+The nodal velocities.
 This array is modified in-place.</p>
 </dd>
 <dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
@@ -884,7 +1092,7 @@ TYPE: numpy.ndarray
 DTYPE: float
 The nodal masses.</p>
 </dd>
-<dt><strong>domain</strong><span class="classifier">yaff.pes.ext.Cell object</span></dt><dd><p>An instance of the simulation domain describing the periodic boundary conditions.</p>
+<dt><strong>domain</strong><span class="classifier">micmec.pes.ext.Domain object</span></dt><dd><p>An instance of the simulation domain describing the periodic boundary conditions.</p>
 </dd>
 </dl>
 </dd>
@@ -894,7 +1102,7 @@ The nodal masses.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="micmec.sampling.utils.domain_lower">
 <span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">domain_lower</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rvecs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.domain_lower" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transform the simulation domain matrix to its lower diagonal form. 
+<dd><p>Transform the simulation domain matrix to its lower diagonal form.
 The transformation is described here:</p>
 <blockquote>
 <div><p><a class="reference external" href="https://lammps.sandia.gov/doc/Howto_triclinic.html">https://lammps.sandia.gov/doc/Howto_triclinic.html</a>,</p>
@@ -942,7 +1150,7 @@ The rotation matrix to go from <cite>rvecs</cite> to <cite>new_rvecs</cite>.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>mmf</strong><span class="classifier">micmec.pes.mmff.MicMecForceField object</span></dt><dd><p>A micromechanical force field.</p>
 </dd>
-<dt><strong>vector_lst</strong><span class="classifier">list of numpy.ndarray</span></dt><dd><p>A list of vectors which should be transformed under the symmetrization. 
+<dt><strong>vector_lst</strong><span class="classifier">list of numpy.ndarray</span></dt><dd><p>A list of vectors which should be transformed under the symmetrization.
 Note that the positions are already transformed automatically.</p>
 </dd>
 <dt><strong>tensor_lst</strong><span class="classifier">list of numpy.ndarray</span></dt><dd><p>A list of tensors which should be transformed under the symmetrization.</p>
@@ -1002,7 +1210,7 @@ TYPE: numpy.ndarray
 DTYPE: float
 The nodal masses.</p>
 </dd>
-<dt><strong>select</strong><span class="classifier">list of int</span></dt><dd><p>When given, this must be an array of integer indexes. 
+<dt><strong>select</strong><span class="classifier">list of int</span></dt><dd><p>When given, this must be an array of integer indexes.
 Only for these nodes (masses) initial velocities will be generated.</p>
 </dd>
 </dl>
@@ -1045,7 +1253,7 @@ The random nodal velocities.</p>
 <dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal positions (Cartesian coordinates). 
+The nodal positions (Cartesian coordinates).
 This array is modified in-place.</p>
 </dd>
 <dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
@@ -1077,13 +1285,13 @@ The inertia tensor.</p>
 <dt><strong>pos</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal positions (Cartesian coordinates). 
+The nodal positions (Cartesian coordinates).
 This array is modified in-place.</p>
 </dd>
 <dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal velocities. 
+The nodal velocities.
 This array is modified in-place.</p>
 </dd>
 <dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
@@ -1095,9 +1303,9 @@ The nodal masses.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The zero angular momentum is achieved by subtracting angular rigid body motion from the nodal velocities. 
-The angular momentum is measured with respect to the center of mass to avoid that this routine reintroduces a 
-linear center-of-mass velocity. 
+<p>The zero angular momentum is achieved by subtracting angular rigid body motion from the nodal velocities.
+The angular momentum is measured with respect to the center of mass to avoid that this routine reintroduces a
+linear center-of-mass velocity.
 This is also beneficial for the numerical stability.</p>
 </dd></dl>
 
@@ -1111,7 +1319,7 @@ This is also beneficial for the numerical stability.</p>
 <dt><strong>vel</strong></dt><dd><p>SHAPE: (nnodes,3)
 TYPE: numpy.ndarray
 DTYPE: float
-The nodal velocities. 
+The nodal velocities.
 This array is modified in-place.</p>
 </dd>
 <dt><strong>masses</strong></dt><dd><p>SHAPE: (nnodes,)
@@ -1123,7 +1331,7 @@ The nodal masses.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The zero linear center-of-mass momentum is achieved by subtracting translational rigid body motion from 
+<p>The zero linear center-of-mass momentum is achieved by subtracting translational rigid body motion from
 the nodal velocities.</p>
 </dd></dl>
 
@@ -1170,8 +1378,8 @@ Assume <cite>mat</cite> is square and symmetric (but not necessarily positive de
 <dt class="sig sig-object py" id="micmec.sampling.utils.transform_lower_triangular">
 <span class="sig-prename descclassname"><span class="pre">micmec.sampling.utils.</span></span><span class="sig-name descname"><span class="pre">transform_lower_triangular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rvecs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.sampling.utils.transform_lower_triangular" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transform coordinate axes such that the cell matrix is lower diagonal.</p>
-<p>The transformation is derived from the QR decomposition and performed in-place. 
-Because the lower triangular form puts restrictions on the size of off-diagonal elements, lattice vectors are by 
+<p>The transformation is derived from the QR decomposition and performed in-place.
+Because the lower triangular form puts restrictions on the size of off-diagonal elements, lattice vectors are by
 default reordered from largest to smallest; this feature can be disabled using the reorder keyword.
 The domain vector lengths and angles remain exactly the same.</p>
 <dl class="field-list simple">
@@ -1203,7 +1411,7 @@ The domain vectors appear as rows in this matrix.</p>
 <dt class="sig sig-object py" id="micmec.sampling.verlet.ConsErrTracker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">micmec.sampling.verlet.</span></span><span class="sig-name descname"><span class="pre">ConsErrTracker</span></span><a class="headerlink" href="#micmec.sampling.verlet.ConsErrTracker" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class that tracks the errors on the conserved quantity.</p>
-<p>Given its superior numerical accuracy, the algorithm below is used to calculate the running average. 
+<p>Given its superior numerical accuracy, the algorithm below is used to calculate the running average.
 Its properties are discussed in Donald Knuth”s Art of Computer Programming, vol. 2, p. 232, 3rd edition.</p>
 <p class="rubric">Methods</p>
 <table class="docutils align-default">

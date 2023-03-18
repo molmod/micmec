@@ -9,8 +9,8 @@
 
 
 
-``micmec.log`` -- Screen logger. 
-=================================
+``micmec.log`` -- Screen logger.
+================================
 
 .. automodule:: micmec.log
     :members:

@@ -53,7 +53,6 @@ It has been confirmed to work with the following combination of packages:</p>
 <ul class="simple">
 <li><p>python      3.8.10</p></li>
 <li><p>numpy       1.22.4</p></li>
-<li><p>yaff        1.4.2</p></li>
 <li><p>molmod      1.4.8</p></li>
 <li><p>scipy       1.8.1</p></li>
 <li><p>cython      0.29.30</p></li>
@@ -66,43 +65,26 @@ It has been confirmed to work with the following combination of packages:</p>
 </ul>
 <p>Sphinx is used for documentation, while JAX (with CUDA[CPU]) is used for automatic differentiation and just-in-time compilation.
 Sphinx and JAX are entirely optional and do not affect the core routines of MicMec. SetupTools is also optional.</p>
-<p>Yaff is an important dependency, even though it only supplies one module to MicMec: <code class="docutils literal notranslate"><span class="pre">yaff.pes.ext.Cell</span></code>. That is, however, a crucial module.
-For now, we have not been able to decouple <code class="docutils literal notranslate"><span class="pre">yaff.pes.ext.Cell</span></code> from Yaff.</p>
 </section>
-<section id="pip-installation">
-<h2><span class="section-number">1.2. </span><code class="docutils literal notranslate"><span class="pre">pip</span></code> installation<a class="headerlink" href="#pip-installation" title="Permalink to this heading">¶</a></h2>
-<p>MicMec is part of the Python Package Index. Therefore, you can simply install it with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install micmec
-</pre></div>
-</div>
-<p>Test that it has been correctly installed.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">micmec</span>
-</pre></div>
-</div>
-<p>Example data, simulation scripts and documentation can be found <a class="reference external" href="https://github.com/Jlvdwall/micmec">here</a>.</p>
-</section>
-<section id="manual-installation">
-<h2><span class="section-number">1.3. </span>Manual installation<a class="headerlink" href="#manual-installation" title="Permalink to this heading">¶</a></h2>
-<p>MicMec can be installed manually by cloning the entire GitHub repository into a pre-existing directory on your Python path, for instance, <code class="docutils literal notranslate"><span class="pre">micmec_repo</span></code>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/Jlvdwall/micmec.git micmec_repo
+<section id="id1">
+<h2><span class="section-number">1.2. </span>Installation<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<p>MicMec can be installed manually by cloning the entire GitHub repository into a pre-existing directory on your Python path, for instance, <code class="docutils literal notranslate"><span class="pre">micmec</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/Jlvdwall/micmec.git micmec
 python
 </pre></div>
 </div>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">repo</span> <span class="o">=</span> <span class="s2">&quot;micmec_repo&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">repo</span> <span class="o">=</span> <span class="s2">&quot;micmec&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">any</span><span class="p">((</span><span class="n">repo</span> <span class="o">==</span> <span class="n">directory</span><span class="p">[</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">repo</span><span class="p">):])</span> <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The Python code checks whether the repository directory (<code class="docutils literal notranslate"><span class="pre">micmec_repo</span></code> in this case) is on your Python path. If it is not, you must add it to the path by editing your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> or <code class="docutils literal notranslate"><span class="pre">.profile</span></code> script. With that, you can use MicMec to its fullest extent. As a bonus, you can install MicMec locally, by performing the following commands.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> micmec_repo
-python setup.py sdist
+<p>The Python code checks whether the repository directory (<code class="docutils literal notranslate"><span class="pre">micmec</span></code> in this case) is on your Python path. If it is not, you must add it to the path by editing your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> or <code class="docutils literal notranslate"><span class="pre">.profile</span></code> script. With that, you can use MicMec to its fullest extent. As a bonus, you can install MicMec locally, by performing the following commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> micmec
+pip install .
 pip list
 </pre></div>
 </div>
-<p>That will create a source distribution and add MicMec to the list of installed packages.</p>
+<p>That will add MicMec to the list of installed packages.</p>
 </section>
 </section>
 
@@ -118,8 +100,7 @@ pip list
     <ul>
 <li><a class="reference internal" href="#">1. Installation</a><ul>
 <li><a class="reference internal" href="#dependencies">1.1. Dependencies</a></li>
-<li><a class="reference internal" href="#pip-installation">1.2. <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation</a></li>
-<li><a class="reference internal" href="#manual-installation">1.3. Manual installation</a></li>
+<li><a class="reference internal" href="#id1">1.2. Installation</a></li>
 </ul>
 </li>
 </ul>

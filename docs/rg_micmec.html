@@ -90,9 +90,9 @@ The minimum image convention is only relevant for these boundary nodes.</p>
 An integer value of 0 in the grid signifies an empty cell, a vacancy.
 An integer value of 1 signifies a cell of type 1, a value of 2 signifies a cell of type 2, etc.</p>
 </dd>
-<dt><strong>types</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">ncells</span></code>, 3), optional</span></dt><dd><p>The cell types present in the micromechanical system.</p>
+<dt><strong>types</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">ncells</span></code>,), optional</span></dt><dd><p>The cell types present in the micromechanical system.</p>
 </dd>
-<dt><strong>params</strong><span class="classifier">dict, optional</span></dt><dd><p>The coarse-grained parameters of the micromechanical system. 
+<dt><strong>params</strong><span class="classifier">dict, optional</span></dt><dd><p>The coarse-grained parameters of the micromechanical system.
 A system may consist of several cell types, each with one or more metastable states.
 A single metastable state is represented by an equilibrium cell matrix, a free energy, and an elasticity tensor.</p>
 </dd>
@@ -121,6 +121,17 @@ them are required to perform a simulation.</p>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#micmec.system.System.to_hdf5" title="micmec.system.System.to_hdf5"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_hdf5</span></code></a>(f)</p></td>
 <td><p>Write the system to an HDF5 file.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 63%" />
+<col style="width: 37%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>update_params</strong></p></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -159,7 +170,7 @@ them are required to perform a simulation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file with a system group. 
+<dt><strong>f</strong><span class="classifier">h5py.File</span></dt><dd><p>An HDF5 file with a system group.
 The system group must at least contain a <code class="docutils literal notranslate"><span class="pre">pos</span></code> dataset.</p>
 </dd>
 </dl>
@@ -196,7 +207,7 @@ The system group must at least contain a <code class="docutils literal notransla
 <ul class="simple">
 <li><p>CHK (<code class="docutils literal notranslate"><span class="pre">.chk</span></code>) : internal text-based checkpoint format.
 This format includes all information about the <code class="docutils literal notranslate"><span class="pre">System</span></code> instance.</p></li>
-<li><p>HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>) : internal binary checkpoint format. 
+<li><p>HDF5 (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>) : internal binary checkpoint format.
 This format includes all information about the <code class="docutils literal notranslate"><span class="pre">System</span></code> instance.</p></li>
 <li><p>XYZ (<code class="docutils literal notranslate"><span class="pre">.xyz</span></code>) : a simple file with node positions.</p></li>
 </ul>
@@ -231,12 +242,12 @@ This format includes all information about the <code class="docutils literal not
 <p>Auxiliary routines for system construction.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="micmec.utils.build_system">
-<span class="sig-prename descclassname"><span class="pre">micmec.utils.</span></span><span class="sig-name descname"><span class="pre">build_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[True,</span> <span class="pre">True,</span> <span class="pre">True]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.utils.build_system" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">micmec.utils.</span></span><span class="sig-name descname"><span class="pre">build_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#micmec.utils.build_system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepare a micromechanical system and store it in a dictionary.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>The micromechanical cell types, stored in a dictionary with integer keys. 
+<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>The micromechanical cell types, stored in a dictionary with integer keys.
 The corresponding values are dictionaries which contain information about the cell type.</p>
 </dd>
 <dt><strong>grid</strong><span class="classifier">numpy.ndarray, dtype=int, shape=(<code class="docutils literal notranslate"><span class="pre">nx</span></code>, <code class="docutils literal notranslate"><span class="pre">ny</span></code>, <code class="docutils literal notranslate"><span class="pre">nz</span></code>)</span></dt><dd><p>A three-dimensional grid that maps the types of cells present in the micromechanical system.

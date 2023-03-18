@@ -67,16 +67,7 @@
 </section>
 <section id="pickle-files">
 <h2><span class="section-number">2.2. </span>PICKLE files<a class="headerlink" href="#pickle-files" title="Permalink to this heading">¶</a></h2>
-<p>In MicMec, the properties of a cell are stored in a PICKLE file by default. In the <code class="docutils literal notranslate"><span class="pre">data</span></code> directory, four examples of PICKLE files are shown, including the scripts that were used to generate them.</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data/test/types/generate_test_types.py</span></code>
--   <code class="docutils literal notranslate"><span class="pre">type_test.pickle</span></code>
--   <code class="docutils literal notranslate"><span class="pre">type_shrunk.pickle</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/uio66/types/generate_fcu_type.py</span></code>
--   <code class="docutils literal notranslate"><span class="pre">type_fcu.pickle</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">data/uio66/types/generate_reo_type.py</span></code>
--   <code class="docutils literal notranslate"><span class="pre">type_reo.pickle</span></code></p></li>
-</ul>
+<p>In MicMec, the properties of a cell are stored in a PICKLE file by default. In the <code class="docutils literal notranslate"><span class="pre">data</span></code> directory, several examples of PICKLE files are shown.</p>
 <p>Please note that the <strong>fcu</strong> and <strong>reo</strong> type files cannot be generated without appropriate atomistic trajectory files. These atomistic trajectory files are multiple gigabytes in size and are therefore not included in MicMec.</p>
 <p>PICKLE files are not human-readable, but they can be opened and read with Python easily, as follows.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pickle</span>
@@ -87,6 +78,8 @@
 </pre></div>
 </div>
 <p>Some nanocell types are multistable and therefore have multiple sets of elastic properties. The <code class="docutils literal notranslate"><span class="pre">cell</span></code>, <code class="docutils literal notranslate"><span class="pre">elasticity</span></code> and <code class="docutils literal notranslate"><span class="pre">free_energy</span></code> groups of such a PICKLE file are always defined as lists to account for that fact.</p>
+<p>To construct a custom cell type, the function <code class="docutils literal notranslate"><span class="pre">micmec.utils.build_type</span></code> is available.
+That function will create a dictionary that can be saved as a PICKLE file.</p>
 </section>
 </section>
 

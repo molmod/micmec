@@ -42,12 +42,12 @@
             
   <section id="micmec-1-0">
 <h1>MicMec 1.0<a class="headerlink" href="#micmec-1-0" title="Permalink to this heading">¶</a></h1>
-<p>The micromechanical model is a coarse-grained force field model to simulate the mechanical behaviour of crystalline materials on a large length scale. MicMec is the first implementation of the micromechanical model, ever. The theoretical groundwork of the model was originally established in:</p>
+<p>The micromechanical model is a coarse-grained force field model to simulate the mechanical behaviour of crystalline materials on a large length scale. MicMec is the first implementation of that model. The theoretical groundwork was originally established in:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>S. M. J. Rogge, “The micromechanical model to computationally investigate cooperative and
 correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225, pp. 271–285, 2020.
 </pre></div>
 </div>
-<p>The micromechanical model has been the main topic of my master’s thesis at the <a class="reference external" href="http://molmod.ugent.be/">Center for Molecular Modeling</a> (CMM). MicMec is, essentially, a simulation package for micromechanical systems. Its architecture is intentionally similar to <a class="reference external" href="https://github.com/molmod/yaff">Yaff</a>, a simulation package for atomistic systems, also developed at the CMM. In the process of building MicMec, the original micromechanical model was modified slightly, to ensure user friendliness, accuracy and flexibility. All major changes with respect to the original model are listed in the text of my <a class="reference external" href="https://github.com/Jlvdwall/micmec/blob/main/docs/thesis/">master’s thesis</a>. More recent changes and quality-of-life improvements are listed in the user guide and reference guide.</p>
+<p>MicMec is, essentially, a simulation package for coarse-grained, micromechanical systems. Its design is intentionally similar to <a class="reference external" href="https://github.com/molmod/yaff">Yaff</a>, a simulation package for atomistic systems. In the process of building MicMec, the original micromechanical model was modified slightly, to ensure user friendliness, accuracy and flexibility. Recent changes and quality-of-life improvements are listed in the user guide and reference guide.</p>
 <section id="user-guide">
 <h2>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this heading">¶</a></h2>
 <p>This guide serves as an introduction to MicMec.</p>
@@ -55,8 +55,7 @@ correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225,
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">1.1. Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#pip-installation">1.2. <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#manual-installation">1.3. Manual installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id1">1.2. Installation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="creating_types.html">2. Creating micromechanical cell types</a><ul>
@@ -89,11 +88,12 @@ correlated phenomena in metal-organic frameworks,” Faraday Discuss., vol. 225,
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rg_micmec_pes.html">3. <code class="docutils literal notranslate"><span class="pre">micmec.pes</span></code> – Micromechanical potential energy surfaces (PESs).</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.mmff">3.1. <code class="docutils literal notranslate"><span class="pre">micmec.pes.mmff</span></code> – MicMecForceField, the micromechanical force field.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell">3.2. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell</span></code> – Micromechanical description of a single nanocell state.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell_jax">3.3. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell_jax</span></code> – Micromechanical description of a single nanocell state (JAX).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.ext">3.1. <code class="docutils literal notranslate"><span class="pre">micmec.pes.ext</span></code> – C routines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.mmff">3.2. <code class="docutils literal notranslate"><span class="pre">micmec.pes.mmff</span></code> – MicMecForceField, the micromechanical force field.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell">3.3. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell</span></code> – Micromechanical description of a single nanocell state.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell_original">3.4. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell_original</span></code> – Micromechanical description of a single nanocell state (original).</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell_thesis">3.5. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell_thesis</span></code> – Micromechanical description of a single nanocell state (thesis).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rg_micmec_pes.html#module-micmec.pes.nanocell_utils">3.6. <code class="docutils literal notranslate"><span class="pre">micmec.pes.nanocell_utils</span></code> – Fixed parameters for the evaluation of a nanocell’s potential energy surface. DO NOT CHANGE.</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="rg_micmec_sampling.html">4. <code class="docutils literal notranslate"><span class="pre">micmec.sampling</span></code> – Phase-space sampling.</a><ul>
