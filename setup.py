@@ -1,6 +1,15 @@
 import numpy as np
-from setuptools import setup, extension
-from Cython.Build import build_ext
+from setuptools import setup
+from setuptools.extension import Extension
+from Cython.Build import build_ext, cythonize
+
+
+external = Extension(
+    "micmec.pes.ext",
+    sources=["micmec/pes/ext.pyx", "micmec/pes/domain.c"],
+    depends=["micmec/pes/domain.h", "micmec/pes/domain.pxd"],
+    include_dirs=[np.get_include()]
+)
 
 setup(
     name="micmec",
@@ -9,6 +18,7 @@ setup(
     author="Joachim Vandewalle",
     author_email="joachim.vandewalle@hotmail.be",
     url="https://github.com/Jlvdwall/micmec",
+    package_dir={"micmec": "micmec"},
     packages=["micmec", "micmec/pes", "micmec/sampling", "micmec/analysis"],
     cmdclass={"build_ext": build_ext},
     include_package_data=True,
@@ -24,14 +34,7 @@ setup(
         "h5py>=2.0.0",
         "molmod>=1.4.1"
     ],
-    ext_modules=[
-        extension.Extension(
-            "micmec.pes.ext",
-            sources=["micmec/pes/ext.pyx", "micmec/pes/domain.c"],
-            depends=["micmec/pes/domain.h", "micmec/pes/domain.pxd"],
-            include_dirs=[np.get_include()]
-        )
-    ],
+    ext_modules=[external],
     classifiers=[
         "Environment :: Console",
         "Operating System :: POSIX :: Linux",

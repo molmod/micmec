@@ -15,9 +15,21 @@ The rest of the MicMec API is explained in detail [here](https://jlvdwall.github
 
 ## Installation
 
+Clone this repository to an empty target directory of your liking and use `pip` to install it.
+
 ```bash
-git clone https://github.com/Jlvdwall/micmec.git
-cd micmec
+git clone https://github.com/Jlvdwall/micmec.git <target>
+cd <target>
 pip install .
 ```
 
+Currently, there are no unit tests for MicMec.
+However, it is possible to verify the installation by running a simulation.
+
+```bash
+cd simulations
+python md.py ../data/3x3x3_test_micmec.chk test.h5
+```
+
+(Please note that running the simulation from the root directory of this repository is not possible, as Python will attempt to find the `micmec.pes.ext` compiled module in the local `micmec` directory.
+That module cannot be found locally, as it is only present in the install directory.)  

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# YAFF is yet another force-field code.
 cdef extern from "domain.h":
     ctypedef struct domain_type:
         pass

@@ -6,5 +6,7 @@ include docs/updatelibdoc.py
 include docs/make.bat
 include docs/objects.inv
 include docs/Makefile
+recursive-include micmec *.pyx *.pxd *.h *.c
+recursive-exclude micmec ext.c
 recursive-include data *
 recursive-include simulations *
