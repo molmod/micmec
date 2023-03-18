@@ -5,6 +5,3 @@ The micromechanical model is a coarse-grained force field model to simulate the 
 
 The micromechanical model has been the main topic of my master's thesis at the `Center for Molecular Modeling <http://molmod.ugent.be/>`_ (CMM). MicMec is, essentially, a simulation package for micromechanical systems. Its architecture is intentionally similar to `Yaff <https://github.com/molmod/yaff>`_, a simulation package for atomistic systems, also developed at the CMM. In the process of building MicMec, the original micromechanical model was modified slightly, to ensure user friendliness, accuracy and flexibility. 
 
-<!---
-All major changes with respect to the original model are listed in the text of my [master's thesis](https://github.com/Jlvdwall/micmec/blob/main/docs/thesis/). More recent changes and quality-of life improvements are listed in the documentation.
--->
