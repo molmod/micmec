@@ -13,7 +13,7 @@ An overview of the model and key results were published in:
 > J. Vandewalle, J. S. De Vos and S. M. J. Rogge, "MicMec: Developing the Micromechanical Model to Investigate the Mechanics of Correlated Node Defects in UiO-66," J. Phys. Chem. C, 2023.
 
 The `simulations` directory contains command-line scripts for different types of simulations, including geometry optimizations and molecular dynamics simulations.
-The rest of the MicMec API is explained in detail [here](https://jlvdwall.github.io/micmec/).
+The rest of the MicMec API is explained in detail [here](https://molmod.github.io/micmec/).
 
 
 ## Installation
